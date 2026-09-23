@@ -1,0 +1,139 @@
+import type { LocationDto } from '@attendence-up/shared';
+import { useState } from 'react';
+import { Button, Field, Icon, inputClass } from './ui';
+
+const PRESETS = ['200', '300', '500'];
+
+export type LocationFormValue = {
+  enabled: boolean;
+  latitude: string;
+  longitude: string;
+  radiusMeters: string;
+};
+
+export function emptyLocation(): LocationFormValue {
+  return { enabled: false, latitude: '', longitude: '', radiusMeters: '200' };
+}
+
+export function locationFromDto(location: LocationDto | null | undefined): LocationFormValue {
+  if (!location) return emptyLocation();
+  return {
+    enabled: true,
+    latitude: String(location.latitude),
+    longitude: String(location.longitude),
+    radiusMeters: String(location.radiusMeters),
+  };
+}
+
+export function LocationFields({
+  value,
+  onChange,
+  error,
+}: {
+  value: LocationFormValue;
+  onChange: (value: LocationFormValue) => void;
+  error?: string;
+}) {
+  const [geoMessage, setGeoMessage] = useState<string | null>(null);
+  const preset = PRESETS.includes(value.radiusMeters);
+
+  function useCurrentLocation() {
+    if (!navigator.geolocation) {
+      setGeoMessage('This browser cannot read location.');
+      return;
+    }
+    setGeoMessage('Requesting location…');
+    navigator.geolocation.getCurrentPosition(
+      (position) => {
+        onChange({
+          ...value,
+          enabled: true,
+          latitude: position.coords.latitude.toFixed(6),
+          longitude: position.coords.longitude.toFixed(6),
+        });
+        setGeoMessage(`Accuracy about ±${Math.round(position.coords.accuracy)} m.`);
+      },
+      () => setGeoMessage('Location permission was denied.'),
+      { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 },
+    );
+  }
+
+  return (
+    <fieldset className="rounded-xl border border-line bg-paper p-4">
+      <legend className="flex items-center gap-1.5 px-1 text-xs font-semibold tracking-wider text-muted uppercase">
+        <Icon name="my_location" className="text-[16px] text-teal" />
+        Classroom location
+      </legend>
+      <label className="mt-1 flex items-start gap-2.5 text-sm text-muted">
+        <input
+          type="checkbox"
+          className="mt-0.5 h-[18px] w-[18px] rounded accent-accent"
+          checked={value.enabled}
+          onChange={(event) => onChange({ ...value, enabled: event.target.checked })}
+        />
+        <span>
+          Record an expected location. Students are never rejected for being outside the radius.
+          The distance is only shown to you.
+        </span>
+      </label>
+      {value.enabled && (
+        <div className="mt-4 grid gap-4 sm:grid-cols-2">
+          <Field label="Latitude">
+            <input
+              className={inputClass}
+              inputMode="decimal"
+              value={value.latitude}
+              onChange={(event) => onChange({ ...value, latitude: event.target.value })}
+            />
+          </Field>
+          <Field label="Longitude">
+            <input
+              className={inputClass}
+              inputMode="decimal"
+              value={value.longitude}
+              onChange={(event) => onChange({ ...value, longitude: event.target.value })}
+            />
+          </Field>
+          <Field label="Expected radius" hint="200, 300, and 500 meters are the usual choices.">
+            <select
+              className={inputClass}
+              value={preset ? value.radiusMeters : 'custom'}
+              onChange={(event) => {
+                if (event.target.value !== 'custom') {
+                  onChange({ ...value, radiusMeters: event.target.value });
+                } else if (preset) {
+                  onChange({ ...value, radiusMeters: '250' });
+                }
+              }}
+            >
+              {PRESETS.map((meters) => (
+                <option key={meters} value={meters}>
+                  {meters} meters
+                </option>
+              ))}
+              <option value="custom">Custom</option>
+            </select>
+          </Field>
+          {!preset && (
+            <Field label="Custom radius (meters)">
+              <input
+                className={inputClass}
+                inputMode="numeric"
+                value={value.radiusMeters}
+                onChange={(event) => onChange({ ...value, radiusMeters: event.target.value })}
+              />
+            </Field>
+          )}
+          <div className="sm:col-span-2">
+            <Button type="button" variant="secondary" onClick={useCurrentLocation}>
+              <Icon name="near_me" className="text-[18px]" />
+              Use my current location
+            </Button>
+            {geoMessage && <p className="mt-2 text-sm text-muted">{geoMessage}</p>}
+          </div>
+        </div>
+      )}
+      {error && <p className="mt-3 text-sm text-danger">{error}</p>}
+    </fieldset>
+  );
+}
