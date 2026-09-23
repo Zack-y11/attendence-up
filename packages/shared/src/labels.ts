@@ -5,13 +5,23 @@ export const CLASS_STATUSES = ['ACTIVE', 'ARCHIVED'] as const;
 export type ClassStatus = (typeof CLASS_STATUSES)[number];
 
 export const LOCATION_STATUSES = [
-  'WITHIN_RADIUS',  
+  'WITHIN_RADIUS',
   'OUTSIDE_RADIUS',
   'LOCATION_UNAVAILABLE',
   'LOW_ACCURACY',
   'NO_EXPECTED_LOCATION',
 ] as const;
 export type LocationStatus = (typeof LOCATION_STATUSES)[number];
+
+export const ATTENDANCE_STATUSES = ['PRESENT', 'LATE', 'ABSENT', 'EXCUSED'] as const;
+export type AttendanceStatus = (typeof ATTENDANCE_STATUSES)[number];
+
+export const ATTENDANCE_STATUS_LABELS: Record<AttendanceStatus, string> = {
+  PRESENT: 'Present',
+  LATE: 'Late',
+  ABSENT: 'Absent',
+  EXCUSED: 'Excused',
+};
 
 export const LOCATION_STATUS_LABELS: Record<LocationStatus, string> = {
   WITHIN_RADIUS: 'Near session',

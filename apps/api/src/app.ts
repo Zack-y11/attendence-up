@@ -30,6 +30,7 @@ const instructors = new WeakMap<FastifyRequest, InstructorContext>();
 export async function buildApp() {
   const app = Fastify({
     logger: {
+      level: process.env.LOG_LEVEL ?? 'info',
       redact: ['req.headers.authorization'],
     },
   }).withTypeProvider<ZodTypeProvider>();

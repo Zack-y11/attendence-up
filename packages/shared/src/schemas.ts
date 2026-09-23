@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import { ATTENDANCE_STATUSES } from './labels';
 
 export const locationSchema = z.object({
   latitude: z.number().min(-90).max(90),
@@ -71,6 +72,10 @@ export const duplicateSessionSchema = z.object({
   shiftDays: z.number().int().min(0).max(366).optional(),
 });
 
+export const updateAttendanceRecordSchema = z.object({
+  attendanceStatus: z.enum(ATTENDANCE_STATUSES),
+});
+
 export const submitAttendanceSchema = z
   .object({
     studentCode: z
@@ -107,6 +112,11 @@ export const exportQuerySchema = z.object({
 
 export const idParamSchema = z.object({
   id: z.uuid(),
+});
+
+export const attendanceRecordParamSchema = z.object({
+  id: z.uuid(),
+  recordId: z.uuid(),
 });
 
 export const tokenParamSchema = z.object({

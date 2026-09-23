@@ -1,5 +1,6 @@
 import type {
   AttendanceRecordDto,
+  AttendanceStatus,
   AttendanceSubmissionDto,
   ClassDetailDto,
   ClassDto,
@@ -68,12 +69,23 @@ export function createApiClient(getToken: () => Promise<string | null>) {
       }),
     updateSession: (id: string, body: SessionWriteInput) =>
       request<SessionDto>(`/api/sessions/${id}`, { method: 'PATCH', body: JSON.stringify(body) }),
-    openSession: (id: string) => request<SessionDto>(`/api/sessions/${id}/open`, { method: 'POST' }),
-    closeSession: (id: string) => request<SessionDto>(`/api/sessions/${id}/close`, { method: 'POST' }),
+    openSession: (id: string) =>
+      request<SessionDto>(`/api/sessions/${id}/open`, { method: 'POST' }),
+    closeSession: (id: string) =>
+      request<SessionDto>(`/api/sessions/${id}/close`, { method: 'POST' }),
     reopenSession: (id: string) =>
       request<SessionDto>(`/api/sessions/${id}/reopen`, { method: 'POST' }),
     deleteSession: (id: string) => request<void>(`/api/sessions/${id}`, { method: 'DELETE' }),
     attendance: (id: string) => request<AttendanceRecordDto[]>(`/api/sessions/${id}/attendance`),
+    updateAttendanceStatus: (
+      sessionId: string,
+      recordId: string,
+      attendanceStatus: AttendanceStatus,
+    ) =>
+      request<AttendanceRecordDto>(`/api/sessions/${sessionId}/attendance/${recordId}`, {
+        method: 'PATCH',
+        body: JSON.stringify({ attendanceStatus }),
+      }),
     exportAttendance: async (id: string, params: URLSearchParams) => {
       const token = await getToken();
       const headers = new Headers();

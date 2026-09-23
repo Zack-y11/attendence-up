@@ -30,6 +30,14 @@ enum LocationStatus {
   NO_EXPECTED_LOCATION
 }
 
+/// Grading meaning of a check-in. Location status stays on its own field.
+enum AttendanceStatus {
+  PRESENT
+  LATE
+  ABSENT
+  EXCUSED
+}
+
 model User {
   id          String   @id
   email       String
@@ -100,6 +108,7 @@ model AttendanceRecord {
   locationAccuracyMeters    Float?
   distanceFromSessionMeters Float?
   locationStatus            LocationStatus
+  attendanceStatus          AttendanceStatus  @default(PRESENT)
   createdAt                 DateTime          @default(now())
 
   @@unique([sessionId, studentCode])

@@ -1,6 +1,11 @@
 import { resolveExportColumns, type ExportColumnId, EXPORT_COLUMNS } from './export-columns';
 import { formatAccuracy, formatCoordinate, formatDistance, formatInstant } from './format';
-import { LOCATION_STATUS_LABELS, type LocationStatus } from './labels';
+import {
+  ATTENDANCE_STATUS_LABELS,
+  LOCATION_STATUS_LABELS,
+  type AttendanceStatus,
+  type LocationStatus,
+} from './labels';
 
 export type ExportRecord = {
   studentCode: string;
@@ -10,6 +15,7 @@ export type ExportRecord = {
   distanceFromSessionMeters: number | null;
   locationAccuracyMeters: number | null;
   locationStatus: LocationStatus;
+  attendanceStatus: AttendanceStatus;
   latitude: number | null;
   longitude: number | null;
 };
@@ -36,6 +42,8 @@ function cell(
       return formatDistance(record.distanceFromSessionMeters);
     case 'accuracy':
       return formatAccuracy(record.locationAccuracyMeters);
+    case 'attendanceStatus':
+      return ATTENDANCE_STATUS_LABELS[record.attendanceStatus];
     case 'locationStatus':
       return LOCATION_STATUS_LABELS[record.locationStatus];
     case 'sessionName':

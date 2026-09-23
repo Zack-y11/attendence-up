@@ -42,8 +42,8 @@ If install prints that Prisma's build scripts were ignored, approve them once wi
 2. Create a class, then a session. Optionally set a classroom location and a radius of 200, 300, or 500 meters.
 3. Open attendance and copy the public link.
 4. Open that link in a private window. Submit a student code and name. Allow or deny location. Both are accepted.
-5. Watch the session page update, then close attendance.
-6. Download Excel or PDF. Latitude and longitude are off unless you select those columns.
+5. Watch the session page update. On the roster, mark a check-in Late or Excused, then close attendance. You can still change that status after the session is closed.
+6. Download Excel or PDF. Attendance status is included by default. Latitude and longitude stay off unless you select those columns.
 7. Repeat with a standalone session from Sessions, which is not attached to a class.
 
 ## Tests

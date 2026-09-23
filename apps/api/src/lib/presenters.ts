@@ -46,7 +46,8 @@ export function sessionLocationColumns(location: LocationDto | null | undefined)
 
 export function classScheduleColumns(input: { startsAt?: string | null; endsAt?: string | null }) {
   const data: { startsAt?: Date | null; endsAt?: Date | null } = {};
-  if (input.startsAt !== undefined) data.startsAt = input.startsAt ? new Date(input.startsAt) : null;
+  if (input.startsAt !== undefined)
+    data.startsAt = input.startsAt ? new Date(input.startsAt) : null;
   if (input.endsAt !== undefined) data.endsAt = input.endsAt ? new Date(input.endsAt) : null;
   return data;
 }
@@ -150,6 +151,7 @@ export function presentRecord(item: AttendanceRecord): AttendanceRecordDto {
     locationAccuracyMeters: item.locationAccuracyMeters,
     distanceFromSessionMeters: item.distanceFromSessionMeters,
     locationStatus: item.locationStatus,
+    attendanceStatus: item.attendanceStatus,
     createdAt: item.createdAt.toISOString(),
   };
 }

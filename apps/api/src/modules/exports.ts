@@ -60,7 +60,8 @@ function renderPdf(input: {
     doc.fillColor('#1c2430');
 
     const width =
-      (doc.page.width - doc.page.margins.left - doc.page.margins.right) / Math.max(input.headers.length, 1);
+      (doc.page.width - doc.page.margins.left - doc.page.margins.right) /
+      Math.max(input.headers.length, 1);
     const startX = doc.page.margins.left;
 
     const drawRow = (cells: string[], header = false) => {
@@ -136,6 +137,7 @@ export async function exportRoutes(app: FastifyInstance) {
           distanceFromSessionMeters: record.distanceFromSessionMeters,
           locationAccuracyMeters: record.locationAccuracyMeters,
           locationStatus: record.locationStatus,
+          attendanceStatus: record.attendanceStatus,
           latitude: record.latitude,
           longitude: record.longitude,
         })),
@@ -153,12 +155,20 @@ export async function exportRoutes(app: FastifyInstance) {
       if (request.query.format === 'xlsx') {
         const buffer = await renderXlsx(table.headers, table.rows);
         return reply
-          .header('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
+          .header(
+            'Content-Type',
+            'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+          )
           .header('Content-Disposition', `attachment; filename="${fileName(session.name, 'xlsx')}"`)
           .send(buffer);
       }
 
-      const pdf = await renderPdf({ title: 'Attendance', subtitle, headers: table.headers, rows: table.rows });
+      const pdf = await renderPdf({
+        title: 'Attendance',
+        subtitle,
+        headers: table.headers,
+        rows: table.rows,
+      });
       return reply
         .header('Content-Type', 'application/pdf')
         .header('Content-Disposition', `attachment; filename="${fileName(session.name, 'pdf')}"`)
