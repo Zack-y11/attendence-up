@@ -91,6 +91,16 @@ export function SessionDetailPage() {
     mutationFn: (body: Parameters<typeof api.updateSession>[1]) => api.updateSession(id, body),
     onSuccess: invalidate,
   });
+  const duplicate = useMutation({
+    mutationFn: (shiftDays: number) => api.duplicateSession(id, { shiftDays }),
+    onSuccess: async (created) => {
+      await queryClient.invalidateQueries({ queryKey: ['sessions'] });
+      if (session.data?.classId) {
+        await queryClient.invalidateQueries({ queryKey: ['class', session.data.classId] });
+      }
+      navigate(`/sessions/${created.id}`);
+    },
+  });
 
   if (session.isLoading) return <LoadingBlock label="Loading session" />;
   if (session.isError) return <ErrorBlock error={session.error} />;
@@ -98,7 +108,7 @@ export function SessionDetailPage() {
   const item = session.data;
   const isOpen = item.status === 'OPEN';
   const link = `${window.location.origin}${item.publicPath}`;
-  const actionError = open.error || close.error || reopen.error || remove.error;
+  const actionError = open.error || close.error || reopen.error || remove.error || duplicate.error;
 
   const records = attendance.data ?? [];
   const near = records.filter((record) => matches(record, 'NEAR')).length;
@@ -144,6 +154,14 @@ export function SessionDetailPage() {
             {item.description && <p className="mt-1.5 max-w-2xl text-sm text-muted">{item.description}</p>}
           </div>
           <div className="flex flex-wrap gap-2">
+            <Button type="button" variant="secondary" onClick={() => duplicate.mutate(0)} disabled={duplicate.isPending}>
+              <Icon name="content_copy" className="text-[18px]" />
+              Duplicate
+            </Button>
+            <Button type="button" variant="secondary" onClick={() => duplicate.mutate(7)} disabled={duplicate.isPending}>
+              <Icon name="event_repeat" className="text-[18px]" />
+              Next week
+            </Button>
             <Button type="button" variant="secondary" onClick={() => setExportOpen(true)}>
               <Icon name="download" className="text-[18px]" />
               Export

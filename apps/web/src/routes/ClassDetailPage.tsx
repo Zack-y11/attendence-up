@@ -53,10 +53,7 @@ export function ClassDetailPage() {
           description={item.description || 'No description yet.'}
           action={
             item.status === 'ACTIVE' ? (
-              <Link to={`/classes/${item.id}/sessions/new`} className={buttonClass()}>
-                <Icon name="play_circle" className="text-[18px]" />
-                New session
-              </Link>
+              <ClassSessionActions classId={item.id} latestSessionId={item.sessions[0]?.id} />
             ) : null
           }
         />
@@ -104,6 +101,36 @@ export function ClassDetailPage() {
       </section>
 
       <ClassSettings classId={item.id} />
+    </div>
+  );
+}
+
+function ClassSessionActions({ classId, latestSessionId }: { classId: string; latestSessionId?: string }) {
+  const api = useApi();
+  const navigate = useNavigate();
+  const queryClient = useQueryClient();
+  const duplicate = useMutation({
+    mutationFn: () => api.duplicateSession(latestSessionId ?? '', { shiftDays: 7 }),
+    onSuccess: async (created) => {
+      await queryClient.invalidateQueries({ queryKey: ['sessions'] });
+      await queryClient.invalidateQueries({ queryKey: ['class', classId] });
+      navigate(`/sessions/${created.id}`);
+    },
+  });
+
+  return (
+    <div className="flex flex-wrap gap-2">
+      {latestSessionId && (
+        <Button type="button" variant="secondary" onClick={() => duplicate.mutate()} disabled={duplicate.isPending}>
+          <Icon name="event_repeat" className="text-[18px]" />
+          Next week
+        </Button>
+      )}
+      <Link to={`/classes/${classId}/sessions/new`} className={buttonClass()}>
+        <Icon name="play_circle" className="text-[18px]" />
+        New session
+      </Link>
+      {duplicate.error ? <ErrorBlock error={duplicate.error} /> : null}
     </div>
   );
 }
