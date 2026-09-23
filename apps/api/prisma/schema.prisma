@@ -1,0 +1,107 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum UserRole {
+  INSTRUCTOR
+}
+
+enum ClassStatus {
+  ACTIVE
+  ARCHIVED
+}
+
+enum SessionStatus {
+  DRAFT
+  OPEN
+  CLOSED
+}
+
+enum LocationStatus {
+  WITHIN_RADIUS
+  OUTSIDE_RADIUS
+  LOCATION_UNAVAILABLE
+  LOW_ACCURACY
+  NO_EXPECTED_LOCATION
+}
+
+model User {
+  id          String   @id
+  email       String
+  displayName String
+  role        UserRole @default(INSTRUCTOR)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  classes  Class[]
+  sessions AttendanceSession[]
+}
+
+model Class {
+  id                  String      @id @default(uuid())
+  ownerId             String
+  owner               User        @relation(fields: [ownerId], references: [id])
+  name                String
+  description         String      @default("")
+  status              ClassStatus @default(ACTIVE)
+  defaultLatitude     Float?
+  defaultLongitude    Float?
+  defaultRadiusMeters Int?
+  startsAt            DateTime?
+  endsAt              DateTime?
+  createdAt           DateTime    @default(now())
+  updatedAt           DateTime    @updatedAt
+
+  sessions AttendanceSession[]
+
+  @@index([ownerId])
+}
+
+model AttendanceSession {
+  id                   String        @id @default(uuid())
+  publicToken          String        @unique
+  classId              String?
+  class                Class?        @relation(fields: [classId], references: [id])
+  instructorId         String
+  instructor           User          @relation(fields: [instructorId], references: [id])
+  name                 String
+  description          String        @default("")
+  status               SessionStatus @default(DRAFT)
+  startsAt             DateTime?
+  endsAt               DateTime?
+  attendanceOpensAt    DateTime?
+  attendanceClosesAt   DateTime?
+  locationLatitude     Float?
+  locationLongitude    Float?
+  locationRadiusMeters Int?
+  createdAt            DateTime      @default(now())
+  updatedAt            DateTime      @updatedAt
+
+  records AttendanceRecord[]
+
+  @@index([instructorId])
+  @@index([classId])
+}
+
+model AttendanceRecord {
+  id                        String            @id @default(uuid())
+  sessionId                 String
+  session                   AttendanceSession @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+  studentCode               String
+  studentName               String
+  signature                 String?
+  latitude                  Float?
+  longitude                 Float?
+  locationAccuracyMeters    Float?
+  distanceFromSessionMeters Float?
+  locationStatus            LocationStatus
+  createdAt                 DateTime          @default(now())
+
+  @@unique([sessionId, studentCode])
+  @@index([sessionId])
+}
