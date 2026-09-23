@@ -19,6 +19,32 @@ describe('deriveLocationStatus', () => {
     ).toEqual({ status: 'NO_EXPECTED_LOCATION', distanceMeters: null });
   });
 
+  it('marks a coarse reading as outside when even the closest possible point is beyond the radius', () => {
+    const result = deriveLocationStatus(
+      { latitude: 13.7379, longitude: -89.2182, accuracyMeters: 500 },
+      classroom,
+    );
+    expect(result.status).toBe('OUTSIDE_RADIUS');
+    expect(result.distanceMeters).toBeGreaterThan(4500);
+  });
+
+  it('keeps low accuracy when a coarse reading could still fall inside the radius', () => {
+    const result = deriveLocationStatus(
+      { latitude: classroom.latitude, longitude: classroom.longitude, accuracyMeters: 500 },
+      classroom,
+    );
+    expect(result.status).toBe('LOW_ACCURACY');
+    expect(result.distanceMeters).toBeLessThan(1);
+  });
+
+  it('marks a coarse reading as near when the whole accuracy circle is inside the radius', () => {
+    const result = deriveLocationStatus(
+      { latitude: classroom.latitude, longitude: classroom.longitude, accuracyMeters: 150 },
+      { ...classroom, radiusMeters: 1000 },
+    );
+    expect(result.status).toBe('WITHIN_RADIUS');
+  });
+
   it('prefers low accuracy over the radius comparison and still stores distance', () => {
     const result = deriveLocationStatus(
       { latitude: 13.6935, longitude: -89.2175, accuracyMeters: 150 },

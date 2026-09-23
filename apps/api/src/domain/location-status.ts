@@ -19,7 +19,9 @@ export type ExpectedLocation = {
  * Location status is contextual information for the instructor.
  * It never accepts or rejects the attendance record.
  *
- * Precedence: missing reading, no classroom location, poor accuracy, then radius.
+ * A coarse reading can still prove someone is far away. Low accuracy is used
+ * only when the accuracy circle overlaps the expected radius, so the point
+ * could be inside or outside.
  */
 export function deriveLocationStatus(
   reported: ReportedLocation,
@@ -41,6 +43,14 @@ export function deriveLocationStatus(
   );
 
   if (reported.accuracyMeters != null && reported.accuracyMeters > LOW_ACCURACY_THRESHOLD_METERS) {
+    const closestPossibleMeters = distanceMeters - reported.accuracyMeters;
+    const farthestPossibleMeters = distanceMeters + reported.accuracyMeters;
+    if (closestPossibleMeters > expected.radiusMeters) {
+      return { status: 'OUTSIDE_RADIUS', distanceMeters };
+    }
+    if (farthestPossibleMeters <= expected.radiusMeters) {
+      return { status: 'WITHIN_RADIUS', distanceMeters };
+    }
     return { status: 'LOW_ACCURACY', distanceMeters };
   }
 
