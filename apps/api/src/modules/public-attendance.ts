@@ -49,7 +49,11 @@ export async function publicAttendanceRoutes(app: FastifyInstance) {
           longitude: body.longitude ?? null,
           accuracyMeters: body.locationAccuracyMeters ?? null,
         },
-        toLocation(session.locationLatitude, session.locationLongitude, session.locationRadiusMeters),
+        toLocation(
+          session.locationLatitude,
+          session.locationLongitude,
+          session.locationRadiusMeters,
+        ),
       );
 
       try {
@@ -64,6 +68,7 @@ export async function publicAttendanceRoutes(app: FastifyInstance) {
             locationAccuracyMeters: body.locationAccuracyMeters ?? null,
             distanceFromSessionMeters: derived.distanceMeters,
             locationStatus: derived.status,
+            attendanceStatus: 'PRESENT',
           },
         });
         return reply.status(201).send({

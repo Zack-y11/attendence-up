@@ -1,9 +1,12 @@
 import {
+  ATTENDANCE_STATUS_LABELS,
+  ATTENDANCE_STATUSES,
   LOCATION_STATUS_LABELS,
   SESSION_STATUS_LABELS,
   formatAccuracy,
   formatDistance,
   type AttendanceRecordDto,
+  type AttendanceStatus,
   type LocationStatus,
 } from '@attendence-up/shared';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
@@ -55,6 +58,7 @@ export function SessionDetailPage() {
   const [confirmDelete, setConfirmDelete] = useState(false);
   const [filter, setFilter] = useState<RosterFilter>('ALL');
   const [search, setSearch] = useState('');
+  const [savingStatusIds, setSavingStatusIds] = useState<ReadonlySet<string>>(new Set());
 
   const session = useQuery({
     queryKey: ['session', id],
@@ -101,6 +105,31 @@ export function SessionDetailPage() {
       navigate(`/sessions/${created.id}`);
     },
   });
+  const setStatus = useMutation({
+    mutationFn: (input: { recordId: string; attendanceStatus: AttendanceStatus }) =>
+      api.updateAttendanceStatus(id, input.recordId, input.attendanceStatus),
+    onSuccess: (updated) => {
+      queryClient.setQueryData<AttendanceRecordDto[]>(['attendance', id], (current) =>
+        current?.map((record) => (record.id === updated.id ? updated : record)),
+      );
+    },
+  });
+
+  function saveStatus(recordId: string, attendanceStatus: AttendanceStatus) {
+    setSavingStatusIds((current) => new Set(current).add(recordId));
+    setStatus.mutate(
+      { recordId, attendanceStatus },
+      {
+        onSettled: () => {
+          setSavingStatusIds((current) => {
+            const next = new Set(current);
+            next.delete(recordId);
+            return next;
+          });
+        },
+      },
+    );
+  }
 
   if (session.isLoading) return <LoadingBlock label="Loading session" />;
   if (session.isError) return <ErrorBlock error={session.error} />;
@@ -142,7 +171,9 @@ export function SessionDetailPage() {
                   Live session
                 </span>
               ) : (
-                <StatusPill tone={sessionTone(item.status)}>{SESSION_STATUS_LABELS[item.status]}</StatusPill>
+                <StatusPill tone={sessionTone(item.status)}>
+                  {SESSION_STATUS_LABELS[item.status]}
+                </StatusPill>
               )}
               <span className="text-xs font-semibold tracking-wider text-muted uppercase">
                 {item.className ?? 'Standalone session'}
@@ -151,14 +182,26 @@ export function SessionDetailPage() {
             <h1 className="font-display text-2xl font-semibold tracking-tight sm:text-[2rem] sm:leading-10">
               {item.name}
             </h1>
-            {item.description && <p className="mt-1.5 max-w-2xl text-sm text-muted">{item.description}</p>}
+            {item.description && (
+              <p className="mt-1.5 max-w-2xl text-sm text-muted">{item.description}</p>
+            )}
           </div>
           <div className="flex flex-wrap gap-2">
-            <Button type="button" variant="secondary" onClick={() => duplicate.mutate(0)} disabled={duplicate.isPending}>
+            <Button
+              type="button"
+              variant="secondary"
+              onClick={() => duplicate.mutate(0)}
+              disabled={duplicate.isPending}
+            >
               <Icon name="content_copy" className="text-[18px]" />
               Duplicate
             </Button>
-            <Button type="button" variant="secondary" onClick={() => duplicate.mutate(7)} disabled={duplicate.isPending}>
+            <Button
+              type="button"
+              variant="secondary"
+              onClick={() => duplicate.mutate(7)}
+              disabled={duplicate.isPending}
+            >
               <Icon name="event_repeat" className="text-[18px]" />
               Next week
             </Button>
@@ -179,7 +222,12 @@ export function SessionDetailPage() {
               </Button>
             )}
             {isOpen && (
-              <Button type="button" variant="danger" onClick={() => close.mutate()} disabled={close.isPending}>
+              <Button
+                type="button"
+                variant="danger"
+                onClick={() => close.mutate()}
+                disabled={close.isPending}
+              >
                 <Icon name="stop_circle" className="text-[18px]" />
                 Close attendance
               </Button>
@@ -199,7 +247,12 @@ export function SessionDetailPage() {
         <div className="flex flex-wrap items-center gap-3 rounded-xl border border-danger/20 bg-danger-soft px-4 py-3 text-sm">
           <Icon name="warning" className="text-[18px] text-danger" />
           <span className="flex-1">Delete this draft session? This cannot be undone.</span>
-          <Button type="button" variant="danger" onClick={() => remove.mutate()} disabled={remove.isPending}>
+          <Button
+            type="button"
+            variant="danger"
+            onClick={() => remove.mutate()}
+            disabled={remove.isPending}
+          >
             Delete
           </Button>
           <Button type="button" variant="secondary" onClick={() => setConfirmDelete(false)}>
@@ -212,13 +265,22 @@ export function SessionDetailPage() {
         <Card className="p-5 lg:col-span-7">
           <div className="flex items-center justify-between gap-3">
             <div>
-              <p className="text-xs font-semibold tracking-wider text-muted uppercase">Public attendance link</p>
+              <p className="text-xs font-semibold tracking-wider text-muted uppercase">
+                Public attendance link
+              </p>
               <p className="mt-0.5 text-sm text-muted">
-                {isOpen ? 'Share this with students to check in.' : 'Students cannot check in until the session is open.'}
+                {isOpen
+                  ? 'Share this with students to check in.'
+                  : 'Students cannot check in until the session is open.'}
               </p>
             </div>
-            <span className={`grid h-9 w-9 place-items-center rounded-lg ${isOpen ? 'bg-teal-soft text-teal' : 'bg-mist text-muted'}`}>
-              <Icon name={isOpen ? 'wifi_tethering' : 'wifi_tethering_off'} className="text-[20px]" />
+            <span
+              className={`grid h-9 w-9 place-items-center rounded-lg ${isOpen ? 'bg-teal-soft text-teal' : 'bg-mist text-muted'}`}
+            >
+              <Icon
+                name={isOpen ? 'wifi_tethering' : 'wifi_tethering_off'}
+                className="text-[20px]"
+              />
             </span>
           </div>
           <div className="mt-4 flex min-w-0 items-center gap-2 rounded-lg border border-line bg-paper px-3 py-2.5">
@@ -226,12 +288,24 @@ export function SessionDetailPage() {
             <span className="min-w-0 flex-1 truncate font-mono text-xs">{link}</span>
           </div>
           <div className="mt-3 flex flex-wrap gap-2">
-            <Button type="button" variant={copyError ? 'danger' : 'primary'} onClick={() => void copy(link)}>
-              <Icon name={copied ? 'check' : copyError ? 'error' : 'content_copy'} className="text-[18px]" />
+            <Button
+              type="button"
+              variant={copyError ? 'danger' : 'primary'}
+              onClick={() => void copy(link)}
+            >
+              <Icon
+                name={copied ? 'check' : copyError ? 'error' : 'content_copy'}
+                className="text-[18px]"
+              />
               {copied ? 'Copied' : copyError ? 'Copy failed' : 'Copy link'}
             </Button>
             {copyError ? <p className="w-full text-sm text-danger">{copyError}</p> : null}
-            <a href={link} target="_blank" rel="noreferrer" className="inline-flex items-center gap-1.5 rounded-lg border border-line bg-card px-3.5 py-2 text-sm font-medium hover:bg-mist">
+            <a
+              href={link}
+              target="_blank"
+              rel="noreferrer"
+              className="inline-flex items-center gap-1.5 rounded-lg border border-line bg-card px-3.5 py-2 text-sm font-medium hover:bg-mist"
+            >
               <Icon name="open_in_new" className="text-[18px]" />
               Open check-in page
             </a>
@@ -240,7 +314,9 @@ export function SessionDetailPage() {
 
         <Card className="p-5 lg:col-span-5">
           <div className="flex items-center justify-between">
-            <p className="text-xs font-semibold tracking-wider text-muted uppercase">Check-in telemetry</p>
+            <p className="text-xs font-semibold tracking-wider text-muted uppercase">
+              Check-in telemetry
+            </p>
             {isOpen && (
               <span className="inline-flex items-center gap-1.5 text-xs font-medium text-teal">
                 <LiveDot className="h-2 w-2" />
@@ -272,7 +348,11 @@ export function SessionDetailPage() {
           icon={item.location ? 'my_location' : 'location_off'}
           label="Classroom"
           value={item.location ? `${item.location.radiusMeters} m radius` : 'Not configured'}
-          sub={item.location ? `${item.location.latitude.toFixed(5)}, ${item.location.longitude.toFixed(5)}` : undefined}
+          sub={
+            item.location
+              ? `${item.location.latitude.toFixed(5)}, ${item.location.longitude.toFixed(5)}`
+              : undefined
+          }
         />
       </Card>
 
@@ -281,7 +361,9 @@ export function SessionDetailPage() {
           <div>
             <h2 className="font-display text-lg font-semibold tracking-tight">Check-in roster</h2>
             <p className="text-sm text-muted">
-              {isOpen ? 'New check-ins appear every few seconds while the session is open.' : 'Everyone who checked in to this session.'}
+              {isOpen
+                ? 'New check-ins appear every few seconds. They start as Present — set Late, Excused, or Absent when the grade should differ.'
+                : 'Check-ins start as Present. You can still set Late, Excused, or Absent after the session closes.'}
             </p>
           </div>
           <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
@@ -300,12 +382,19 @@ export function SessionDetailPage() {
         </div>
         {attendance.isLoading && <LoadingBlock label="Loading attendance" />}
         {attendance.isError && <ErrorBlock error={attendance.error} />}
+        {setStatus.error ? (
+          <div className="mb-3">
+            <ErrorBlock error={setStatus.error} />
+          </div>
+        ) : null}
         {attendance.data && (
           <Card className="overflow-hidden">
             {visible.length === 0 ? (
               <div className="px-4 py-10 text-center text-sm text-muted">
                 <Icon name="group_off" className="mb-1 block text-[22px]" />
-                {records.length === 0 ? 'No one has checked in yet.' : 'No check-ins match this filter.'}
+                {records.length === 0
+                  ? 'No one has checked in yet.'
+                  : 'No check-ins match this filter.'}
               </div>
             ) : (
               <div className="overflow-x-auto">
@@ -314,6 +403,7 @@ export function SessionDetailPage() {
                     <tr>
                       <th className={thClass}>Time</th>
                       <th className={thClass}>Student</th>
+                      <th className={thClass}>Attendance status</th>
                       <th className={thClass}>Distance</th>
                       <th className={thClass}>Precision</th>
                       <th className={thClass}>Location status</th>
@@ -322,7 +412,9 @@ export function SessionDetailPage() {
                   <tbody>
                     {visible.map((record) => (
                       <tr key={record.id} className={trClass}>
-                        <td className={`${tdClass} whitespace-nowrap text-xs text-muted tabular-nums`}>
+                        <td
+                          className={`${tdClass} whitespace-nowrap text-xs text-muted tabular-nums`}
+                        >
                           {formatTime(record.createdAt)}
                         </td>
                         <td className={tdClass}>
@@ -337,12 +429,21 @@ export function SessionDetailPage() {
                             </div>
                           </div>
                         </td>
+                        <td className={tdClass}>
+                          <AttendanceStatusSelect
+                            record={record}
+                            disabled={savingStatusIds.has(record.id)}
+                            onChange={(attendanceStatus) => saveStatus(record.id, attendanceStatus)}
+                          />
+                        </td>
                         <td className={`${tdClass} whitespace-nowrap`}>
                           <DistanceCell record={record} />
                         </td>
                         <td className={`${tdClass} whitespace-nowrap text-xs tabular-nums`}>
                           {formatAccuracy(record.locationAccuracyMeters) ? (
-                            <span className="font-medium">GPS {formatAccuracy(record.locationAccuracyMeters)}</span>
+                            <span className="font-medium">
+                              GPS {formatAccuracy(record.locationAccuracyMeters)}
+                            </span>
                           ) : (
                             <span className="text-muted">—</span>
                           )}
@@ -385,7 +486,15 @@ export function SessionDetailPage() {
   );
 }
 
-function TelemetryBar({ near, flagged, noLocation }: { near: number; flagged: number; noLocation: number }) {
+function TelemetryBar({
+  near,
+  flagged,
+  noLocation,
+}: {
+  near: number;
+  flagged: number;
+  noLocation: number;
+}) {
   const total = near + flagged + noLocation;
   if (total === 0) return <div className="mt-4 h-2 rounded-full bg-mist" />;
   const pct = (value: number) => `${(value / total) * 100}%`;
@@ -410,19 +519,73 @@ function Legend({ color, label, value }: { color: string; label: string; value: 
   );
 }
 
-function Detail({ icon, label, value, sub }: { icon: string; label: string; value: ReactNode; sub?: string }) {
+function Detail({
+  icon,
+  label,
+  value,
+  sub,
+}: {
+  icon: string;
+  label: string;
+  value: ReactNode;
+  sub?: string;
+}) {
   return (
     <div className="flex items-start gap-3">
       <span className="grid h-8 w-8 shrink-0 place-items-center rounded-lg bg-mist text-muted">
         <Icon name={icon} className="text-[18px]" />
       </span>
       <div className="min-w-0">
-        <span className="block text-xs font-semibold tracking-wider text-muted uppercase">{label}</span>
+        <span className="block text-xs font-semibold tracking-wider text-muted uppercase">
+          {label}
+        </span>
         <span className="block truncate text-sm font-medium">{value}</span>
         {sub && <span className="block truncate font-mono text-[11px] text-muted">{sub}</span>}
       </div>
     </div>
   );
+}
+
+function AttendanceStatusSelect({
+  record,
+  disabled,
+  onChange,
+}: {
+  record: AttendanceRecordDto;
+  disabled: boolean;
+  onChange: (status: AttendanceStatus) => void;
+}) {
+  return (
+    <select
+      aria-label={`Attendance status for ${record.studentName}`}
+      className={`h-8 rounded-lg border px-2 text-xs font-semibold outline-none focus:ring-[3px] focus:ring-accent/15 disabled:cursor-wait disabled:opacity-60 ${attendanceSelectClass(record.attendanceStatus)}`}
+      value={record.attendanceStatus}
+      disabled={disabled}
+      onChange={(event) => {
+        const next = event.target.value as AttendanceStatus;
+        if (next !== record.attendanceStatus) onChange(next);
+      }}
+    >
+      {ATTENDANCE_STATUSES.map((status) => (
+        <option key={status} value={status}>
+          {ATTENDANCE_STATUS_LABELS[status]}
+        </option>
+      ))}
+    </select>
+  );
+}
+
+function attendanceSelectClass(status: AttendanceStatus): string {
+  switch (status) {
+    case 'PRESENT':
+      return 'border-teal/30 bg-teal-soft text-teal';
+    case 'LATE':
+      return 'border-amber/30 bg-amber-soft text-amber';
+    case 'EXCUSED':
+      return 'border-line bg-mist text-ink';
+    case 'ABSENT':
+      return 'border-danger/20 bg-danger-soft text-danger';
+  }
 }
 
 function DistanceCell({ record }: { record: AttendanceRecordDto }) {

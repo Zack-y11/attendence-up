@@ -1,6 +1,7 @@
 export const EXPORT_COLUMNS = [
   { id: 'studentCode', label: 'Student code', defaultSelected: true },
   { id: 'studentName', label: 'Student name', defaultSelected: true },
+  { id: 'attendanceStatus', label: 'Attendance status', defaultSelected: true },
   { id: 'signature', label: 'Signature', defaultSelected: true },
   { id: 'attendanceTime', label: 'Attendance time', defaultSelected: true },
   { id: 'distance', label: 'Distance', defaultSelected: true },

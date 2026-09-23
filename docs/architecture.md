@@ -33,7 +33,7 @@ Duplicate registration is rejected with `(sessionId, studentCode)`. The code is 
 
 The browser is asked for location once, and only when the session has a classroom location. The page explains why. Denial still allows submit.
 
-The server computes distance with the Haversine formula. Status is separate from attendance:
+The server computes distance with the Haversine formula. Location status is separate from the check-in itself, and from the grading status stored on the record:
 
 1. No student coordinates: `LOCATION_UNAVAILABLE`
 2. No classroom location: `NO_EXPECTED_LOCATION`
@@ -41,7 +41,9 @@ The server computes distance with the Haversine formula. Status is separate from
 4. Distance within the radius: `WITHIN_RADIUS`
 5. Otherwise: `OUTSIDE_RADIUS`
 
-None of these statuses reject the record. A future `requireLocation` flag can change that without redesigning the record.
+None of these location statuses reject the record. A future `requireLocation` flag can change that without redesigning the record.
+
+A new check-in is `PRESENT`. The instructor can set that record to `LATE`, `EXCUSED`, or `ABSENT` from the session roster, including after the session is closed. The roster saves that override with `PATCH /api/sessions/:id/attendance/:recordId`. The override does not change the stored location reading. Excel and PDF include attendance status in the default columns.
 
 Classroom coordinates are stored only when latitude, longitude, and radius are all present. The database enforces that with a check constraint. Creating a class session copies the class default when the request omits location.
 

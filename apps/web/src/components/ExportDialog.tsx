@@ -4,13 +4,7 @@ import { ApiError } from '../api/client';
 import { useApi } from '../api/context';
 import { Button, ErrorBlock } from './ui';
 
-export function ExportDialog({
-  sessionId,
-  onClose,
-}: {
-  sessionId: string;
-  onClose: () => void;
-}) {
+export function ExportDialog({ sessionId, onClose }: { sessionId: string; onClose: () => void }) {
   const api = useApi();
   const [format, setFormat] = useState<'xlsx' | 'pdf'>('xlsx');
   const [columns, setColumns] = useState<ExportColumnId[]>(
@@ -58,7 +52,8 @@ export function ExportDialog({
       <div className="max-h-[90vh] w-full max-w-lg overflow-y-auto rounded-xl border border-line bg-card p-5 shadow-[0_20px_25px_-5px_rgba(15,23,42,0.08)]">
         <h2 className="font-display text-xl font-semibold tracking-tight">Download attendance</h2>
         <p className="mt-1 text-sm text-muted">
-          Coordinates stay off unless you select them. Distance and status are enough for most reports.
+          Attendance status is included by default so a late or excused mark stays in the file.
+          Coordinates stay off unless you select them.
         </p>
         <fieldset className="mt-4">
           <legend className="text-sm font-medium">Format</legend>
@@ -73,7 +68,12 @@ export function ExportDialog({
               Excel
             </label>
             <label className="flex items-center gap-2">
-              <input type="radio" name="format" checked={format === 'pdf'} onChange={() => setFormat('pdf')} />
+              <input
+                type="radio"
+                name="format"
+                checked={format === 'pdf'}
+                onChange={() => setFormat('pdf')}
+              />
               PDF
             </label>
           </div>

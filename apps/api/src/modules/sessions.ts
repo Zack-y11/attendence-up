@@ -1,15 +1,22 @@
 import {
+  attendanceRecordParamSchema,
   duplicateSessionSchema,
   idParamSchema,
   sessionListQuerySchema,
   sessionWriteSchema,
+  updateAttendanceRecordSchema,
   updateSessionSchema,
 } from '@attendence-up/shared';
 import type { Prisma } from '@prisma/client';
 import type { FastifyInstance } from 'fastify';
 import type { ZodTypeProvider } from 'fastify-type-provider-zod';
 import { AppError } from '../lib/errors';
-import { dateColumns, presentRecord, presentSession, sessionLocationColumns } from '../lib/presenters';
+import {
+  dateColumns,
+  presentRecord,
+  presentSession,
+  sessionLocationColumns,
+} from '../lib/presenters';
 import { prisma } from '../lib/prisma';
 import { createPublicToken } from '../domain/tokens';
 
@@ -116,7 +123,9 @@ export async function sessionRoutes(app: FastifyInstance) {
         where: { id: session.id },
         data: {
           ...(request.body.name !== undefined ? { name: request.body.name } : {}),
-          ...(request.body.description !== undefined ? { description: request.body.description } : {}),
+          ...(request.body.description !== undefined
+            ? { description: request.body.description }
+            : {}),
           ...dateColumns(request.body),
           ...sessionLocationColumns(request.body.location),
         },
@@ -130,7 +139,10 @@ export async function sessionRoutes(app: FastifyInstance) {
     const session = await ownedSession(request.params.id, request.instructor.id);
     if (session.status === 'OPEN') return presentSession(session);
     if (session.status !== 'DRAFT') {
-      throw new AppError(409, 'Only a draft session can be opened. Reopen a closed session instead.');
+      throw new AppError(
+        409,
+        'Only a draft session can be opened. Reopen a closed session instead.',
+      );
     }
     const updated = await prisma.attendanceSession.update({
       where: { id: session.id },
@@ -185,4 +197,21 @@ export async function sessionRoutes(app: FastifyInstance) {
     });
     return records.map(presentRecord);
   });
+
+  api.patch(
+    '/sessions/:id/attendance/:recordId',
+    { schema: { params: attendanceRecordParamSchema, body: updateAttendanceRecordSchema } },
+    async (request) => {
+      const session = await ownedSession(request.params.id, request.instructor.id);
+      const record = await prisma.attendanceRecord.findFirst({
+        where: { id: request.params.recordId, sessionId: session.id },
+      });
+      if (!record) throw new AppError(404, 'Attendance record not found.');
+      const updated = await prisma.attendanceRecord.update({
+        where: { id: record.id },
+        data: { attendanceStatus: request.body.attendanceStatus },
+      });
+      return presentRecord(updated);
+    },
+  );
 }
