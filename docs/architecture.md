@@ -25,7 +25,7 @@ Both use `AttendanceRecord`. There is no second attendance table.
 
 `startsAt` and `endsAt` are the schedule. `attendanceOpensAt` and `attendanceClosesAt` are the optional check-in window. Students can submit only when the status is `OPEN` and the current time is inside that window, if one is set.
 
-The public URL uses `publicToken`, a 128-bit random value, at `/attendance/{publicToken}`. The internal session id stays private. A later QR code can encode the same URL. A later expiring token can be a new table beside this stable token.
+The public URL uses `publicToken`, a 128-bit random value, at `/attendance/{publicToken}`. The internal session id stays private. While a session is open, the live view shows a QR code of that same path plus a short-lived code: `/attendance/{publicToken}?c={code}`. Copy link uses that same URL. Each code is a row in `AttendanceCheckInCode` beside the stable token. The screen keeps a code for 30 seconds, then issues a new one. The previous code still checks in for 60 seconds so a student who just scanned can finish the form. After that, check-in fails with a clear error. There is no second check-in pipeline.
 
 Duplicate registration is rejected with `(sessionId, studentCode)`. The code is stored trimmed and uppercased, so `sm001` and `SM001` are the same student for that session.
 

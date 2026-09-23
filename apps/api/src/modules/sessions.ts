@@ -9,8 +9,14 @@ import type { Prisma } from '@prisma/client';
 import type { FastifyInstance } from 'fastify';
 import type { ZodTypeProvider } from 'fastify-type-provider-zod';
 import { AppError } from '../lib/errors';
-import { dateColumns, presentRecord, presentSession, sessionLocationColumns } from '../lib/presenters';
+import {
+  dateColumns,
+  presentRecord,
+  presentSession,
+  sessionLocationColumns,
+} from '../lib/presenters';
 import { prisma } from '../lib/prisma';
+import { displayedCheckInCode } from '../domain/check-in-codes';
 import { createPublicToken } from '../domain/tokens';
 
 function shiftByDays(value: Date | null, days: number): Date | null {
@@ -116,7 +122,9 @@ export async function sessionRoutes(app: FastifyInstance) {
         where: { id: session.id },
         data: {
           ...(request.body.name !== undefined ? { name: request.body.name } : {}),
-          ...(request.body.description !== undefined ? { description: request.body.description } : {}),
+          ...(request.body.description !== undefined
+            ? { description: request.body.description }
+            : {}),
           ...dateColumns(request.body),
           ...sessionLocationColumns(request.body.location),
         },
@@ -130,7 +138,10 @@ export async function sessionRoutes(app: FastifyInstance) {
     const session = await ownedSession(request.params.id, request.instructor.id);
     if (session.status === 'OPEN') return presentSession(session);
     if (session.status !== 'DRAFT') {
-      throw new AppError(409, 'Only a draft session can be opened. Reopen a closed session instead.');
+      throw new AppError(
+        409,
+        'Only a draft session can be opened. Reopen a closed session instead.',
+      );
     }
     const updated = await prisma.attendanceSession.update({
       where: { id: session.id },
@@ -176,6 +187,30 @@ export async function sessionRoutes(app: FastifyInstance) {
     await prisma.attendanceSession.delete({ where: { id: session.id } });
     return reply.status(204).send();
   });
+
+  api.get('/sessions/:id/check-in-code', { schema: { params: idParamSchema } }, async (request) => {
+    const session = await ownedSession(request.params.id, request.instructor.id);
+    if (session.status !== 'OPEN') {
+      throw new AppError(409, 'Open the session before sharing a check-in code.');
+    }
+    return displayedCheckInCode({ sessionId: session.id, publicToken: session.publicToken });
+  });
+
+  api.post(
+    '/sessions/:id/check-in-code',
+    { schema: { params: idParamSchema } },
+    async (request) => {
+      const session = await ownedSession(request.params.id, request.instructor.id);
+      if (session.status !== 'OPEN') {
+        throw new AppError(409, 'Open the session before sharing a check-in code.');
+      }
+      return displayedCheckInCode({
+        sessionId: session.id,
+        publicToken: session.publicToken,
+        force: true,
+      });
+    },
+  );
 
   api.get('/sessions/:id/attendance', { schema: { params: idParamSchema } }, async (request) => {
     const session = await ownedSession(request.params.id, request.instructor.id);

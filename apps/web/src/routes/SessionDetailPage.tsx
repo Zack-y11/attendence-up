@@ -10,6 +10,7 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useState, type ReactNode } from 'react';
 import { Link, useNavigate, useParams } from 'react-router';
 import { useApi } from '../api/context';
+import { AttendanceQr } from '../components/AttendanceQr';
 import { ExportDialog } from '../components/ExportDialog';
 import { SessionForm } from '../components/SessionForm';
 import {
@@ -30,7 +31,9 @@ import {
   thClass,
   trClass,
 } from '../components/ui';
+import { rotationDelayMs, useSecondsUntilRotation } from '../lib/checkInRotation';
 import { formatTime, formatWhen } from '../lib/datetime';
+import { publicAttendanceUrl } from '../lib/publicAttendanceUrl';
 import { useCopy } from '../lib/useCopy';
 
 type RosterFilter = 'ALL' | 'NEAR' | 'FLAGGED' | 'NO_LOCATION';
@@ -67,11 +70,23 @@ export function SessionDetailPage() {
     enabled: session.isSuccess,
     refetchInterval: session.data?.status === 'OPEN' ? 4000 : false,
   });
+  const sessionIsOpen = session.data?.status === 'OPEN';
+  const checkIn = useQuery({
+    queryKey: ['check-in-code', id],
+    queryFn: () => api.checkInCode(id),
+    enabled: sessionIsOpen,
+    refetchInterval: (query) => (sessionIsOpen ? rotationDelayMs(query.state.data?.rotatesAt) : false),
+  });
+  const refreshCheckIn = useMutation({
+    mutationFn: () => api.refreshCheckInCode(id),
+    onSuccess: (data) => queryClient.setQueryData(['check-in-code', id], data),
+  });
 
   const invalidate = async () => {
     await queryClient.invalidateQueries({ queryKey: ['session', id] });
     await queryClient.invalidateQueries({ queryKey: ['sessions'] });
     await queryClient.invalidateQueries({ queryKey: ['attendance', id] });
+    await queryClient.invalidateQueries({ queryKey: ['check-in-code', id] });
     if (session.data?.classId) {
       await queryClient.invalidateQueries({ queryKey: ['class', session.data.classId] });
     }
@@ -107,7 +122,8 @@ export function SessionDetailPage() {
   if (!session.data) return null;
   const item = session.data;
   const isOpen = item.status === 'OPEN';
-  const link = `${window.location.origin}${item.publicPath}`;
+  const checkInPath = isOpen ? checkIn.data?.publicPath : item.publicPath;
+  const link = checkInPath ? publicAttendanceUrl(window.location.origin, checkInPath) : '';
   const actionError = open.error || close.error || reopen.error || remove.error || duplicate.error;
 
   const records = attendance.data ?? [];
@@ -214,27 +230,66 @@ export function SessionDetailPage() {
             <div>
               <p className="text-xs font-semibold tracking-wider text-muted uppercase">Public attendance link</p>
               <p className="mt-0.5 text-sm text-muted">
-                {isOpen ? 'Share this with students to check in.' : 'Students cannot check in until the session is open.'}
+                {isOpen
+                  ? 'Students scan the QR code. It changes on a short timer, and a code that just left the screen still checks in briefly.'
+                  : 'Students cannot check in until the session is open.'}
               </p>
             </div>
             <span className={`grid h-9 w-9 place-items-center rounded-lg ${isOpen ? 'bg-teal-soft text-teal' : 'bg-mist text-muted'}`}>
               <Icon name={isOpen ? 'wifi_tethering' : 'wifi_tethering_off'} className="text-[20px]" />
             </span>
           </div>
-          <div className="mt-4 flex min-w-0 items-center gap-2 rounded-lg border border-line bg-paper px-3 py-2.5">
-            <Icon name="link" className="text-[18px] text-muted" />
-            <span className="min-w-0 flex-1 truncate font-mono text-xs">{link}</span>
-          </div>
-          <div className="mt-3 flex flex-wrap gap-2">
-            <Button type="button" variant={copyError ? 'danger' : 'primary'} onClick={() => void copy(link)}>
-              <Icon name={copied ? 'check' : copyError ? 'error' : 'content_copy'} className="text-[18px]" />
-              {copied ? 'Copied' : copyError ? 'Copy failed' : 'Copy link'}
-            </Button>
-            {copyError ? <p className="w-full text-sm text-danger">{copyError}</p> : null}
-            <a href={link} target="_blank" rel="noreferrer" className="inline-flex items-center gap-1.5 rounded-lg border border-line bg-card px-3.5 py-2 text-sm font-medium hover:bg-mist">
-              <Icon name="open_in_new" className="text-[18px]" />
-              Open check-in page
-            </a>
+          <div className="mt-4 flex flex-col gap-4 sm:flex-row sm:items-center">
+            {isOpen && checkIn.data && <AttendanceQr url={link} />}
+            {isOpen && !checkIn.data && (
+              <div className="grid h-48 w-44 shrink-0 place-items-center rounded-lg border border-line bg-white text-xs text-muted">
+                {checkIn.isError ? 'QR unavailable' : 'Preparing QR…'}
+              </div>
+            )}
+            <div className="min-w-0 flex-1">
+              <div className="flex min-w-0 items-center gap-2 rounded-lg border border-line bg-paper px-3 py-2.5">
+                <Icon name="link" className="text-[18px] text-muted" />
+                <span className="min-w-0 flex-1 truncate font-mono text-xs">
+                  {isOpen && checkIn.isError ? 'Check-in link unavailable' : link || 'Preparing the current check-in link…'}
+                </span>
+              </div>
+              <div className="mt-3 flex flex-wrap gap-2">
+                <Button type="button" variant={copyError ? 'danger' : 'primary'} disabled={!link} onClick={() => void copy(link)}>
+                  <Icon name={copied ? 'check' : copyError ? 'error' : 'content_copy'} className="text-[18px]" />
+                  {copied ? 'Copied' : copyError ? 'Copy failed' : 'Copy link'}
+                </Button>
+                {isOpen && (
+                  <Button type="button" variant="secondary" onClick={() => refreshCheckIn.mutate()} disabled={refreshCheckIn.isPending}>
+                    <Icon name="refresh" className="text-[18px]" />
+                    {refreshCheckIn.isPending ? 'Refreshing…' : 'New code'}
+                  </Button>
+                )}
+                {copyError ? <p className="w-full text-sm text-danger">{copyError}</p> : null}
+                {link ? (
+                  <a href={link} target="_blank" rel="noreferrer" className="inline-flex items-center gap-1.5 rounded-lg border border-line bg-card px-3.5 py-2 text-sm font-medium hover:bg-mist">
+                    <Icon name="open_in_new" className="text-[18px]" />
+                    Open check-in page
+                  </a>
+                ) : null}
+                {isOpen && checkIn.data && (
+                  <QrRefreshNote
+                    rotatesAt={checkIn.data.rotatesAt}
+                    refreshSeconds={checkIn.data.refreshSeconds}
+                    graceSeconds={checkIn.data.graceSeconds}
+                  />
+                )}
+              </div>
+              {checkIn.isError ? (
+                <div className="mt-3">
+                  <ErrorBlock error={checkIn.error} />
+                </div>
+              ) : null}
+              {refreshCheckIn.isError ? (
+                <div className="mt-3">
+                  <ErrorBlock error={refreshCheckIn.error} />
+                </div>
+              ) : null}
+            </div>
           </div>
         </Card>
 
@@ -449,4 +504,22 @@ function toneFor(status: LocationStatus): 'live' | 'warn' | 'neutral' {
   if (status === 'WITHIN_RADIUS') return 'live';
   if (FLAGGED.includes(status)) return 'warn';
   return 'neutral';
+}
+
+function QrRefreshNote({
+  rotatesAt,
+  refreshSeconds,
+  graceSeconds,
+}: {
+  rotatesAt: string;
+  refreshSeconds: number;
+  graceSeconds: number;
+}) {
+  const seconds = useSecondsUntilRotation(rotatesAt);
+  return (
+    <p className="w-full text-xs text-muted">
+      {seconds != null && seconds > 0 ? `QR refreshes in ${seconds}s.` : 'Refreshing the QR code…'} It changes every{' '}
+      {refreshSeconds} seconds. A code that just left the screen keeps working for {graceSeconds} seconds.
+    </p>
+  );
 }

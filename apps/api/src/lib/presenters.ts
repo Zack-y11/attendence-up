@@ -1,5 +1,6 @@
 import type {
   AttendanceRecordDto,
+  CheckInCodeStatus,
   ClassDetailDto,
   ClassDto,
   InstructorDto,
@@ -46,7 +47,8 @@ export function sessionLocationColumns(location: LocationDto | null | undefined)
 
 export function classScheduleColumns(input: { startsAt?: string | null; endsAt?: string | null }) {
   const data: { startsAt?: Date | null; endsAt?: Date | null } = {};
-  if (input.startsAt !== undefined) data.startsAt = input.startsAt ? new Date(input.startsAt) : null;
+  if (input.startsAt !== undefined)
+    data.startsAt = input.startsAt ? new Date(input.startsAt) : null;
   if (input.endsAt !== undefined) data.endsAt = input.endsAt ? new Date(input.endsAt) : null;
   return data;
 }
@@ -157,6 +159,7 @@ export function presentRecord(item: AttendanceRecord): AttendanceRecordDto {
 export function presentPublicSession(
   item: AttendanceSession & { class: ClassSchedule | null },
   now: Date,
+  checkInCodeStatus: CheckInCodeStatus,
 ): PublicSessionDto {
   const gate = attendanceGate(item, now);
   return {
@@ -167,6 +170,7 @@ export function presentPublicSession(
     acceptingAttendance: gate.ok,
     closedReason: gate.ok ? null : gate.reason,
     requestsLocation: item.locationLatitude != null && item.locationLongitude != null,
+    checkInCodeStatus,
     startsAt: item.class?.startsAt?.toISOString() ?? null,
     endsAt: item.class?.endsAt?.toISOString() ?? null,
     attendanceOpensAt: item.attendanceOpensAt?.toISOString() ?? null,
