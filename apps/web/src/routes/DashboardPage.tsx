@@ -184,7 +184,7 @@ export function DashboardPage() {
 }
 
 function LiveSpotlight({ session }: { session: SessionDto }) {
-  const { copied, copy } = useCopy();
+  const { copied, error: copyError, copy } = useCopy();
   const link = `${window.location.origin}${session.publicPath}`;
 
   return (
@@ -233,11 +233,13 @@ function LiveSpotlight({ session }: { session: SessionDto }) {
           <span className="min-w-0 flex-1 truncate font-mono text-xs text-ink">{link}</span>
           <button
             type="button"
-            className="inline-flex items-center gap-1 rounded-md px-2 py-1 text-xs font-semibold text-accent hover:bg-accent-soft"
+            className={`inline-flex items-center gap-1 rounded-md px-2 py-1 text-xs font-semibold hover:bg-accent-soft ${copyError ? 'text-danger' : 'text-accent'}`}
+            title={copyError ?? undefined}
             onClick={() => void copy(link)}
           >
-            <Icon name={copied ? 'check' : 'content_copy'} className="text-[16px]" />
-            {copied ? 'Copied' : 'Copy link'}
+            <Icon name={copied ? 'check' : copyError ? 'error' : 'content_copy'} className="text-[16px]" />
+            {copied ? 'Copied' : copyError ? 'Copy failed' : 'Copy link'}
+            {copyError ? <span className="sr-only">{copyError}</span> : null}
           </button>
         </div>
       </div>

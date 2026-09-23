@@ -50,7 +50,7 @@ export function SessionDetailPage() {
   const api = useApi();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
-  const { copied, copy } = useCopy();
+  const { copied, error: copyError, copy } = useCopy();
   const [exportOpen, setExportOpen] = useState(false);
   const [confirmDelete, setConfirmDelete] = useState(false);
   const [filter, setFilter] = useState<RosterFilter>('ALL');
@@ -226,10 +226,11 @@ export function SessionDetailPage() {
             <span className="min-w-0 flex-1 truncate font-mono text-xs">{link}</span>
           </div>
           <div className="mt-3 flex flex-wrap gap-2">
-            <Button type="button" onClick={() => void copy(link)}>
-              <Icon name={copied ? 'check' : 'content_copy'} className="text-[18px]" />
-              {copied ? 'Copied' : 'Copy link'}
+            <Button type="button" variant={copyError ? 'danger' : 'primary'} onClick={() => void copy(link)}>
+              <Icon name={copied ? 'check' : copyError ? 'error' : 'content_copy'} className="text-[18px]" />
+              {copied ? 'Copied' : copyError ? 'Copy failed' : 'Copy link'}
             </Button>
+            {copyError ? <p className="w-full text-sm text-danger">{copyError}</p> : null}
             <a href={link} target="_blank" rel="noreferrer" className="inline-flex items-center gap-1.5 rounded-lg border border-line bg-card px-3.5 py-2 text-sm font-medium hover:bg-mist">
               <Icon name="open_in_new" className="text-[18px]" />
               Open check-in page
