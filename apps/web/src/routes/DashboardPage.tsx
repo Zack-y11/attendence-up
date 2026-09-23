@@ -17,6 +17,7 @@ import {
   StatusPill,
 } from '../components/ui';
 import { formatWhen } from '../lib/datetime';
+import { publicAttendanceUrl } from '../lib/publicAttendanceUrl';
 import { useCopy } from '../lib/useCopy';
 
 type Filter = 'ALL' | SessionStatus;
@@ -185,7 +186,7 @@ export function DashboardPage() {
 
 function LiveSpotlight({ session }: { session: SessionDto }) {
   const { copied, error: copyError, copy } = useCopy();
-  const link = `${window.location.origin}${session.publicPath}`;
+  const link = publicAttendanceUrl(window.location.origin, session.publicPath);
 
   return (
     <Card className="overflow-hidden">
