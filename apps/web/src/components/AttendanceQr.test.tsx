@@ -62,4 +62,17 @@ describe('public attendance QR', () => {
     expect(scan(html)).toBe(url);
     expect(html).toContain('same check-in page as Copy link');
   });
+
+  it('changes the encoded check-in URL when the short-lived code changes', () => {
+    const current = publicAttendanceUrl(
+      'https://class.example',
+      '/attendance/token-123?c=code-current',
+    );
+    const next = publicAttendanceUrl('https://class.example', '/attendance/token-123?c=code-next');
+
+    expect(current).toBe('https://class.example/attendance/token-123?c=code-current');
+    expect(scan(renderToStaticMarkup(<AttendanceQr url={current} />))).toBe(current);
+    expect(scan(renderToStaticMarkup(<AttendanceQr url={next} />))).toBe(next);
+    expect(current).not.toBe(next);
+  });
 });

@@ -1,7 +1,7 @@
-import { submitAttendanceSchema } from '@attendence-up/shared';
+import { missingCheckInCodeMessage, staleCheckInCodeMessage, submitAttendanceSchema } from '@attendence-up/shared';
 import { useMutation, useQuery } from '@tanstack/react-query';
 import { useEffect, useState, type ReactNode } from 'react';
-import { useParams } from 'react-router';
+import { useParams, useSearchParams } from 'react-router';
 import { ApiError, fetchPublicSession, submitPublicAttendance } from '../api/client';
 import { Button, ErrorBlock, Field, LoadingBlock, inputClass } from '../components/ui';
 import { formatWhen } from '../lib/datetime';
@@ -39,9 +39,11 @@ function requestPosition(): Promise<Reading | null> {
 
 export function PublicAttendancePage() {
   const { token = '' } = useParams();
+  const [params] = useSearchParams();
+  const checkInCode = params.get('c')?.trim() ?? '';
   const session = useQuery({
-    queryKey: ['public-session', token],
-    queryFn: () => fetchPublicSession(token),
+    queryKey: ['public-session', token, checkInCode],
+    queryFn: () => fetchPublicSession(token, checkInCode || undefined),
   });
   const [code, setCode] = useState('');
   const [name, setName] = useState('');
@@ -73,6 +75,7 @@ export function PublicAttendancePage() {
         latitude: reading?.latitude ?? null,
         longitude: reading?.longitude ?? null,
         locationAccuracyMeters: reading?.locationAccuracyMeters ?? null,
+        checkInCode: checkInCode || undefined,
       });
       if (!parsed.success) {
         throw new ApiError(400, parsed.error.issues[0]?.message ?? 'Check the form and try again.');
@@ -139,6 +142,11 @@ export function PublicAttendancePage() {
               {closedMessage(item.closedReason, item.status)}
             </p>
           )}
+          {item.acceptingAttendance && item.checkInCodeStatus !== 'VALID' && (
+            <p className="rounded-lg bg-amber-soft px-3 py-2 text-sm text-amber">
+              {item.checkInCodeStatus === 'EXPIRED' ? staleCheckInCodeMessage() : missingCheckInCodeMessage()}
+            </p>
+          )}
           {item.requestsLocation && (
             <LocationCard
               state={locationState}
@@ -176,7 +184,11 @@ export function PublicAttendancePage() {
             />
           </Field>
           {(fieldError || submit.error) && <ErrorBlock error={fieldError ?? submit.error} />}
-          <Button type="submit" className="w-full" disabled={!item.acceptingAttendance || submit.isPending}>
+          <Button
+            type="submit"
+            className="w-full"
+            disabled={!item.acceptingAttendance || item.checkInCodeStatus !== 'VALID' || submit.isPending}
+          >
             {submit.isPending ? 'Registering…' : 'Register attendance'}
           </Button>
         </form>

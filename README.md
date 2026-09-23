@@ -40,8 +40,8 @@ If install prints that Prisma's build scripts were ignored, approve them once wi
 
 1. Sign up as an instructor.
 2. Create a class, then a session. Optionally set a classroom location and a radius of 200, 300, or 500 meters.
-3. Open attendance and copy the public link.
-4. Open that link in a private window. Submit a student code and name. Allow or deny location. Both are accepted.
+3. Open attendance. The live session shows a QR code of the public link. The code changes every 30 seconds, and Copy link matches the code on screen.
+4. Scan or open that link, then submit a student code and name. Allow or deny location. Both are accepted. An expired QR fails and asks you to scan the screen again.
 5. Watch the session page update, then close attendance.
 6. Download Excel or PDF. Latitude and longitude are off unless you select those columns.
 7. Repeat with a standalone session from Sessions, which is not attached to a class.

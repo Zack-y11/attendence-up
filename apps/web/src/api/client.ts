@@ -1,6 +1,7 @@
 import type {
   AttendanceRecordDto,
   AttendanceSubmissionDto,
+  CheckInCodeDto,
   ClassDetailDto,
   ClassDto,
   CreateClassInput,
@@ -68,12 +69,17 @@ export function createApiClient(getToken: () => Promise<string | null>) {
       }),
     updateSession: (id: string, body: SessionWriteInput) =>
       request<SessionDto>(`/api/sessions/${id}`, { method: 'PATCH', body: JSON.stringify(body) }),
-    openSession: (id: string) => request<SessionDto>(`/api/sessions/${id}/open`, { method: 'POST' }),
-    closeSession: (id: string) => request<SessionDto>(`/api/sessions/${id}/close`, { method: 'POST' }),
+    openSession: (id: string) =>
+      request<SessionDto>(`/api/sessions/${id}/open`, { method: 'POST' }),
+    closeSession: (id: string) =>
+      request<SessionDto>(`/api/sessions/${id}/close`, { method: 'POST' }),
     reopenSession: (id: string) =>
       request<SessionDto>(`/api/sessions/${id}/reopen`, { method: 'POST' }),
     deleteSession: (id: string) => request<void>(`/api/sessions/${id}`, { method: 'DELETE' }),
     attendance: (id: string) => request<AttendanceRecordDto[]>(`/api/sessions/${id}/attendance`),
+    checkInCode: (id: string) => request<CheckInCodeDto>(`/api/sessions/${id}/check-in-code`),
+    refreshCheckInCode: (id: string) =>
+      request<CheckInCodeDto>(`/api/sessions/${id}/check-in-code`, { method: 'POST' }),
     exportAttendance: async (id: string, params: URLSearchParams) => {
       const token = await getToken();
       const headers = new Headers();
@@ -90,8 +96,12 @@ export function createApiClient(getToken: () => Promise<string | null>) {
 
 export type ApiClient = ReturnType<typeof createApiClient>;
 
-export async function fetchPublicSession(token: string): Promise<PublicSessionDto> {
-  const response = await fetch(`/api/public/sessions/${encodeURIComponent(token)}`);
+export async function fetchPublicSession(
+  token: string,
+  checkInCode?: string,
+): Promise<PublicSessionDto> {
+  const query = checkInCode ? `?c=${encodeURIComponent(checkInCode)}` : '';
+  const response = await fetch(`/api/public/sessions/${encodeURIComponent(token)}${query}`);
   if (!response.ok) throw await parseError(response);
   return (await response.json()) as PublicSessionDto;
 }

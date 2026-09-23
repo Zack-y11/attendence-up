@@ -16,6 +16,7 @@ import {
   SegmentedTabs,
   StatusPill,
 } from '../components/ui';
+import { rotationDelayMs } from '../lib/checkInRotation';
 import { formatWhen } from '../lib/datetime';
 import { publicAttendanceUrl } from '../lib/publicAttendanceUrl';
 import { useCopy } from '../lib/useCopy';
@@ -185,8 +186,14 @@ export function DashboardPage() {
 }
 
 function LiveSpotlight({ session }: { session: SessionDto }) {
+  const api = useApi();
   const { copied, error: copyError, copy } = useCopy();
-  const link = publicAttendanceUrl(window.location.origin, session.publicPath);
+  const checkIn = useQuery({
+    queryKey: ['check-in-code', session.id],
+    queryFn: () => api.checkInCode(session.id),
+    refetchInterval: (query) => rotationDelayMs(query.state.data?.rotatesAt),
+  });
+  const link = checkIn.data ? publicAttendanceUrl(window.location.origin, checkIn.data.publicPath) : '';
 
   return (
     <Card className="overflow-hidden">
@@ -231,11 +238,14 @@ function LiveSpotlight({ session }: { session: SessionDto }) {
         </div>
         <div className="flex min-w-0 items-center gap-2 rounded-lg bg-paper px-3 py-2 lg:col-span-9">
           <Icon name="link" className="text-[18px] text-muted" />
-          <span className="min-w-0 flex-1 truncate font-mono text-xs text-ink">{link}</span>
+          <span className="min-w-0 flex-1 truncate font-mono text-xs text-ink">
+            {checkIn.isError ? 'Check-in link unavailable' : link || 'Preparing the current check-in link…'}
+          </span>
           <button
             type="button"
-            className={`inline-flex items-center gap-1 rounded-md px-2 py-1 text-xs font-semibold hover:bg-accent-soft ${copyError ? 'text-danger' : 'text-accent'}`}
+            className={`inline-flex items-center gap-1 rounded-md px-2 py-1 text-xs font-semibold hover:bg-accent-soft disabled:opacity-60 ${copyError ? 'text-danger' : 'text-accent'}`}
             title={copyError ?? undefined}
+            disabled={!link}
             onClick={() => void copy(link)}
           >
             <Icon name={copied ? 'check' : copyError ? 'error' : 'content_copy'} className="text-[16px]" />

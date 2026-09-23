@@ -1,3 +1,4 @@
+import type { CheckInCodeStatus } from './check-in-code';
 import type { AttendanceGateReason, ClassStatus, LocationStatus, SessionStatus } from './labels';
 import type { LocationInput } from './schemas';
 
@@ -68,6 +69,16 @@ export type AttendanceRecordDto = {
   createdAt: string;
 };
 
+export type CheckInCodeDto = {
+  code: string;
+  issuedAt: string;
+  expiresAt: string;
+  rotatesAt: string;
+  publicPath: string;
+  refreshSeconds: number;
+  graceSeconds: number;
+};
+
 export type PublicSessionDto = {
   name: string;
   description: string;
@@ -76,6 +87,7 @@ export type PublicSessionDto = {
   acceptingAttendance: boolean;
   closedReason: AttendanceGateReason | null;
   requestsLocation: boolean;
+  checkInCodeStatus: CheckInCodeStatus;
   startsAt: string | null;
   endsAt: string | null;
   attendanceOpensAt: string | null;

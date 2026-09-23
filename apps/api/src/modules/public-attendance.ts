@@ -1,24 +1,53 @@
-import { submitAttendanceSchema, tokenParamSchema } from '@attendence-up/shared';
+import {
+  missingCheckInCodeMessage,
+  publicSessionQuerySchema,
+  staleCheckInCodeMessage,
+  submitAttendanceSchema,
+  tokenParamSchema,
+  type CheckInCodeStatus,
+} from '@attendence-up/shared';
 import type { FastifyInstance } from 'fastify';
 import type { ZodTypeProvider } from 'fastify-type-provider-zod';
 import { attendanceGate, attendanceGateMessage } from '../domain/attendance-gate';
+import { judgeCheckInCode } from '../domain/check-in-code';
+import { findCheckInPass } from '../domain/check-in-codes';
 import { deriveLocationStatus } from '../domain/location-status';
 import { normalizeStudentCode } from '../domain/student-code';
 import { AppError } from '../lib/errors';
 import { presentPublicSession, toLocation } from '../lib/presenters';
 import { isUniqueConstraintError, prisma } from '../lib/prisma';
 
+async function checkInCodeStatus(
+  sessionId: string,
+  code: string | undefined,
+  now: Date,
+): Promise<CheckInCodeStatus> {
+  const submitted = code?.trim() ?? '';
+  if (!submitted) return 'ABSENT';
+  const pass = await findCheckInPass(sessionId, submitted);
+  return judgeCheckInCode(pass, now).ok ? 'VALID' : 'EXPIRED';
+}
+
 export async function publicAttendanceRoutes(app: FastifyInstance) {
   const api = app.withTypeProvider<ZodTypeProvider>();
 
-  api.get('/sessions/:token', { schema: { params: tokenParamSchema } }, async (request) => {
-    const session = await prisma.attendanceSession.findUnique({
-      where: { publicToken: request.params.token },
-      include: { class: { select: { name: true, startsAt: true, endsAt: true } } },
-    });
-    if (!session) throw new AppError(404, 'This attendance link is not valid.');
-    return presentPublicSession(session, new Date());
-  });
+  api.get(
+    '/sessions/:token',
+    { schema: { params: tokenParamSchema, querystring: publicSessionQuerySchema } },
+    async (request) => {
+      const session = await prisma.attendanceSession.findUnique({
+        where: { publicToken: request.params.token },
+        include: { class: { select: { name: true, startsAt: true, endsAt: true } } },
+      });
+      if (!session) throw new AppError(404, 'This attendance link is not valid.');
+      const now = new Date();
+      return presentPublicSession(
+        session,
+        now,
+        await checkInCodeStatus(session.id, request.query.c, now),
+      );
+    },
+  );
 
   api.post(
     '/sessions/:token/attendance',
@@ -37,9 +66,19 @@ export async function publicAttendanceRoutes(app: FastifyInstance) {
       });
       if (!session) throw new AppError(404, 'This attendance link is not valid.');
 
-      const gate = attendanceGate(session, new Date());
+      const now = new Date();
+      const gate = attendanceGate(session, now);
       if (!gate.ok) {
         throw new AppError(403, attendanceGateMessage(gate.reason), gate.reason);
+      }
+
+      const submittedCode = request.body.checkInCode?.trim() ?? '';
+      if (!submittedCode) {
+        throw new AppError(403, missingCheckInCodeMessage(), 'MISSING_CHECK_IN_CODE');
+      }
+      const pass = await findCheckInPass(session.id, submittedCode);
+      if (!judgeCheckInCode(pass, now).ok) {
+        throw new AppError(403, staleCheckInCodeMessage(), 'STALE_CHECK_IN_CODE');
       }
 
       const body = request.body;
@@ -49,7 +88,11 @@ export async function publicAttendanceRoutes(app: FastifyInstance) {
           longitude: body.longitude ?? null,
           accuracyMeters: body.locationAccuracyMeters ?? null,
         },
-        toLocation(session.locationLatitude, session.locationLongitude, session.locationRadiusMeters),
+        toLocation(
+          session.locationLatitude,
+          session.locationLongitude,
+          session.locationRadiusMeters,
+        ),
       );
 
       try {

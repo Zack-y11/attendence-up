@@ -84,6 +84,7 @@ export const submitAttendanceSchema = z
     latitude: z.number().min(-90).max(90).nullable().optional(),
     longitude: z.number().min(-180).max(180).nullable().optional(),
     locationAccuracyMeters: z.number().min(0).max(100_000).nullable().optional(),
+    checkInCode: z.string().trim().max(128).optional(),
   })
   .superRefine((value, ctx) => {
     if ((value.latitude != null) !== (value.longitude != null)) {
@@ -111,6 +112,10 @@ export const idParamSchema = z.object({
 
 export const tokenParamSchema = z.object({
   token: z.string().min(16).max(128),
+});
+
+export const publicSessionQuerySchema = z.object({
+  c: z.string().trim().max(128).optional(),
 });
 
 export type LocationInput = z.infer<typeof locationSchema>;

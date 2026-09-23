@@ -1,3 +1,4 @@
+export * from './check-in-code';
 export * from './export-columns';
 export * from './export-table';
 export * from './format';

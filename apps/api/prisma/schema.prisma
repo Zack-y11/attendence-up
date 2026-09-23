@@ -82,10 +82,22 @@ model AttendanceSession {
   createdAt            DateTime      @default(now())
   updatedAt            DateTime      @updatedAt
 
-  records AttendanceRecord[]
+  records      AttendanceRecord[]
+  checkInCodes AttendanceCheckInCode[]
 
   @@index([instructorId])
   @@index([classId])
+}
+
+model AttendanceCheckInCode {
+  id        String            @id @default(uuid())
+  sessionId String
+  session   AttendanceSession @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+  code      String            @unique
+  issuedAt  DateTime
+  expiresAt DateTime
+
+  @@index([sessionId, issuedAt])
 }
 
 model AttendanceRecord {
