@@ -1,4 +1,5 @@
 import {
+  duplicateSessionSchema,
   idParamSchema,
   sessionListQuerySchema,
   sessionWriteSchema,
@@ -11,6 +12,13 @@ import { AppError } from '../lib/errors';
 import { dateColumns, presentRecord, presentSession, sessionLocationColumns } from '../lib/presenters';
 import { prisma } from '../lib/prisma';
 import { createPublicToken } from '../domain/tokens';
+
+function shiftByDays(value: Date | null, days: number): Date | null {
+  if (!value || days === 0) return value;
+  const next = new Date(value);
+  next.setUTCDate(next.getUTCDate() + days);
+  return next;
+}
 
 const sessionInclude = {
   class: { select: { name: true, startsAt: true, endsAt: true } },
@@ -61,6 +69,40 @@ export async function sessionRoutes(app: FastifyInstance) {
   api.get('/sessions/:id', { schema: { params: idParamSchema } }, async (request) => {
     return presentSession(await ownedSession(request.params.id, request.instructor.id));
   });
+
+  api.post(
+    '/sessions/:id/duplicate',
+    { schema: { params: idParamSchema, body: duplicateSessionSchema } },
+    async (request, reply) => {
+      const session = await ownedSession(request.params.id, request.instructor.id);
+      if (session.classId) {
+        const course = await prisma.class.findFirst({
+          where: { id: session.classId, ownerId: request.instructor.id },
+        });
+        if (!course) throw new AppError(404, 'Class not found.');
+        if (course.status === 'ARCHIVED') {
+          throw new AppError(409, 'Archived classes cannot accept new sessions.');
+        }
+      }
+      const shiftDays = request.body.shiftDays ?? 0;
+      const created = await prisma.attendanceSession.create({
+        data: {
+          publicToken: createPublicToken(),
+          classId: session.classId,
+          instructorId: request.instructor.id,
+          name: session.name,
+          description: session.description,
+          attendanceOpensAt: shiftByDays(session.attendanceOpensAt, shiftDays),
+          attendanceClosesAt: shiftByDays(session.attendanceClosesAt, shiftDays),
+          locationLatitude: session.locationLatitude,
+          locationLongitude: session.locationLongitude,
+          locationRadiusMeters: session.locationRadiusMeters,
+        },
+        include: sessionInclude,
+      });
+      return reply.status(201).send(presentSession(created));
+    },
+  );
 
   api.patch(
     '/sessions/:id',

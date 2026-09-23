@@ -61,6 +61,11 @@ export function createApiClient(getToken: () => Promise<string | null>) {
         method: 'POST',
         body: JSON.stringify(body),
       }),
+    duplicateSession: (id: string, body: { shiftDays?: number } = {}) =>
+      request<SessionDto>(`/api/sessions/${id}/duplicate`, {
+        method: 'POST',
+        body: JSON.stringify(body),
+      }),
     updateSession: (id: string, body: SessionWriteInput) =>
       request<SessionDto>(`/api/sessions/${id}`, { method: 'PATCH', body: JSON.stringify(body) }),
     openSession: (id: string) => request<SessionDto>(`/api/sessions/${id}/open`, { method: 'POST' }),

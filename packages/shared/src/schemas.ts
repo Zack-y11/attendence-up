@@ -67,6 +67,10 @@ const sessionFieldsSchema = z.object({
 export const sessionWriteSchema = sessionFieldsSchema.superRefine(assertTimeOrder);
 export const updateSessionSchema = sessionFieldsSchema.partial().superRefine(assertTimeOrder);
 
+export const duplicateSessionSchema = z.object({
+  shiftDays: z.number().int().min(0).max(366).optional(),
+});
+
 export const submitAttendanceSchema = z
   .object({
     studentCode: z
