@@ -29,6 +29,8 @@ const instructors = new WeakMap<FastifyRequest, InstructorContext>();
 
 export async function buildApp() {
   const app = Fastify({
+    // Vercel proxies /api to this process and sets X-Forwarded-For.
+    trustProxy: true,
     logger: {
       redact: ['req.headers.authorization'],
     },
@@ -90,6 +92,8 @@ export async function buildApp() {
   );
 
   await app.register(publicAttendanceRoutes, { prefix: '/api/public' });
+
+  app.get('/health', async () => ({ ok: true }));
 
   app.addHook('onClose', async () => {
     await prisma.$disconnect();
