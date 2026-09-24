@@ -1,3 +1,4 @@
+export * from './absence-note';
 export * from './export-columns';
 export * from './haversine';
 export * from './location-status';
