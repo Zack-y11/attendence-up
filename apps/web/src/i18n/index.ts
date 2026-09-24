@@ -17,14 +17,21 @@ const ready = i18n.use(LanguageDetector).use(initReactI18next).init({
   load: 'languageOnly',
   interpolation: { escapeValue: false },
   detection: {
-    order: ['localStorage', 'navigator'],
+    order: ['querystring', 'localStorage', 'navigator'],
     caches: [],
+    lookupQuerystring: 'lng',
     lookupLocalStorage: LANGUAGE_STORAGE_KEY,
   },
 });
 
 export function setAppLanguage(language: 'en' | 'es') {
   localStorage.setItem(LANGUAGE_STORAGE_KEY, language);
+  const url = new URL(window.location.href);
+  if (language === 'es') url.searchParams.set('lng', 'es');
+  else url.searchParams.delete('lng');
+  const next = `${url.pathname}${url.search}${url.hash}`;
+  const current = `${window.location.pathname}${window.location.search}${window.location.hash}`;
+  if (next !== current) window.history.replaceState(window.history.state, '', next);
   return i18n.changeLanguage(language);
 }
 
