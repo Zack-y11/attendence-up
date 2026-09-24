@@ -32,7 +32,7 @@ import {
   thClass,
   trClass,
 } from '../components/ui';
-import { formatTime, formatWhen } from '../lib/datetime';
+import { formatClock, formatTime, formatWhen } from '../lib/datetime';
 import { publicAttendanceUrl } from '../lib/publicAttendanceUrl';
 import { useCopy } from '../lib/useCopy';
 
@@ -318,8 +318,8 @@ export function SessionDetailPage() {
       </div>
 
       <Card className="grid gap-4 p-5 sm:grid-cols-2 lg:grid-cols-5">
-        <Detail icon="event" label={t('session.starts')} value={formatWhen(item.startsAt)} />
-        <Detail icon="event_busy" label={t('session.ends')} value={formatWhen(item.endsAt)} />
+        <Detail icon="event" label={t('session.starts')} value={formatClock(item.startsAt)} />
+        <Detail icon="event_busy" label={t('session.ends')} value={formatClock(item.endsAt)} />
         <Detail icon="login" label={t('session.opens')} value={formatWhen(item.attendanceOpensAt)} />
         <Detail icon="logout" label={t('session.closes')} value={formatWhen(item.attendanceClosesAt)} />
         <Detail
