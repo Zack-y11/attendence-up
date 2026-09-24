@@ -74,7 +74,12 @@ export const en = {
   },
   missingRoute: 'That page does not exist.',
   signIn: {
+    title: 'Sign in',
     blurb: 'Open a class session or a one-off event, share a link, and keep the attendance record.',
+  },
+  landing: {
+    signIn: 'Sign in',
+    signUp: 'Create account',
   },
   errors: {
     generic: 'Something went wrong.',
@@ -429,15 +434,18 @@ export const en = {
     },
   },
   seo: {
+    headline: 'Attendence-Up',
+    snippet:
+      'Attendence-Up opens class attendance with a classroom location. Share a check-in link and see who was near the room.',
     homeTitle: 'Attendence-Up — class attendance with classroom location',
     homeDescription:
-      'Instructors open attendance for a class meeting or a one-off event. Students confirm they are present from a shared link. If they are not in the classroom, they can say why. A location reading is shown to the instructor and never blocks check-in.',
+      'Attendence-Up opens class attendance with a classroom location. Share a check-in link and see who was near the room.',
     signInTitle: 'Sign in · Attendence-Up',
-    signInDescription:
-      'Sign in to open class attendance, share a check-in link, and see who was near the classroom.',
+    signInDescription: 'Sign in to Attendence-Up to open class attendance and share a check-in link.',
+    signUpHeadline: 'Create an instructor account',
     signUpTitle: 'Create an instructor account · Attendence-Up',
     signUpDescription:
-      'Create an instructor account to run class and event attendance with an optional classroom location.',
+      'Create an instructor account for class and event attendance, with an optional classroom location.',
     appTitle: 'Attendence-Up',
     appDescription: 'Instructor attendance for classes and events.',
     attendanceTitle: 'Check in to {{name}} · Attendence-Up',

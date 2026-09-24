@@ -76,7 +76,12 @@ export const es: typeof en = {
   },
   missingRoute: 'Esa página no existe.',
   signIn: {
+    title: 'Entrar',
     blurb: 'Abre una sesión de clase o un evento, comparte un enlace y conserva el registro de asistencia.',
+  },
+  landing: {
+    signIn: 'Entrar',
+    signUp: 'Crear cuenta',
   },
   errors: {
     generic: 'Algo salió mal.',
@@ -431,15 +436,18 @@ export const es: typeof en = {
     },
   },
   seo: {
+    headline: 'Attendence-Up',
+    snippet:
+      'Attendence-Up abre la asistencia de clase con ubicación del aula. Comparte un enlace de registro y mira quién estuvo cerca.',
     homeTitle: 'Attendence-Up — asistencia de clase con ubicación del aula',
     homeDescription:
-      'Los instructores abren la asistencia de una clase o un evento. Los estudiantes confirman que están presentes desde un enlace. Si no están en el aula, pueden decir por qué. La ubicación se muestra al instructor y nunca bloquea el registro.',
+      'Attendence-Up abre la asistencia de clase con ubicación del aula. Comparte un enlace de registro y mira quién estuvo cerca.',
     signInTitle: 'Entrar · Attendence-Up',
-    signInDescription:
-      'Entra para abrir la asistencia, compartir el enlace de registro y ver quién estuvo cerca del aula.',
+    signInDescription: 'Entra a Attendence-Up para abrir la asistencia y compartir el enlace de registro.',
+    signUpHeadline: 'Crear cuenta de instructor',
     signUpTitle: 'Crear cuenta de instructor · Attendence-Up',
     signUpDescription:
-      'Crea una cuenta de instructor para llevar la asistencia de clases y eventos, con una ubicación de aula opcional.',
+      'Crea una cuenta de instructor para la asistencia de clases y eventos, con una ubicación de aula opcional.',
     appTitle: 'Attendence-Up',
     appDescription: 'Asistencia para instructores, de clases y eventos.',
     attendanceTitle: 'Registro en {{name}} · Attendence-Up',
