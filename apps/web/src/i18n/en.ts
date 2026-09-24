@@ -80,6 +80,12 @@ export const en = {
   landing: {
     signIn: 'Sign in',
     signUp: 'Create account',
+    contribute: 'Become a contributor',
+    contributeBody: 'Attendence-Up is open. Follow the work, open an issue, or send a change.',
+    github: 'GitHub',
+    repo: 'Repository',
+    x: 'X',
+    linkedin: 'LinkedIn',
   },
   errors: {
     generic: 'Something went wrong.',
