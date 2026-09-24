@@ -1,4 +1,5 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { useTranslation } from 'react-i18next';
 import { useNavigate, useParams } from 'react-router';
 import { useApi } from '../api/context';
 import { FormLayout } from '../components/FormLayout';
@@ -6,6 +7,7 @@ import { SessionForm } from '../components/SessionForm';
 import { ErrorBlock, LoadingBlock, PageHeader } from '../components/ui';
 
 export function SessionCreatePage() {
+  const { t } = useTranslation();
   const { classId } = useParams();
   const api = useApi();
   const navigate = useNavigate();
@@ -25,25 +27,21 @@ export function SessionCreatePage() {
     },
   });
 
-  if (classId && course.isLoading) return <LoadingBlock label="Loading class" />;
+  if (classId && course.isLoading) return <LoadingBlock label={t('classDetail.loading')} />;
   if (classId && course.isError) return <ErrorBlock error={course.error} />;
 
   return (
     <div>
       <PageHeader
-        eyebrow={course.data?.name ?? 'Sessions'}
-        title={classId ? 'New class session' : 'New standalone session'}
-        description={
-          classId
-            ? 'This session stays attached to the class. The classroom default is filled in so you can adjust it.'
-            : 'Use this for a workshop, meetup, or any attendance that does not belong to a class.'
-        }
+        eyebrow={course.data?.name ?? t('nav.sessions')}
+        title={classId ? t('sessionCreate.newClass') : t('sessionCreate.newStandalone')}
+        description={classId ? t('sessionCreate.classDescription') : t('sessionCreate.standaloneDescription')}
       />
       <FormLayout
         tips={[
-          { icon: 'edit_calendar', title: 'Starts as a draft', body: 'Nobody can check in until you open attendance from the session page.' },
-          { icon: 'link', title: 'Share one link', body: 'Each session gets its own public check-in link for students.' },
-          { icon: 'timer', title: 'Optional time window', body: 'Set when check-in opens and closes, or leave it open while the session is open.' },
+          { icon: 'edit_calendar', title: t('sessionCreate.tipDraftTitle'), body: t('sessionCreate.tipDraftBody') },
+          { icon: 'link', title: t('sessionCreate.tipLinkTitle'), body: t('sessionCreate.tipLinkBody') },
+          { icon: 'timer', title: t('sessionCreate.tipWindowTitle'), body: t('sessionCreate.tipWindowBody') },
         ]}
       >
         <SessionForm
@@ -58,7 +56,7 @@ export function SessionCreatePage() {
                 }
               : undefined
           }
-          submitLabel="Create session"
+          submitLabel={t('sessionCreate.submit')}
           pending={mutation.isPending}
           error={mutation.error}
           onSubmit={(values) => mutation.mutate(values)}

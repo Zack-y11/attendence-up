@@ -1,6 +1,7 @@
 import type { SessionStatus } from '@attendence-up/shared';
 import { useQuery } from '@tanstack/react-query';
 import { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { Link } from 'react-router';
 import { useApi } from '../api/context';
 import { SessionsTable } from '../components/SessionsTable';
@@ -18,6 +19,7 @@ import {
 type Filter = SessionStatus | 'ALL';
 
 export function SessionsPage() {
+  const { t } = useTranslation();
   const api = useApi();
   const sessions = useQuery({ queryKey: ['sessions', 'all'], queryFn: () => api.sessions('all') });
   const [filter, setFilter] = useState<Filter>('ALL');
@@ -38,42 +40,42 @@ export function SessionsPage() {
   return (
     <div>
       <PageHeader
-        eyebrow="Attendance log"
-        title="Sessions"
-        description="Class sessions and standalone sessions live in the same list."
+        eyebrow={t('sessions.eyebrow')}
+        title={t('sessions.title')}
+        description={t('sessions.description')}
         action={
           <Link to="/sessions/new" className={buttonClass()}>
             <Icon name="add" className="text-[18px]" />
-            Standalone session
+            {t('sessions.standalone')}
           </Link>
         }
       />
-      {sessions.isLoading && <LoadingBlock label="Loading sessions" />}
+      {sessions.isLoading && <LoadingBlock label={t('sessions.loading')} />}
       {sessions.isError && <ErrorBlock error={sessions.error} />}
       {sessions.data && (
         <>
           <section className="mb-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-            <MetricCard label="Open" value={count('OPEN')} icon="sensors" tone="teal" live={count('OPEN') > 0} caption="Collecting attendance" />
-            <MetricCard label="Drafts" value={count('DRAFT')} icon="edit_calendar" tone="neutral" caption="Not yet open" />
-            <MetricCard label="Closed" value={count('CLOSED')} icon="lock" tone="neutral" caption="Finished sessions" />
-            <MetricCard label="Check-ins" value={checkIns} icon="how_to_reg" caption="Across every session" />
+            <MetricCard label={t('common.open')} value={count('OPEN')} icon="sensors" tone="teal" live={count('OPEN') > 0} caption={t('sessions.collecting')} />
+            <MetricCard label={t('common.drafts')} value={count('DRAFT')} icon="edit_calendar" tone="neutral" caption={t('sessions.notYetOpen')} />
+            <MetricCard label={t('common.closed')} value={count('CLOSED')} icon="lock" tone="neutral" caption={t('sessions.finished')} />
+            <MetricCard label={t('common.checkIns')} value={checkIns} icon="how_to_reg" caption={t('sessions.across')} />
           </section>
           <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
             <SegmentedTabs
               value={filter}
               onChange={setFilter}
               options={[
-                { value: 'ALL', label: 'All', count: list.length },
-                { value: 'OPEN', label: 'Open', count: count('OPEN') },
-                { value: 'DRAFT', label: 'Drafts', count: count('DRAFT') },
-                { value: 'CLOSED', label: 'Closed', count: count('CLOSED') },
+                { value: 'ALL', label: t('common.all'), count: list.length },
+                { value: 'OPEN', label: t('common.open'), count: count('OPEN') },
+                { value: 'DRAFT', label: t('common.drafts'), count: count('DRAFT') },
+                { value: 'CLOSED', label: t('common.closed'), count: count('CLOSED') },
               ]}
             />
-            <SearchInput value={search} onChange={setSearch} placeholder="Search session or class…" />
+            <SearchInput value={search} onChange={setSearch} placeholder={t('sessions.search')} />
           </div>
           <SessionsTable
             rows={visible}
-            empty={list.length === 0 ? 'Your sessions will show up here.' : 'No sessions match this filter.'}
+            empty={list.length === 0 ? t('sessions.empty') : t('sessions.noMatch')}
           />
         </>
       )}

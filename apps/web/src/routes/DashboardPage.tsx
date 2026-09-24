@@ -1,6 +1,7 @@
 import type { ClassDto, SessionDto, SessionStatus } from '@attendence-up/shared';
 import { useQuery } from '@tanstack/react-query';
 import { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { Link } from 'react-router';
 import { useApi } from '../api/context';
 import { SessionsTable } from '../components/SessionsTable';
@@ -16,19 +17,20 @@ import {
   SegmentedTabs,
   StatusPill,
 } from '../components/ui';
-import { formatWhen } from '../lib/datetime';
+import { formatFullDate, formatWhen } from '../lib/datetime';
 import { useCopy } from '../lib/useCopy';
 
 type Filter = 'ALL' | SessionStatus;
 
 export function DashboardPage() {
+  const { t } = useTranslation();
   const api = useApi();
   const me = useQuery({ queryKey: ['me'], queryFn: () => api.me() });
   const classes = useQuery({ queryKey: ['classes'], queryFn: () => api.classes() });
   const sessions = useQuery({ queryKey: ['sessions', 'all'], queryFn: () => api.sessions('all') });
   const [filter, setFilter] = useState<Filter>('ALL');
 
-  if (me.isLoading || classes.isLoading || sessions.isLoading) return <LoadingBlock label="Loading your desk" />;
+  if (me.isLoading || classes.isLoading || sessions.isLoading) return <LoadingBlock label={t('dashboard.loading')} />;
   if (me.isError) return <ErrorBlock error={me.error} />;
   if (classes.isError) return <ErrorBlock error={classes.error} />;
   if (sessions.isError) return <ErrorBlock error={sessions.error} />;
@@ -36,7 +38,7 @@ export function DashboardPage() {
   const profile = me.data;
   const classList = classes.data;
   const sessionList = sessions.data;
-  if (!profile || !classList || !sessionList) return <LoadingBlock label="Loading your desk" />;
+  if (!profile || !classList || !sessionList) return <LoadingBlock label={t('dashboard.loading')} />;
 
   const openSessions = sessionList.filter((session) => session.status === 'OPEN');
   const drafts = sessionList.filter((session) => session.status === 'DRAFT');
@@ -44,7 +46,7 @@ export function DashboardPage() {
   const archivedCount = classList.length - activeClasses.length;
   const totalCheckIns = sessionList.reduce((sum, session) => sum + session.attendanceCount, 0);
   const live = openSessions[0];
-  const firstName = profile.displayName.split(' ')[0] || 'there';
+  const firstName = profile.displayName.split(' ')[0] ?? '';
   const filtered = filter === 'ALL' ? sessionList : sessionList.filter((session) => session.status === filter);
   const count = (status: SessionStatus) => sessionList.filter((session) => session.status === status).length;
 
@@ -57,33 +59,35 @@ export function DashboardPage() {
           <div>
             <span className="inline-flex items-center gap-1.5 rounded-full bg-[#eaedff] px-2.5 py-0.5 text-xs font-semibold text-muted">
               <Icon name="calendar_today" className="text-[14px] text-teal" />
-              {new Intl.DateTimeFormat(undefined, { dateStyle: 'full' }).format(new Date())}
+              {formatFullDate(new Date())}
             </span>
             <h1 className="mt-2 font-display text-2xl font-semibold tracking-tight sm:text-[2rem] sm:leading-10">
-              Welcome back, {firstName}
+              {firstName ? t('dashboard.welcome', { name: firstName }) : t('dashboard.welcomeAnonymous')}
             </h1>
             <p className="mt-1.5 max-w-2xl text-sm text-muted">
               {live ? (
                 <>
-                  You have{' '}
+                  {t('dashboard.youHave')}{' '}
                   <span className="font-semibold text-accent">
-                    {openSessions.length} session{openSessions.length === 1 ? '' : 's'} collecting attendance
+                    {t('dashboard.collecting', { count: openSessions.length })}
                   </span>{' '}
-                  with {openSessions.reduce((sum, session) => sum + session.attendanceCount, 0)} check-ins so far.
+                  {t('dashboard.checkInsSoFar', {
+                    count: openSessions.reduce((sum, session) => sum + session.attendanceCount, 0),
+                  })}
                 </>
               ) : (
-                'No session is collecting attendance right now. Open a class session or start a standalone one.'
+                t('dashboard.idle')
               )}
             </p>
           </div>
           <div className="flex flex-wrap gap-2">
             <Link to="/classes/new" className={buttonClass('secondary')}>
               <Icon name="add_circle" className="text-[18px]" />
-              New class
+              {t('dashboard.newClass')}
             </Link>
             <Link to="/sessions/new" className={buttonClass()}>
               <Icon name="sensors" className="text-[18px]" />
-              Standalone session
+              {t('dashboard.standalone')}
             </Link>
           </div>
         </div>
@@ -91,33 +95,37 @@ export function DashboardPage() {
 
       <section className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
         <MetricCard
-          label="Live now"
+          label={t('dashboard.liveNow')}
           value={openSessions.length}
-          unit={openSessions.length === 1 ? 'session' : 'sessions'}
+          unit={t('common.session', { count: openSessions.length })}
           icon="sensors"
           live={openSessions.length > 0}
           tone="teal"
-          caption={live ? `${live.name} · ${live.attendanceCount} checked in` : 'Nothing open'}
+          caption={
+            live
+              ? t('dashboard.liveCaption', { name: live.name, count: live.attendanceCount })
+              : t('dashboard.nothingOpen')
+          }
         />
         <MetricCard
-          label="Active classes"
+          label={t('dashboard.activeClasses')}
           value={activeClasses.length}
           icon="school"
-          caption={archivedCount ? `${archivedCount} archived` : 'None archived'}
+          caption={archivedCount ? t('dashboard.archivedCount', { count: archivedCount }) : t('dashboard.noneArchived')}
         />
         <MetricCard
-          label="Check-ins recorded"
+          label={t('dashboard.checkInsRecorded')}
           value={totalCheckIns}
           icon="how_to_reg"
           tone="teal"
-          caption={`Across ${sessionList.length} session${sessionList.length === 1 ? '' : 's'}`}
+          caption={t('dashboard.acrossSessions', { count: sessionList.length })}
         />
         <MetricCard
-          label="Drafts ready"
+          label={t('dashboard.draftsReady')}
           value={drafts.length}
           icon="edit_calendar"
           tone="neutral"
-          caption={drafts.length ? 'Ready to open' : 'No drafts waiting'}
+          caption={drafts.length ? t('dashboard.readyToOpen') : t('dashboard.noDrafts')}
         />
       </section>
 
@@ -127,20 +135,20 @@ export function DashboardPage() {
         <SectionTitle
           action={
             <Link to="/classes" className="text-xs font-semibold text-accent hover:underline">
-              Manage all classes →
+              {t('dashboard.manageClasses')}
             </Link>
           }
         >
-          My active classes
+          {t('dashboard.myClasses')}
         </SectionTitle>
         {activeClasses.length === 0 ? (
           <EmptyState
             icon="school"
-            title="No active classes"
-            body="A class keeps the history of every session you run for the same course or group."
+            title={t('dashboard.noActiveTitle')}
+            body={t('dashboard.noActiveBody')}
             action={
               <Link to="/classes/new" className={buttonClass()}>
-                New class
+                {t('dashboard.newClass')}
               </Link>
             }
           />
@@ -160,21 +168,21 @@ export function DashboardPage() {
               value={filter}
               onChange={setFilter}
               options={[
-                { value: 'ALL', label: 'All', count: sessionList.length },
-                { value: 'OPEN', label: 'Open', count: count('OPEN') },
-                { value: 'DRAFT', label: 'Drafts', count: count('DRAFT') },
-                { value: 'CLOSED', label: 'Closed', count: count('CLOSED') },
+                { value: 'ALL', label: t('common.all'), count: sessionList.length },
+                { value: 'OPEN', label: t('common.open'), count: count('OPEN') },
+                { value: 'DRAFT', label: t('common.drafts'), count: count('DRAFT') },
+                { value: 'CLOSED', label: t('common.closed'), count: count('CLOSED') },
               ]}
             />
           }
         >
-          Recent sessions
+          {t('dashboard.recent')}
         </SectionTitle>
-        <SessionsTable rows={filtered.slice(0, 8)} empty="No sessions match this filter." />
+        <SessionsTable rows={filtered.slice(0, 8)} empty={t('dashboard.noFilterMatch')} />
         {filtered.length > 8 && (
           <div className="mt-3 text-right">
             <Link to="/sessions" className="text-xs font-semibold text-accent hover:underline">
-              View all {filtered.length} sessions →
+              {t('dashboard.viewAll', { count: filtered.length })}
             </Link>
           </div>
         )}
@@ -184,6 +192,7 @@ export function DashboardPage() {
 }
 
 function LiveSpotlight({ session }: { session: SessionDto }) {
+  const { t } = useTranslation();
   const { copied, error: copyError, copy } = useCopy();
   const link = `${window.location.origin}${session.publicPath}`;
 
@@ -201,23 +210,25 @@ function LiveSpotlight({ session }: { session: SessionDto }) {
           <div className="min-w-0">
             <div className="flex flex-wrap items-center gap-2">
               <h2 className="font-display text-xl font-semibold tracking-tight">{session.name}</h2>
-              <StatusPill tone="live">Live</StatusPill>
+              <StatusPill tone="live">{t('common.live')}</StatusPill>
             </div>
             <p className="text-sm text-muted">
-              {session.className ?? 'Standalone session'}
-              {session.location ? ` · ${session.location.radiusMeters} m expected radius` : ' · No classroom location'}
+              {session.className ?? t('dashboard.standalone')}
+              {session.location
+                ? ` · ${t('dashboard.expectedRadius', { radius: session.location.radiusMeters })}`
+                : ` · ${t('dashboard.noClassroom')}`}
             </p>
           </div>
         </div>
         <div className="flex flex-wrap items-center gap-2">
           <span className="inline-flex items-center gap-2 rounded-lg bg-card px-3 py-1.5 text-xs shadow-sm">
             <Icon name="timer" className="text-[16px] text-teal" />
-            <span className="text-muted">Closes</span>
+            <span className="text-muted">{t('dashboard.closes')}</span>
             <span className="font-semibold">{formatWhen(session.attendanceClosesAt)}</span>
           </span>
           <Link to={`/sessions/${session.id}`} className={buttonClass()}>
             <Icon name="monitoring" className="text-[18px]" />
-            Inspect live
+            {t('dashboard.inspectLive')}
           </Link>
         </div>
       </div>
@@ -226,7 +237,7 @@ function LiveSpotlight({ session }: { session: SessionDto }) {
           <span className="font-display text-[2.5rem] leading-none font-semibold tracking-tight text-accent">
             {session.attendanceCount}
           </span>
-          <span className="text-sm text-muted">check-ins so far</span>
+          <span className="text-sm text-muted">{t('dashboard.checkInsLabel')}</span>
         </div>
         <div className="flex min-w-0 items-center gap-2 rounded-lg bg-paper px-3 py-2 lg:col-span-9">
           <Icon name="link" className="text-[18px] text-muted" />
@@ -234,12 +245,12 @@ function LiveSpotlight({ session }: { session: SessionDto }) {
           <button
             type="button"
             className={`inline-flex items-center gap-1 rounded-md px-2 py-1 text-xs font-semibold hover:bg-accent-soft ${copyError ? 'text-danger' : 'text-accent'}`}
-            title={copyError ?? undefined}
+            title={copyError ? t('errors.copyFailed') : undefined}
             onClick={() => void copy(link)}
           >
             <Icon name={copied ? 'check' : copyError ? 'error' : 'content_copy'} className="text-[16px]" />
-            {copied ? 'Copied' : copyError ? 'Copy failed' : 'Copy link'}
-            {copyError ? <span className="sr-only">{copyError}</span> : null}
+            {copied ? t('common.copied') : copyError ? t('common.copyFailed') : t('common.copyLink')}
+            {copyError ? <span className="sr-only">{t('errors.copyFailed')}</span> : null}
           </button>
         </div>
       </div>
@@ -248,6 +259,7 @@ function LiveSpotlight({ session }: { session: SessionDto }) {
 }
 
 function ClassTile({ item, sessions }: { item: ClassDto; sessions: SessionDto[] }) {
+  const { t } = useTranslation();
   const classSessions = sessions.filter((session) => session.classId === item.id);
   const liveCount = classSessions.filter((session) => session.status === 'OPEN').length;
   const checkIns = classSessions.reduce((sum, session) => sum + session.attendanceCount, 0);
@@ -263,17 +275,17 @@ function ClassTile({ item, sessions }: { item: ClassDto; sessions: SessionDto[] 
         <span className="grid h-8 w-8 place-items-center rounded-lg bg-accent-soft text-accent">
           <Icon name="school" className="text-[18px]" />
         </span>
-        {liveCount ? <StatusPill tone="live">Live</StatusPill> : <StatusPill tone="good">Active</StatusPill>}
+        {liveCount ? <StatusPill tone="live">{t('common.live')}</StatusPill> : <StatusPill tone="good">{t('status.class.ACTIVE')}</StatusPill>}
       </div>
       <h3 className="mt-3 font-display text-base font-semibold tracking-tight group-hover:text-accent">{item.name}</h3>
-      <p className="mt-0.5 line-clamp-2 min-h-8 text-xs text-muted">{item.description || 'No description yet.'}</p>
+      <p className="mt-0.5 line-clamp-2 min-h-8 text-xs text-muted">{item.description || t('common.noDescription')}</p>
       <div className="mt-4 flex items-end justify-between border-t border-mist pt-3 text-xs">
         <div>
-          <span className="block text-muted">Sessions</span>
+          <span className="block text-muted">{t('common.sessions')}</span>
           <span className="font-semibold tabular-nums">{item.sessionCount}</span>
         </div>
         <div className="text-right">
-          <span className="block text-muted">Check-ins</span>
+          <span className="block text-muted">{t('common.checkIns')}</span>
           <span className="font-semibold tabular-nums">{checkIns}</span>
         </div>
       </div>
