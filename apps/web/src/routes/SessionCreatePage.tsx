@@ -5,6 +5,7 @@ import { useApi } from '../api/context';
 import { FormLayout } from '../components/FormLayout';
 import { SessionForm } from '../components/SessionForm';
 import { ErrorBlock, LoadingBlock, PageHeader } from '../components/ui';
+import { applyTimeOnDate } from '../lib/datetime';
 
 export function SessionCreatePage() {
   const { t } = useTranslation();
@@ -50,8 +51,8 @@ export function SessionCreatePage() {
               ? {
                   name: '',
                   description: '',
-                  attendanceOpensAt: null,
-                  attendanceClosesAt: null,
+                  attendanceOpensAt: applyTimeOnDate(course.data.startsAt, new Date()),
+                  attendanceClosesAt: applyTimeOnDate(course.data.endsAt, new Date()),
                   location: course.data.location,
                 }
               : undefined
