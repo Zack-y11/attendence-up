@@ -150,6 +150,8 @@ export function presentRecord(item: AttendanceRecord): AttendanceRecordDto {
     locationAccuracyMeters: item.locationAccuracyMeters,
     distanceFromSessionMeters: item.distanceFromSessionMeters,
     locationStatus: item.locationStatus,
+    attendanceStatus: item.attendanceStatus,
+    absenceNote: item.absenceNote,
     createdAt: item.createdAt.toISOString(),
   };
 }
