@@ -22,6 +22,11 @@ export function attendanceGate(session: SessionGateInput, now: Date): Attendance
   return { ok: true };
 }
 
+/** The close instant itself still accepts check-in. The next moment does not. */
+export function attendanceWindowEnded(closesAt: Date | null, now: Date): boolean {
+  return closesAt != null && now > closesAt;
+}
+
 export function attendanceGateMessage(reason: AttendanceGateReason): string {
   switch (reason) {
     case 'NOT_OPEN':

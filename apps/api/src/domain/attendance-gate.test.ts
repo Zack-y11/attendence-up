@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { attendanceGate } from './attendance-gate';
+import { attendanceGate, attendanceWindowEnded } from './attendance-gate';
 
 const now = new Date('2026-09-23T14:00:00.000Z');
 
@@ -49,5 +49,17 @@ describe('attendanceGate', () => {
         now,
       ),
     ).toEqual({ ok: false, reason: 'TOO_LATE' });
+  });
+});
+
+describe('attendanceWindowEnded', () => {
+  it('stays open when no close time is set or the close instant has not passed', () => {
+    expect(attendanceWindowEnded(null, now)).toBe(false);
+    expect(attendanceWindowEnded(now, now)).toBe(false);
+    expect(attendanceWindowEnded(new Date('2026-09-23T15:00:00.000Z'), now)).toBe(false);
+  });
+
+  it('ends once the clock is past the close time', () => {
+    expect(attendanceWindowEnded(new Date('2026-09-23T13:00:00.000Z'), now)).toBe(true);
   });
 });
