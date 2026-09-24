@@ -430,4 +430,22 @@ export const es: typeof en = {
       longitude: 'Longitud',
     },
   },
+  seo: {
+    homeTitle: 'Attendence-Up — asistencia de clase con ubicación del aula',
+    homeDescription:
+      'Los instructores abren la asistencia de una clase o un evento. Los estudiantes confirman que están presentes desde un enlace. Si no están en el aula, pueden decir por qué. La ubicación se muestra al instructor y nunca bloquea el registro.',
+    signInTitle: 'Entrar · Attendence-Up',
+    signInDescription:
+      'Entra para abrir la asistencia, compartir el enlace de registro y ver quién estuvo cerca del aula.',
+    signUpTitle: 'Crear cuenta de instructor · Attendence-Up',
+    signUpDescription:
+      'Crea una cuenta de instructor para llevar la asistencia de clases y eventos, con una ubicación de aula opcional.',
+    appTitle: 'Attendence-Up',
+    appDescription: 'Asistencia para instructores, de clases y eventos.',
+    attendanceTitle: 'Registro en {{name}} · Attendence-Up',
+    attendanceDescription:
+      'Confirma tu asistencia en {{name}}. Quedas como presente. Si no estás en el aula, puedes decir por qué.',
+    attendanceWithPlace:
+      'Confirma tu asistencia en {{name}}. El área del aula es de unos {{radius}} metros. Quedas como presente aunque estés fuera, y puedes decir por qué.',
+  },
 };

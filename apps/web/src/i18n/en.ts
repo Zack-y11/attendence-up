@@ -428,4 +428,22 @@ export const en = {
       longitude: 'Longitude',
     },
   },
+  seo: {
+    homeTitle: 'Attendence-Up — class attendance with classroom location',
+    homeDescription:
+      'Instructors open attendance for a class meeting or a one-off event. Students confirm they are present from a shared link. If they are not in the classroom, they can say why. A location reading is shown to the instructor and never blocks check-in.',
+    signInTitle: 'Sign in · Attendence-Up',
+    signInDescription:
+      'Sign in to open class attendance, share a check-in link, and see who was near the classroom.',
+    signUpTitle: 'Create an instructor account · Attendence-Up',
+    signUpDescription:
+      'Create an instructor account to run class and event attendance with an optional classroom location.',
+    appTitle: 'Attendence-Up',
+    appDescription: 'Instructor attendance for classes and events.',
+    attendanceTitle: 'Check in to {{name}} · Attendence-Up',
+    attendanceDescription:
+      'Confirm attendance for {{name}}. You are marked present. If you are not in the classroom, you can say why.',
+    attendanceWithPlace:
+      'Confirm attendance for {{name}}. The classroom area is about {{radius}} meters. You are marked present even if you are outside it, and you can say why.',
+  },
 };
