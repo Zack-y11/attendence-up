@@ -11,6 +11,7 @@ import { useState, type ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Link, useNavigate, useParams } from 'react-router';
 import { useApi } from '../api/context';
+import { AttendanceQr } from '../components/AttendanceQr';
 import { ExportDialog } from '../components/ExportDialog';
 import { SessionForm } from '../components/SessionForm';
 import {
@@ -32,6 +33,7 @@ import {
   trClass,
 } from '../components/ui';
 import { formatTime, formatWhen } from '../lib/datetime';
+import { publicAttendanceUrl } from '../lib/publicAttendanceUrl';
 import { useCopy } from '../lib/useCopy';
 
 type RosterFilter = 'ALL' | 'NEAR' | 'FLAGGED' | 'NO_LOCATION';
@@ -145,7 +147,7 @@ export function SessionDetailPage() {
   if (!session.data) return null;
   const item = session.data;
   const isOpen = item.status === 'OPEN';
-  const link = `${window.location.origin}${item.publicPath}`;
+  const link = publicAttendanceUrl(window.location.origin, item.publicPath);
   const actionError = open.error || close.error || reopen.error || remove.error || duplicate.error;
 
   const records = attendance.data ?? [];
@@ -260,20 +262,27 @@ export function SessionDetailPage() {
               <Icon name={isOpen ? 'wifi_tethering' : 'wifi_tethering_off'} className="text-[20px]" />
             </span>
           </div>
-          <div className="mt-4 flex min-w-0 items-center gap-2 rounded-lg border border-line bg-paper px-3 py-2.5">
-            <Icon name="link" className="text-[18px] text-muted" />
-            <span className="min-w-0 flex-1 truncate font-mono text-xs">{link}</span>
-          </div>
-          <div className="mt-3 flex flex-wrap gap-2">
-            <Button type="button" variant={copyError ? 'danger' : 'primary'} onClick={() => void copy(link)}>
-              <Icon name={copied ? 'check' : copyError ? 'error' : 'content_copy'} className="text-[18px]" />
-              {copied ? t('common.copied') : copyError ? t('common.copyFailed') : t('common.copyLink')}
-            </Button>
-            {copyError ? <p className="w-full text-sm text-danger">{t('errors.copyFailed')}</p> : null}
-            <a href={link} target="_blank" rel="noreferrer" className="inline-flex items-center gap-1.5 rounded-lg border border-line bg-card px-3.5 py-2 text-sm font-medium hover:bg-mist">
-              <Icon name="open_in_new" className="text-[18px]" />
-              {t('session.openPage')}
-            </a>
+          <div className="mt-4 flex flex-col gap-4 sm:flex-row sm:items-center">
+            {isOpen && (
+              <AttendanceQr url={link} title={t('session.qrTitle')} caption={t('session.qrCaption')} />
+            )}
+            <div className="min-w-0 flex-1">
+              <div className="flex min-w-0 items-center gap-2 rounded-lg border border-line bg-paper px-3 py-2.5">
+                <Icon name="link" className="text-[18px] text-muted" />
+                <span className="min-w-0 flex-1 truncate font-mono text-xs">{link}</span>
+              </div>
+              <div className="mt-3 flex flex-wrap gap-2">
+                <Button type="button" variant={copyError ? 'danger' : 'primary'} onClick={() => void copy(link)}>
+                  <Icon name={copied ? 'check' : copyError ? 'error' : 'content_copy'} className="text-[18px]" />
+                  {copied ? t('common.copied') : copyError ? t('common.copyFailed') : t('common.copyLink')}
+                </Button>
+                {copyError ? <p className="w-full text-sm text-danger">{t('errors.copyFailed')}</p> : null}
+                <a href={link} target="_blank" rel="noreferrer" className="inline-flex items-center gap-1.5 rounded-lg border border-line bg-card px-3.5 py-2 text-sm font-medium hover:bg-mist">
+                  <Icon name="open_in_new" className="text-[18px]" />
+                  {t('session.openPage')}
+                </a>
+              </div>
+            </div>
           </div>
         </Card>
 

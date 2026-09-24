@@ -316,6 +316,8 @@ export const en = {
     linkTitle: 'Public attendance link',
     linkOpen: 'Share this with students to check in.',
     linkClosed: 'Students cannot check in until the session is open.',
+    qrTitle: 'QR code for the public attendance page',
+    qrCaption: 'Scan to open the same check-in page as Copy link.',
     openPage: 'Open check-in page',
     telemetry: 'Check-in telemetry',
     updating: 'Updating',

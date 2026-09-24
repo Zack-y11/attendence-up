@@ -318,6 +318,8 @@ export const es: typeof en = {
     linkTitle: 'Enlace público de asistencia',
     linkOpen: 'Compártelo con los estudiantes para que se registren.',
     linkClosed: 'Los estudiantes no pueden registrarse hasta que la sesión esté abierta.',
+    qrTitle: 'Código QR de la página pública de asistencia',
+    qrCaption: 'Escanéalo para abrir la misma página de registro que Copiar enlace.',
     openPage: 'Abrir página de registro',
     telemetry: 'Resumen de registros',
     updating: 'Actualizando',
