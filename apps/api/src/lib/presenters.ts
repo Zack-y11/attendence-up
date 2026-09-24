@@ -182,5 +182,10 @@ export function presentInstructor(user: User): InstructorDto {
     email: user.email,
     displayName: user.displayName,
     role: 'INSTRUCTOR',
+    university: user.university,
+    faculty: user.faculty,
+    career: user.career,
+    printName: user.printName,
+    logo: user.logo,
   };
 }
