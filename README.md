@@ -22,15 +22,13 @@ Checked against the [v0.1.0](https://github.com/Zack-y11/attendence-up/releases/
 - The live session view shows a QR code for the public link, next to copy link. Scanning it opens the same `/attendance/{publicToken}` page.
 - A check-in is stored as Present. On the roster, including after the session is closed, the instructor can set Present, Late, Absent, or Excused. That status is separate from location status and is included in the default export.
 - A student can say they are not in the classroom and leave an absence note (8 to 500 characters). The check-in stays Present. The note is required only when they say they are away, and it is dropped otherwise. If the location preview is outside the radius, the page suggests that toggle.
-- Optional signature on the check-in form: drawn, or written. The roster and the export can show it. Drawn images are omitted from the spreadsheet text cell; a written signature is kept as text.
+- Optional signature on the check-in form, drawn or written. A written signature is stored as text. A drawn signature is a PNG: the export preview shows it, and the Excel and PDF files embed that image.
 - Location preview on the public page: while the browser is locating, once a reading is in (with accuracy), or when location is unavailable. Unavailable location can be retried, and the form can still be submitted.
-- Branded export preview before download, for both Excel and PDF. The heading uses the instructor's university, faculty, career, print name, and logo (PNG or JPEG), or the Attendence-Up mark when no logo is set. The preview shows the same columns as the file.
+- Branded export preview before download, for both Excel and PDF. The heading uses the instructor's university, faculty, career, and print name. The PDF also places a logo (a PNG or JPEG from print settings, or the Attendence-Up mark). Excel keeps the text heading. The preview uses the same columns as the file. Latitude and longitude stay off unless selected.
 - English and Spanish across the instructor app and the public check-in page, with a language switch. The language is read from `?lng=` and kept in the URL.
 - Public landing page at `/` for signed-out visitors, with sign-in and sign-up. SEO for that page and the auth pages: title and description, Open Graph, canonical URL, `hreflang` alternates, `robots.txt`, `sitemap.xml`, and the Google Search Console verification file. Private app routes and check-in tokens are `noindex`.
 
-**v0.2.1** closes the check-in window:
-
-- An open session becomes closed once `attendanceClosesAt` has passed, so it does not stay live after students can no longer register. To take attendance again, set a later close time, then reopen.
+**v0.2.1** closes the check-in window. There is no background job. The next time the API reads an open session whose `attendanceClosesAt` is already past — the public page, a check-in, that session, the instructor's session list, or its class — it stores the session as closed. The close instant itself still accepts a check-in. To take attendance again, set a later close time, then reopen.
 
 After the v0.2.1 tag, `master` also adds a contributor section on the landing page (GitHub profile, this repository, X, and LinkedIn) over an animated grid. That section is not part of the v0.2.1 release.
 
