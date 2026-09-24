@@ -1,4 +1,6 @@
 import { z } from 'zod';
+import { ABSENCE_NOTE_MAX } from './absence-note';
+import { ATTENDANCE_STATUSES } from './labels';
 
 export const locationSchema = z.object({
   latitude: z.number().min(-90).max(90),
@@ -71,6 +73,10 @@ export const duplicateSessionSchema = z.object({
   shiftDays: z.number().int().min(0).max(366).optional(),
 });
 
+export const updateAttendanceRecordSchema = z.object({
+  attendanceStatus: z.enum(ATTENDANCE_STATUSES),
+});
+
 export const submitAttendanceSchema = z
   .object({
     studentCode: z
@@ -84,6 +90,8 @@ export const submitAttendanceSchema = z
     latitude: z.number().min(-90).max(90).nullable().optional(),
     longitude: z.number().min(-180).max(180).nullable().optional(),
     locationAccuracyMeters: z.number().min(0).max(100_000).nullable().optional(),
+    absenceNote: z.string().trim().max(ABSENCE_NOTE_MAX).nullable().optional(),
+    notInClassroom: z.boolean().optional(),
   })
   .superRefine((value, ctx) => {
     if ((value.latitude != null) !== (value.longitude != null)) {
@@ -107,6 +115,11 @@ export const exportQuerySchema = z.object({
 
 export const idParamSchema = z.object({
   id: z.uuid(),
+});
+
+export const attendanceRecordParamSchema = z.object({
+  id: z.uuid(),
+  recordId: z.uuid(),
 });
 
 export const tokenParamSchema = z.object({
