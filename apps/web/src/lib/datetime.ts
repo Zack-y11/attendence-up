@@ -1,3 +1,9 @@
+import i18n from '../i18n';
+
+function activeLocale(): string {
+  return i18n.resolvedLanguage ?? i18n.language ?? 'en';
+}
+
 export function toDatetimeLocal(iso: string | null): string {
   if (!iso) return '';
   const date = new Date(iso);
@@ -15,14 +21,18 @@ export function fromDatetimeLocal(value: string): string | null {
 
 export function formatWhen(iso: string | null): string {
   if (!iso) return '—';
-  return new Intl.DateTimeFormat(undefined, {
+  return new Intl.DateTimeFormat(activeLocale(), {
     dateStyle: 'medium',
     timeStyle: 'short',
   }).format(new Date(iso));
 }
 
+export function formatFullDate(date: Date): string {
+  return new Intl.DateTimeFormat(activeLocale(), { dateStyle: 'full' }).format(date);
+}
+
 export function formatTime(iso: string): string {
-  return new Intl.DateTimeFormat(undefined, { timeStyle: 'short' }).format(new Date(iso));
+  return new Intl.DateTimeFormat(activeLocale(), { timeStyle: 'short' }).format(new Date(iso));
 }
 
 export function numberOrNan(value: string): number {
