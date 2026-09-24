@@ -1,5 +1,6 @@
 import type {
   AttendanceRecordDto,
+  AttendanceStatus,
   AttendanceSubmissionDto,
   ClassDetailDto,
   ClassDto,
@@ -10,6 +11,7 @@ import type {
   SessionWriteInput,
   SubmitAttendanceInput,
   UpdateClassInput,
+  UpdatePrintSettingsInput,
 } from '@attendence-up/shared';
 
 export class ApiError extends Error {
@@ -45,6 +47,8 @@ export function createApiClient(getToken: () => Promise<string | null>) {
 
   return {
     me: () => request<InstructorDto>('/api/me'),
+    updateMe: (body: UpdatePrintSettingsInput) =>
+      request<InstructorDto>('/api/me', { method: 'PATCH', body: JSON.stringify(body) }),
     classes: () => request<ClassDto[]>('/api/classes'),
     class: (id: string) => request<ClassDetailDto>(`/api/classes/${id}`),
     createClass: (body: CreateClassInput) =>
@@ -74,6 +78,11 @@ export function createApiClient(getToken: () => Promise<string | null>) {
       request<SessionDto>(`/api/sessions/${id}/reopen`, { method: 'POST' }),
     deleteSession: (id: string) => request<void>(`/api/sessions/${id}`, { method: 'DELETE' }),
     attendance: (id: string) => request<AttendanceRecordDto[]>(`/api/sessions/${id}/attendance`),
+    updateAttendanceStatus: (sessionId: string, recordId: string, attendanceStatus: AttendanceStatus) =>
+      request<AttendanceRecordDto>(`/api/sessions/${sessionId}/attendance/${recordId}`, {
+        method: 'PATCH',
+        body: JSON.stringify({ attendanceStatus }),
+      }),
     exportAttendance: async (id: string, params: URLSearchParams) => {
       const token = await getToken();
       const headers = new Headers();

@@ -1,17 +1,21 @@
 import { UserButton } from '@clerk/react';
 import { useQuery } from '@tanstack/react-query';
 import { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { Link, NavLink, Outlet } from 'react-router';
 import { useApi } from '../api/context';
+import { LanguageSwitch } from './LanguageSwitch';
 import { buttonClass, Icon, LiveDot } from './ui';
 
-const links = [
-  { to: '/', label: 'Dashboard', icon: 'space_dashboard', end: true },
-  { to: '/classes', label: 'Classes', icon: 'school', end: false },
-  { to: '/sessions', label: 'Sessions', icon: 'event_available', end: false },
-];
-
 function NavItems({ onNavigate, vertical = false }: { onNavigate?: () => void; vertical?: boolean }) {
+  const { t } = useTranslation();
+  const links = [
+    { to: '/', label: t('nav.dashboard'), icon: 'space_dashboard', end: true },
+    { to: '/classes', label: t('nav.classes'), icon: 'school', end: false },
+    { to: '/sessions', label: t('nav.sessions'), icon: 'event_available', end: false },
+    { to: '/settings', label: t('nav.settings'), icon: 'settings', end: false },
+  ];
+
   return (
     <nav className={`flex gap-1 ${vertical ? 'flex-col' : ''}`}>
       {links.map((link) => (
@@ -44,6 +48,7 @@ function Brand() {
 }
 
 function LiveIndicator() {
+  const { t } = useTranslation();
   const api = useApi();
   const sessions = useQuery({ queryKey: ['sessions', 'all'], queryFn: () => api.sessions('all') });
   const open = sessions.data?.filter((session) => session.status === 'OPEN') ?? [];
@@ -55,12 +60,13 @@ function LiveIndicator() {
       className="hidden items-center gap-2 rounded-full border border-teal/20 bg-teal-soft/50 px-3 py-1 text-xs font-semibold text-teal transition hover:bg-teal-soft lg:flex"
     >
       <LiveDot className="h-2 w-2" />
-      {open.length === 1 ? `Live: ${first.name}` : `${open.length} sessions live`}
+      {open.length === 1 ? t('shell.liveNamed', { name: first.name }) : t('shell.liveCount', { count: open.length })}
     </Link>
   );
 }
 
 export function AppShell() {
+  const { t } = useTranslation();
   const [menuOpen, setMenuOpen] = useState(false);
 
   return (
@@ -77,12 +83,13 @@ export function AppShell() {
             <LiveIndicator />
             <Link to="/sessions/new" className={buttonClass('primary', 'hidden sm:inline-flex')}>
               <Icon name="add" className="text-[18px]" />
-              New session
+              {t('shell.newSession')}
             </Link>
+            <LanguageSwitch />
             <button
               type="button"
               className="grid h-9 w-9 place-items-center rounded-lg border border-line text-muted md:hidden"
-              aria-label="Open menu"
+              aria-label={t('shell.openMenu')}
               onClick={() => setMenuOpen(true)}
             >
               <Icon name="menu" className="text-[20px]" />
@@ -98,16 +105,16 @@ export function AppShell() {
       </main>
       <footer className="mx-auto flex w-full max-w-7xl flex-wrap items-center justify-between gap-2 border-t border-line px-4 py-5 text-xs text-muted md:px-8">
         <span>
-          <span className="font-semibold text-ink">Attendence-Up</span> · Attendance sessions for classes and events
+          <span className="font-semibold text-ink">Attendence-Up</span> · {t('shell.tagline')}
         </span>
-        <span>Location is informational only, never used to reject a check-in.</span>
+        <span>{t('shell.locationNote')}</span>
       </footer>
       {menuOpen && (
         <div className="fixed inset-0 z-40 md:hidden">
           <button
             type="button"
             className="absolute inset-0 bg-ink/40 backdrop-blur-sm"
-            aria-label="Close menu"
+            aria-label={t('shell.closeMenu')}
             onClick={() => setMenuOpen(false)}
           />
           <div className="absolute inset-y-0 left-0 flex w-72 flex-col gap-8 bg-card px-4 py-6 shadow-[0_20px_25px_-5px_rgba(15,23,42,0.08)]">
@@ -115,7 +122,7 @@ export function AppShell() {
             <NavItems vertical onNavigate={() => setMenuOpen(false)} />
             <Link to="/sessions/new" className={buttonClass()} onClick={() => setMenuOpen(false)}>
               <Icon name="add" className="text-[18px]" />
-              New session
+              {t('shell.newSession')}
             </Link>
           </div>
         </div>

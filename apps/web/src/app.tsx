@@ -1,6 +1,9 @@
 import { ClerkProvider, Show } from '@clerk/react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import { useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 import { Navigate, Outlet, Route, BrowserRouter, Routes } from 'react-router';
+import { applyDocumentLanguage, clerkLocalization } from './i18n';
 import { ApiProvider } from './api/context';
 import { AppShell } from './components/AppShell';
 import { ClassCreatePage } from './routes/ClassCreatePage';
@@ -10,6 +13,7 @@ import { DashboardPage } from './routes/DashboardPage';
 import { PublicAttendancePage } from './routes/PublicAttendancePage';
 import { SessionCreatePage } from './routes/SessionCreatePage';
 import { SessionDetailPage } from './routes/SessionDetailPage';
+import { SettingsPage } from './routes/SettingsPage';
 import { SessionsPage } from './routes/SessionsPage';
 import { SignInPage } from './routes/SignInPage';
 import { SignUpPage } from './routes/SignUpPage';
@@ -27,29 +31,30 @@ function publishableKey(): string | null {
 }
 
 function MissingClerkConfig() {
+  const { t } = useTranslation();
   return (
     <div className="grid min-h-screen place-items-center bg-paper px-4">
       <div className="max-w-lg rounded-xl border border-line bg-card p-6 shadow-card">
-        <h1 className="font-display text-2xl font-semibold tracking-tight">Add your Clerk keys</h1>
-        <p className="mt-3 text-muted">
-          Instructor sign-in uses Clerk. Copy <code>apps/web/.env.example</code> to{' '}
-          <code>apps/web/.env</code> and set <code>VITE_CLERK_PUBLISHABLE_KEY</code>. Set{' '}
-          <code>CLERK_SECRET_KEY</code> in <code>apps/api/.env</code>, then restart both apps.
-        </p>
-        <p className="mt-3 text-sm text-muted">
-          The public attendance page does not need an account and stays available at{' '}
-          <code>/attendance/&lt;token&gt;</code>.
-        </p>
+        <h1 className="font-display text-2xl font-semibold tracking-tight">{t('missingClerk.title')}</h1>
+        <p className="mt-3 text-muted">{t('missingClerk.body')}</p>
+        <p className="mt-3 text-sm text-muted">{t('missingClerk.public')}</p>
       </div>
     </div>
   );
 }
 
 function ClerkGate() {
+  const { i18n } = useTranslation();
   const key = publishableKey();
   if (!key) return <MissingClerkConfig />;
   return (
-    <ClerkProvider publishableKey={key} signInUrl="/sign-in" signUpUrl="/sign-up">
+    <ClerkProvider
+      publishableKey={key}
+      signInUrl="/sign-in"
+      signUpUrl="/sign-up"
+      localization={clerkLocalization()}
+      key={i18n.resolvedLanguage}
+    >
       <ApiProvider>
         <Outlet />
       </ApiProvider>
@@ -66,6 +71,11 @@ function RequireAuth() {
 }
 
 export function App() {
+  const { i18n } = useTranslation();
+  useEffect(() => {
+    applyDocumentLanguage();
+  }, [i18n.language, i18n.resolvedLanguage]);
+
   return (
     <QueryClientProvider client={queryClient}>
       <BrowserRouter>
@@ -84,6 +94,7 @@ export function App() {
                 <Route path="sessions" element={<SessionsPage />} />
                 <Route path="sessions/new" element={<SessionCreatePage />} />
                 <Route path="sessions/:id" element={<SessionDetailPage />} />
+                <Route path="settings" element={<SettingsPage />} />
               </Route>
             </Route>
           </Route>
@@ -95,9 +106,10 @@ export function App() {
 }
 
 function MissingRoute() {
+  const { t } = useTranslation();
   return (
     <div className="grid min-h-screen place-items-center bg-paper">
-      <p className="text-muted">That page does not exist.</p>
+      <p className="text-muted">{t('missingRoute')}</p>
     </div>
   );
 }
