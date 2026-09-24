@@ -1,0 +1,32 @@
+# App name is global on Fly. If `fly apps create` says it is taken, pick another
+# name here and use the same host in vercel.json (https://<name>.fly.dev).
+app = "attendence-up-api"
+primary_region = "dfw"
+
+[build]
+  dockerfile = "Dockerfile"
+
+[env]
+  PORT = "8080"
+  NODE_ENV = "production"
+
+[http_service]
+  internal_port = 8080
+  force_https = true
+  auto_stop_machines = "off"
+  auto_start_machines = true
+  min_machines_running = 1
+
+  [[http_service.checks]]
+    grace_period = "20s"
+    interval = "30s"
+    method = "GET"
+    path = "/health"
+    timeout = "5s"
+
+[[vm]]
+  size = "shared-cpu-1x"
+  memory = "512mb"
+
+[deploy]
+  release_command = "pnpm exec prisma migrate deploy"
