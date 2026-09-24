@@ -1,6 +1,7 @@
-import { CLASS_STATUS_LABELS, type ClassDto, type ClassStatus, type SessionDto } from '@attendence-up/shared';
+import type { ClassDto, ClassStatus, SessionDto } from '@attendence-up/shared';
 import { useQuery } from '@tanstack/react-query';
 import { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { Link } from 'react-router';
 import { useApi } from '../api/context';
 import {
@@ -19,6 +20,7 @@ import { formatWhen } from '../lib/datetime';
 type Filter = ClassStatus | 'ALL';
 
 export function ClassesPage() {
+  const { t } = useTranslation();
   const api = useApi();
   const classes = useQuery({ queryKey: ['classes'], queryFn: () => api.classes() });
   const sessions = useQuery({ queryKey: ['sessions', 'all'], queryFn: () => api.sessions('all') });
@@ -37,26 +39,26 @@ export function ClassesPage() {
   return (
     <div>
       <PageHeader
-        eyebrow="Course roster"
-        title="Classes"
-        description="A class is the course or group. Each meeting is its own attendance session."
+        eyebrow={t('classes.eyebrow')}
+        title={t('classes.title')}
+        description={t('classes.description')}
         action={
           <Link to="/classes/new" className={buttonClass()}>
             <Icon name="add" className="text-[18px]" />
-            New class
+            {t('classes.new')}
           </Link>
         }
       />
-      {classes.isLoading && <LoadingBlock label="Loading classes" />}
+      {classes.isLoading && <LoadingBlock label={t('classes.loading')} />}
       {classes.isError && <ErrorBlock error={classes.error} />}
       {classes.data && list.length === 0 && (
         <EmptyState
           icon="school"
-          title="No classes yet"
-          body="Create a class to keep every session for the same course together, or start with a standalone session."
+          title={t('classes.emptyTitle')}
+          body={t('classes.emptyBody')}
           action={
             <Link to="/classes/new" className={buttonClass()}>
-              New class
+              {t('classes.new')}
             </Link>
           }
         />
@@ -68,15 +70,15 @@ export function ClassesPage() {
               value={filter}
               onChange={setFilter}
               options={[
-                { value: 'ACTIVE', label: 'Active', count: count('ACTIVE') },
-                { value: 'ARCHIVED', label: 'Archived', count: count('ARCHIVED') },
-                { value: 'ALL', label: 'All', count: list.length },
+                { value: 'ACTIVE', label: t('common.active'), count: count('ACTIVE') },
+                { value: 'ARCHIVED', label: t('common.archived'), count: count('ARCHIVED') },
+                { value: 'ALL', label: t('common.all'), count: list.length },
               ]}
             />
-            <SearchInput value={search} onChange={setSearch} placeholder="Search classes…" />
+            <SearchInput value={search} onChange={setSearch} placeholder={t('classes.search')} />
           </div>
           {visible.length === 0 ? (
-            <EmptyState icon="search_off" title="No classes match" body="Try another filter or search term." />
+            <EmptyState icon="search_off" title={t('classes.noMatchTitle')} body={t('classes.noMatchBody')} />
           ) : (
             <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
               {visible.map((item) => (
@@ -91,6 +93,7 @@ export function ClassesPage() {
 }
 
 function ClassCard({ item, sessions }: { item: ClassDto; sessions: SessionDto[] }) {
+  const { t } = useTranslation();
   const classSessions = sessions.filter((session) => session.classId === item.id);
   const live = classSessions.find((session) => session.status === 'OPEN');
   const checkIns = classSessions.reduce((sum, session) => sum + session.attendanceCount, 0);
@@ -110,52 +113,59 @@ function ClassCard({ item, sessions }: { item: ClassDto; sessions: SessionDto[] 
           >
             {item.name}
           </Link>
-          <p className="mt-0.5 line-clamp-2 text-sm text-muted">{item.description || 'No description yet.'}</p>
+          <p className="mt-0.5 line-clamp-2 text-sm text-muted">{item.description || t('common.noDescription')}</p>
         </div>
         {live ? (
-          <StatusPill tone="live">Live</StatusPill>
+          <StatusPill tone="live">{t('common.live')}</StatusPill>
         ) : (
-          <StatusPill tone={archived ? 'closed' : 'good'}>{CLASS_STATUS_LABELS[item.status]}</StatusPill>
+          <StatusPill tone={archived ? 'closed' : 'good'}>{t(`status.class.${item.status}`)}</StatusPill>
         )}
       </div>
 
       <div className="mt-4 grid gap-1.5 text-sm text-muted">
         <span className="flex items-center gap-2">
           <Icon name="event_note" className="text-[16px]" />
-          {item.sessionCount} session{item.sessionCount === 1 ? '' : 's'} · {checkIns} check-ins
+          {t('classes.summary', {
+            sessions: t('classes.sessions', { count: item.sessionCount }),
+            checkIns: t('classes.checkIns', { count: checkIns }),
+          })}
         </span>
         <span className="flex items-center gap-2">
           <Icon name={item.location ? 'my_location' : 'location_off'} className="text-[16px]" />
-          {item.location ? `Default classroom · ${item.location.radiusMeters} m radius` : 'No default location'}
+          {item.location
+            ? t('classes.defaultClassroom', { radius: item.location.radiusMeters })
+            : t('classes.noLocation')}
         </span>
         <span className="flex items-center gap-2">
           <Icon name="calendar_today" className="text-[16px]" />
-          Created {formatWhen(item.createdAt)}
+          {t('common.created', { when: formatWhen(item.createdAt) })}
         </span>
       </div>
 
       {live && (
         <div className="mt-4 flex items-center justify-between rounded-lg bg-teal-soft/50 px-3 py-2 text-xs">
           <span className="truncate font-semibold text-teal">{live.name}</span>
-          <span className="font-semibold tabular-nums text-teal">{live.attendanceCount} checked in</span>
+          <span className="font-semibold tabular-nums text-teal">
+            {t('classes.checkedIn', { count: live.attendanceCount })}
+          </span>
         </div>
       )}
 
       <div className="mt-5 flex gap-2 border-t border-mist pt-4">
         <Link to={`/classes/${item.id}`} className={buttonClass('secondary', 'flex-1')}>
           <Icon name="tune" className="text-[18px]" />
-          Manage
+          {t('common.manage')}
         </Link>
         {live ? (
           <Link to={`/sessions/${live.id}`} className={buttonClass('primary', 'flex-1')}>
             <Icon name="monitoring" className="text-[18px]" />
-            Inspect live
+            {t('dashboard.inspectLive')}
           </Link>
         ) : (
           !archived && (
             <Link to={`/classes/${item.id}/sessions/new`} className={buttonClass('primary', 'flex-1')}>
               <Icon name="play_arrow" className="text-[18px]" />
-              New session
+              {t('classes.newSession')}
             </Link>
           )
         )}

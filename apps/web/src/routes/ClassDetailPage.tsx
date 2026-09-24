@@ -1,5 +1,5 @@
-import { CLASS_STATUS_LABELS } from '@attendence-up/shared';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { useTranslation } from 'react-i18next';
 import { Link, useNavigate, useParams } from 'react-router';
 import { useApi } from '../api/context';
 import { ClassForm } from '../components/ClassForm';
@@ -19,11 +19,12 @@ import {
 import { formatWhen } from '../lib/datetime';
 
 export function ClassDetailPage() {
+  const { t } = useTranslation();
   const { id = '' } = useParams();
   const api = useApi();
   const course = useQuery({ queryKey: ['class', id], queryFn: () => api.class(id) });
 
-  if (course.isLoading) return <LoadingBlock label="Loading class" />;
+  if (course.isLoading) return <LoadingBlock label={t('classDetail.loading')} />;
   if (course.isError) return <ErrorBlock error={course.error} />;
   if (!course.data) return null;
   const item = course.data;
@@ -41,16 +42,16 @@ export function ClassDetailPage() {
           eyebrow={
             <span className="flex items-center gap-1.5 normal-case">
               <Link to="/classes" className="text-muted hover:text-accent">
-                Classes
+                {t('nav.classes')}
               </Link>
               <Icon name="chevron_right" className="text-[14px] text-muted" />
               <StatusPill tone={item.status === 'ACTIVE' ? 'good' : 'closed'}>
-                {CLASS_STATUS_LABELS[item.status]}
+                {t(`status.class.${item.status}`)}
               </StatusPill>
             </span>
           }
           title={item.name}
-          description={item.description || 'No description yet.'}
+          description={item.description || t('common.noDescription')}
           action={
             item.status === 'ACTIVE' ? (
               <ClassSessionActions classId={item.id} latestSessionId={item.sessions[0]?.id} />
@@ -61,42 +62,55 @@ export function ClassDetailPage() {
           <span className="inline-flex items-center gap-1.5 rounded-full bg-mist px-2.5 py-1 font-medium text-muted">
             <Icon name={item.location ? 'my_location' : 'location_off'} className="text-[14px]" />
             {item.location
-              ? `${item.location.latitude.toFixed(5)}, ${item.location.longitude.toFixed(5)} · ${item.location.radiusMeters} m`
-              : 'No default location'}
+              ? t('classDetail.coords', {
+                  lat: item.location.latitude.toFixed(5),
+                  lng: item.location.longitude.toFixed(5),
+                  radius: item.location.radiusMeters,
+                })
+              : t('classes.noLocation')}
           </span>
           <span className="inline-flex items-center gap-1.5 rounded-full bg-mist px-2.5 py-1 font-medium text-muted">
             <Icon name="calendar_today" className="text-[14px]" />
-            Created {formatWhen(item.createdAt)}
+            {t('common.created', { when: formatWhen(item.createdAt) })}
           </span>
         </div>
       </div>
 
       <section className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-        <MetricCard label="Sessions" value={item.sessions.length} icon="event_note" caption={`${closed.length} closed`} />
         <MetricCard
-          label="Open now"
+          label={t('common.sessions')}
+          value={item.sessions.length}
+          icon="event_note"
+          caption={t('classDetail.closedCount', { count: closed.length })}
+        />
+        <MetricCard
+          label={t('classDetail.openNow')}
           value={open.length}
           icon="sensors"
           tone="teal"
           live={open.length > 0}
-          caption={open[0] ? `${open[0].name} · ${open[0].attendanceCount} in` : 'Nothing open'}
+          caption={
+            open[0]
+              ? t('classDetail.openCaption', { name: open[0].name, count: open[0].attendanceCount })
+              : t('dashboard.nothingOpen')
+          }
         />
-        <MetricCard label="Check-ins" value={checkIns} icon="how_to_reg" tone="teal" caption="All sessions" />
+        <MetricCard label={t('common.checkIns')} value={checkIns} icon="how_to_reg" tone="teal" caption={t('classDetail.allSessions')} />
         <MetricCard
-          label="Avg per session"
+          label={t('classDetail.avg')}
           value={average ?? '—'}
           icon="trending_up"
           tone="neutral"
-          caption={average === null ? 'After the first closed session' : 'Closed sessions only'}
+          caption={average === null ? t('classDetail.avgEmpty') : t('classDetail.avgCaption')}
         />
       </section>
 
       <section>
-        <SectionTitle>Session history</SectionTitle>
+        <SectionTitle>{t('classDetail.history')}</SectionTitle>
         <SessionsTable
           rows={item.sessions}
           showClass={false}
-          empty="No sessions yet. Each date you meet should be its own session."
+          empty={t('classDetail.emptyHistory')}
         />
       </section>
 
@@ -106,6 +120,7 @@ export function ClassDetailPage() {
 }
 
 function ClassSessionActions({ classId, latestSessionId }: { classId: string; latestSessionId?: string }) {
+  const { t } = useTranslation();
   const api = useApi();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
@@ -123,12 +138,12 @@ function ClassSessionActions({ classId, latestSessionId }: { classId: string; la
       {latestSessionId && (
         <Button type="button" variant="secondary" onClick={() => duplicate.mutate()} disabled={duplicate.isPending}>
           <Icon name="event_repeat" className="text-[18px]" />
-          Next week
+          {t('classDetail.nextWeek')}
         </Button>
       )}
       <Link to={`/classes/${classId}/sessions/new`} className={buttonClass()}>
         <Icon name="play_circle" className="text-[18px]" />
-        New session
+        {t('classes.newSession')}
       </Link>
       {duplicate.error ? <ErrorBlock error={duplicate.error} /> : null}
     </div>
@@ -136,6 +151,7 @@ function ClassSessionActions({ classId, latestSessionId }: { classId: string; la
 }
 
 function ClassSettings({ classId }: { classId: string }) {
+  const { t } = useTranslation();
   const api = useApi();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
@@ -155,11 +171,11 @@ function ClassSettings({ classId }: { classId: string }) {
   return (
     <section className="grid gap-4 lg:grid-cols-3">
       <Card className="p-5 lg:col-span-2">
-        <SectionTitle>Class settings</SectionTitle>
+        <SectionTitle>{t('classDetail.settings')}</SectionTitle>
         <ClassForm
           key={`${item.updatedAt}`}
           initial={item}
-          submitLabel="Save changes"
+          submitLabel={t('classDetail.save')}
           pending={update.isPending}
           error={update.error}
           onSubmit={(values) => update.mutate(values)}
@@ -170,12 +186,10 @@ function ClassSettings({ classId }: { classId: string }) {
           <Icon name={archiving ? 'inventory_2' : 'unarchive'} className="text-[20px]" />
         </div>
         <h3 className="font-display text-base font-semibold tracking-tight">
-          {archiving ? 'Archive this class' : 'Restore this class'}
+          {archiving ? t('classDetail.archiveTitle') : t('classDetail.restoreTitle')}
         </h3>
         <p className="mt-1 text-sm text-muted">
-          {archiving
-            ? 'Archived classes keep their history but stop appearing in your active list.'
-            : 'Bring the class back to your active list so you can run new sessions.'}
+          {archiving ? t('classDetail.archiveBody') : t('classDetail.restoreBody')}
         </p>
         <Button
           type="button"
@@ -194,7 +208,7 @@ function ClassSettings({ classId }: { classId: string }) {
             );
           }}
         >
-          {archiving ? 'Archive class' : 'Restore class'}
+          {archiving ? t('classDetail.archive') : t('classDetail.restore')}
         </Button>
       </Card>
     </section>

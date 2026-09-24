@@ -1,4 +1,5 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router';
 import { useApi } from '../api/context';
 import { ClassForm } from '../components/ClassForm';
@@ -6,6 +7,7 @@ import { FormLayout } from '../components/FormLayout';
 import { PageHeader } from '../components/ui';
 
 export function ClassCreatePage() {
+  const { t } = useTranslation();
   const api = useApi();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
@@ -20,19 +22,19 @@ export function ClassCreatePage() {
   return (
     <div>
       <PageHeader
-        eyebrow="Classes"
-        title="New class"
-        description="You can set a default classroom. New sessions copy it, and you can change each one."
+        eyebrow={t('classCreate.eyebrow')}
+        title={t('classCreate.title')}
+        description={t('classCreate.description')}
       />
       <FormLayout
         tips={[
-          { icon: 'school', title: 'One class per course', body: 'Use a class for a course or group that meets more than once.' },
-          { icon: 'event_note', title: 'Sessions keep the history', body: 'Every meeting becomes its own session with its own check-in link.' },
-          { icon: 'my_location', title: 'Location is optional', body: 'Distance is shown to you only. Students are never rejected for it.' },
+          { icon: 'school', title: t('classCreate.tipCourseTitle'), body: t('classCreate.tipCourseBody') },
+          { icon: 'event_note', title: t('classCreate.tipHistoryTitle'), body: t('classCreate.tipHistoryBody') },
+          { icon: 'my_location', title: t('classCreate.tipLocationTitle'), body: t('classCreate.tipLocationBody') },
         ]}
       >
         <ClassForm
-          submitLabel="Create class"
+          submitLabel={t('classCreate.submit')}
           pending={mutation.isPending}
           error={mutation.error}
           onSubmit={(values) => mutation.mutate(values)}
