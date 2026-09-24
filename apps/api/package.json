@@ -8,7 +8,7 @@
     "start": "tsx src/main.ts",
     "typecheck": "tsc --noEmit",
     "test": "vitest run",
-    "postinstall": "prisma generate"
+    "postinstall": "node ./scripts/postinstall.mjs"
   },
   "dependencies": {
     "@attendence-up/shared": "workspace:*",
