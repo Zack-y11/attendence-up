@@ -2,7 +2,7 @@ import { createClassSchema, type CreateClassInput, type LocationDto } from '@att
 import { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { useTranslation } from 'react-i18next';
-import { fromDatetimeLocal, numberOrNan, toDatetimeLocal } from '../lib/datetime';
+import { fromTimeLocal, numberOrNan, toTimeLocal } from '../lib/datetime';
 import { LocationFields, locationFromDto, type LocationFormValue } from './LocationFields';
 import { Button, ErrorBlock, Field, inputClass } from './ui';
 
@@ -37,8 +37,8 @@ export function ClassForm({
     defaultValues: {
       name: initial?.name ?? '',
       description: initial?.description ?? '',
-      startsAt: toDatetimeLocal(initial?.startsAt ?? null),
-      endsAt: toDatetimeLocal(initial?.endsAt ?? null),
+      startsAt: toTimeLocal(initial?.startsAt ?? null),
+      endsAt: toTimeLocal(initial?.endsAt ?? null),
     },
   });
   const [location, setLocation] = useState<LocationFormValue>(locationFromDto(initial?.location));
@@ -48,8 +48,8 @@ export function ClassForm({
     const parsed = createClassSchema.safeParse({
       name: values.name,
       description: values.description,
-      startsAt: fromDatetimeLocal(values.startsAt),
-      endsAt: fromDatetimeLocal(values.endsAt),
+      startsAt: fromTimeLocal(values.startsAt),
+      endsAt: fromTimeLocal(values.endsAt),
       location: location.enabled
         ? {
             latitude: numberOrNan(location.latitude),
@@ -85,10 +85,10 @@ export function ClassForm({
       </Field>
       <div className="grid gap-4 sm:grid-cols-2">
         <Field label={t('form.starts')} hint={t('form.startsHint')}>
-          <input type="datetime-local" className={inputClass} {...form.register('startsAt')} />
+          <input type="time" step={60} className={inputClass} {...form.register('startsAt')} />
         </Field>
         <Field label={t('form.ends')} error={form.formState.errors.endsAt?.message}>
-          <input type="datetime-local" className={inputClass} {...form.register('endsAt')} />
+          <input type="time" step={60} className={inputClass} {...form.register('endsAt')} />
         </Field>
       </div>
       <LocationFields value={location} onChange={setLocation} error={locationError} />
