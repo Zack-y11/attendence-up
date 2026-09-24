@@ -13,7 +13,8 @@ import type { ZodTypeProvider } from 'fastify-type-provider-zod';
 import { AppError } from '../lib/errors';
 import { dateColumns, presentRecord, presentSession, sessionLocationColumns } from '../lib/presenters';
 import { prisma } from '../lib/prisma';
-import { closeExpiredSessions, attendanceWindowEnded } from '../domain/close-expired-sessions';
+import { closeExpiredSessions } from '../domain/close-expired-sessions';
+import { attendanceWindowEnded } from '../domain/attendance-gate';
 import { createPublicToken } from '../domain/tokens';
 
 function shiftByDays(value: Date | null, days: number): Date | null {
