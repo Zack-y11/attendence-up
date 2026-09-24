@@ -1,8 +1,10 @@
 import {
+  attendanceRecordParamSchema,
   duplicateSessionSchema,
   idParamSchema,
   sessionListQuerySchema,
   sessionWriteSchema,
+  updateAttendanceRecordSchema,
   updateSessionSchema,
 } from '@attendence-up/shared';
 import type { Prisma } from '@prisma/client';
@@ -185,4 +187,21 @@ export async function sessionRoutes(app: FastifyInstance) {
     });
     return records.map(presentRecord);
   });
+
+  api.patch(
+    '/sessions/:id/attendance/:recordId',
+    { schema: { params: attendanceRecordParamSchema, body: updateAttendanceRecordSchema } },
+    async (request) => {
+      const session = await ownedSession(request.params.id, request.instructor.id);
+      const record = await prisma.attendanceRecord.findFirst({
+        where: { id: request.params.recordId, sessionId: session.id },
+      });
+      if (!record) throw new AppError(404, 'Attendance record not found.');
+      const updated = await prisma.attendanceRecord.update({
+        where: { id: record.id },
+        data: { attendanceStatus: request.body.attendanceStatus },
+      });
+      return presentRecord(updated);
+    },
+  );
 }

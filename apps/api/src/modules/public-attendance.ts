@@ -1,4 +1,4 @@
-import { submitAttendanceSchema, tokenParamSchema } from '@attendence-up/shared';
+import { absenceNoteForCheckIn, submitAttendanceSchema, tokenParamSchema } from '@attendence-up/shared';
 import type { FastifyInstance } from 'fastify';
 import type { ZodTypeProvider } from 'fastify-type-provider-zod';
 import { attendanceGate, attendanceGateMessage } from '../domain/attendance-gate';
@@ -51,6 +51,10 @@ export async function publicAttendanceRoutes(app: FastifyInstance) {
         },
         toLocation(session.locationLatitude, session.locationLongitude, session.locationRadiusMeters),
       );
+      const absence = absenceNoteForCheckIn(body.notInClassroom === true, body.absenceNote);
+      if (!absence.ok) {
+        throw new AppError(400, absence.message, 'ABSENCE_NOTE_REQUIRED');
+      }
 
       try {
         const record = await prisma.attendanceRecord.create({
@@ -64,6 +68,8 @@ export async function publicAttendanceRoutes(app: FastifyInstance) {
             locationAccuracyMeters: body.locationAccuracyMeters ?? null,
             distanceFromSessionMeters: derived.distanceMeters,
             locationStatus: derived.status,
+            attendanceStatus: 'PRESENT',
+            absenceNote: absence.note,
           },
         });
         return reply.status(201).send({
