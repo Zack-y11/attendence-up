@@ -13,6 +13,7 @@ import { SignaturePad } from '../components/SignaturePad';
 import { LanguageSwitch } from '../components/LanguageSwitch';
 import { Button, ErrorBlock, Field, LoadingBlock, inputClass } from '../components/ui';
 import { formatWhen } from '../lib/datetime';
+import { setPageMeta } from '../lib/seo';
 
 type Reading = {
   latitude: number;
@@ -46,7 +47,7 @@ function requestPosition(): Promise<Reading | null> {
 }
 
 export function PublicAttendancePage() {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const { token = '' } = useParams();
   const session = useQuery({
     queryKey: ['public-session', token],
@@ -63,6 +64,26 @@ export function PublicAttendancePage() {
   const suggestedAway = useRef(false);
   const away =
     previewLocationStatus(session.data?.location ?? null, locationState) === 'OUTSIDE_RADIUS';
+
+  useEffect(() => {
+    const item = session.data;
+    if (!item) return;
+    const label = item.className ? `${item.name} · ${item.className}` : item.name;
+    setPageMeta({
+      title: t('seo.attendanceTitle', { name: item.name }),
+      description: item.location
+        ? t('seo.attendanceWithPlace', { name: label, radius: item.location.radiusMeters })
+        : t('seo.attendanceDescription', { name: label }),
+      index: false,
+      place: item.location
+        ? {
+            name: item.className ?? item.name,
+            latitude: item.location.latitude,
+            longitude: item.location.longitude,
+          }
+        : null,
+    });
+  }, [session.data, t, i18n.language]);
 
   useEffect(() => {
     if (!away || suggestedAway.current) return;

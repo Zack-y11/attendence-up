@@ -2,7 +2,9 @@ import { ClerkProvider, Show } from '@clerk/react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Navigate, Outlet, Route, BrowserRouter, Routes } from 'react-router';
+import { SpeedInsights } from '@vercel/speed-insights/react';
+import { Navigate, Outlet, Route, BrowserRouter, Routes, useLocation } from 'react-router';
+import { setPageMeta } from './lib/seo';
 import { applyDocumentLanguage, clerkLocalization } from './i18n';
 import { ApiProvider } from './api/context';
 import { AppShell } from './components/AppShell';
@@ -79,6 +81,8 @@ export function App() {
   return (
     <QueryClientProvider client={queryClient}>
       <BrowserRouter>
+        <RouteSeo />
+        <SpeedInsightsRoute />
         <Routes>
           <Route path="/attendance/:token" element={<PublicAttendancePage />} />
           <Route element={<ClerkGate />}>
@@ -103,6 +107,43 @@ export function App() {
       </BrowserRouter>
     </QueryClientProvider>
   );
+}
+
+function insightRoute(pathname: string): string {
+  if (pathname.startsWith('/attendance/')) return '/attendance/:token';
+  if (pathname.startsWith('/sign-in')) return '/sign-in';
+  if (pathname.startsWith('/sign-up')) return '/sign-up';
+  if (/^\/classes\/[^/]+\/sessions\/new$/.test(pathname)) return '/classes/:classId/sessions/new';
+  if (/^\/classes\/[^/]+$/.test(pathname) && pathname !== '/classes/new') return '/classes/:id';
+  if (/^\/sessions\/[^/]+$/.test(pathname) && pathname !== '/sessions/new') return '/sessions/:id';
+  return pathname;
+}
+
+function SpeedInsightsRoute() {
+  const { pathname } = useLocation();
+  return <SpeedInsights route={insightRoute(pathname)} />;
+}
+
+function RouteSeo() {
+  const { pathname } = useLocation();
+  const { t, i18n } = useTranslation();
+  useEffect(() => {
+    if (pathname.startsWith('/attendance/')) return;
+    if (pathname.startsWith('/sign-in')) {
+      setPageMeta({ title: t('seo.signInTitle'), description: t('seo.signInDescription'), index: true });
+      return;
+    }
+    if (pathname.startsWith('/sign-up')) {
+      setPageMeta({ title: t('seo.signUpTitle'), description: t('seo.signUpDescription'), index: true });
+      return;
+    }
+    if (pathname === '/') {
+      setPageMeta({ title: t('seo.homeTitle'), description: t('seo.homeDescription'), index: true });
+      return;
+    }
+    setPageMeta({ title: t('seo.appTitle'), description: t('seo.appDescription'), index: false });
+  }, [pathname, t, i18n.language]);
+  return null;
 }
 
 function MissingRoute() {
