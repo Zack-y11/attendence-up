@@ -127,22 +127,38 @@ function SpeedInsightsRoute() {
 function RouteSeo() {
   const { pathname } = useLocation();
   const { t, i18n } = useTranslation();
+  const language = i18n.language === 'es' ? 'es' : 'en';
   useEffect(() => {
     if (pathname.startsWith('/attendance/')) return;
+    if (pathname === '/') {
+      setPageMeta({
+        title: t('seo.homeTitle'),
+        description: t('seo.snippet'),
+        index: true,
+        language,
+      });
+      return;
+    }
     if (pathname.startsWith('/sign-in')) {
-      setPageMeta({ title: t('seo.signInTitle'), description: t('seo.signInDescription'), index: true });
+      setPageMeta({
+        title: t('seo.signInTitle'),
+        description: t('seo.signInDescription'),
+        index: true,
+        language,
+      });
       return;
     }
     if (pathname.startsWith('/sign-up')) {
-      setPageMeta({ title: t('seo.signUpTitle'), description: t('seo.signUpDescription'), index: true });
+      setPageMeta({
+        title: t('seo.signUpTitle'),
+        description: t('seo.signUpDescription'),
+        index: true,
+        language,
+      });
       return;
     }
-    if (pathname === '/') {
-      setPageMeta({ title: t('seo.homeTitle'), description: t('seo.homeDescription'), index: true });
-      return;
-    }
-    setPageMeta({ title: t('seo.appTitle'), description: t('seo.appDescription'), index: false });
-  }, [pathname, t, i18n.language]);
+    setPageMeta({ title: t('seo.appTitle'), description: t('seo.appDescription'), index: false, language });
+  }, [pathname, t, language]);
   return null;
 }
 

@@ -75,6 +75,7 @@ export function PublicAttendancePage() {
         ? t('seo.attendanceWithPlace', { name: label, radius: item.location.radiusMeters })
         : t('seo.attendanceDescription', { name: label }),
       index: false,
+      language: i18n.language === 'es' ? 'es' : 'en',
       place: item.location
         ? {
             name: item.className ?? item.name,
