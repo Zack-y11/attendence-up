@@ -8,3 +8,6 @@ coverage
 apps/api/prisma/*.db
 .prisma
 .agents/
+
+# Google Stitch design exports. Kept locally, not part of the app.
+/stitch/
