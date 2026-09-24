@@ -1,4 +1,10 @@
-import type { AttendanceGateReason, ClassStatus, LocationStatus, SessionStatus } from './labels';
+import type {
+  AttendanceGateReason,
+  AttendanceStatus,
+  ClassStatus,
+  LocationStatus,
+  SessionStatus,
+} from './labels';
 import type { LocationInput } from './schemas';
 
 export type LocationDto = LocationInput;
@@ -65,6 +71,8 @@ export type AttendanceRecordDto = {
   locationAccuracyMeters: number | null;
   distanceFromSessionMeters: number | null;
   locationStatus: LocationStatus;
+  attendanceStatus: AttendanceStatus;
+  absenceNote: string | null;
   createdAt: string;
 };
 
