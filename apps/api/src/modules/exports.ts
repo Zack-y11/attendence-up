@@ -136,6 +136,8 @@ export async function exportRoutes(app: FastifyInstance) {
           distanceFromSessionMeters: record.distanceFromSessionMeters,
           locationAccuracyMeters: record.locationAccuracyMeters,
           locationStatus: record.locationStatus,
+          attendanceStatus: record.attendanceStatus,
+          absenceNote: record.absenceNote,
           latitude: record.latitude,
           longitude: record.longitude,
         })),
