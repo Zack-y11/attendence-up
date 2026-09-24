@@ -50,7 +50,11 @@ function Brand() {
 function LiveIndicator() {
   const { t } = useTranslation();
   const api = useApi();
-  const sessions = useQuery({ queryKey: ['sessions', 'all'], queryFn: () => api.sessions('all') });
+  const sessions = useQuery({
+    queryKey: ['sessions', 'all'],
+    queryFn: () => api.sessions('all'),
+    refetchInterval: (query) => (query.state.data?.some((session) => session.status === 'OPEN') ? 8000 : false),
+  });
   const open = sessions.data?.filter((session) => session.status === 'OPEN') ?? [];
   const first = open[0];
   if (!first) return null;

@@ -64,7 +64,13 @@ export function SessionDetailPage() {
 
   const session = useQuery({
     queryKey: ['session', id],
-    queryFn: () => api.session(id),
+    queryFn: async () => {
+      const item = await api.session(id);
+      if (item.status !== 'OPEN') {
+        await queryClient.invalidateQueries({ queryKey: ['sessions'] });
+      }
+      return item;
+    },
     refetchInterval: (query) => (query.state.data?.status === 'OPEN' ? 4000 : false),
   });
   const attendance = useQuery({
@@ -446,19 +452,17 @@ export function SessionDetailPage() {
         )}
       </section>
 
-      {item.status !== 'CLOSED' && (
-        <Card className="p-5">
-          <SectionTitle>{t('session.settings')}</SectionTitle>
-          <SessionForm
-            key={item.updatedAt}
-            initial={item}
-            submitLabel={t('session.save')}
-            pending={update.isPending}
-            error={update.error}
-            onSubmit={(values) => update.mutate(values)}
-          />
-        </Card>
-      )}
+      <Card className="p-5">
+        <SectionTitle>{t('session.settings')}</SectionTitle>
+        <SessionForm
+          key={item.updatedAt}
+          initial={item}
+          submitLabel={t('session.save')}
+          pending={update.isPending}
+          error={update.error}
+          onSubmit={(values) => update.mutate(values)}
+        />
+      </Card>
       {exportOpen && (
         <ExportDialog
           sessionId={item.id}
