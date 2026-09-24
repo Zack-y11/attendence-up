@@ -3,6 +3,8 @@ Allow: /
 Allow: /sign-in
 Allow: /sign-up
 
+Sitemap: https://attendence-up.vercel.app/sitemap.xml
+
 # Check-in links are unlisted tokens. App pages require an instructor account.
 Disallow: /attendance/
 Disallow: /classes
