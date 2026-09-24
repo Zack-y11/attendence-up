@@ -1,4 +1,7 @@
 import i18n from '../i18n';
+import { applyTimeOnDate, fromTimeLocal, toTimeLocal } from './meeting-time';
+
+export { applyTimeOnDate, fromTimeLocal, toTimeLocal };
 
 function activeLocale(): string {
   return i18n.resolvedLanguage ?? i18n.language ?? 'en';
@@ -33,6 +36,19 @@ export function formatFullDate(date: Date): string {
 
 export function formatTime(iso: string): string {
   return new Intl.DateTimeFormat(activeLocale(), { timeStyle: 'short' }).format(new Date(iso));
+}
+
+export function formatClock(iso: string | null): string {
+  if (!iso) return '—';
+  const date = new Date(iso);
+  if (Number.isNaN(date.getTime())) return '—';
+  return formatTime(iso);
+}
+
+export function formatMeeting(startsAt: string | null, endsAt: string | null): string {
+  if (startsAt && endsAt) return `${formatClock(startsAt)} – ${formatClock(endsAt)}`;
+  if (startsAt || endsAt) return formatClock(startsAt ?? endsAt);
+  return '—';
 }
 
 export function numberOrNan(value: string): number {
