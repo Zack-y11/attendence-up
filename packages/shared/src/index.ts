@@ -5,5 +5,7 @@ export * from './location-status';
 export * from './export-table';
 export * from './format';
 export * from './labels';
+export * from './logo';
 export * from './schemas';
+export * from './signature';
 export * from './types';
