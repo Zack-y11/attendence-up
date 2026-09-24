@@ -1,0 +1,10 @@
+User-agent: *
+Allow: /
+Allow: /sign-in
+Allow: /sign-up
+
+# Check-in links are unlisted tokens. App pages require an instructor account.
+Disallow: /attendance/
+Disallow: /classes
+Disallow: /sessions
+Disallow: /settings
