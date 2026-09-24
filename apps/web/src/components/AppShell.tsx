@@ -7,12 +7,19 @@ import { useApi } from '../api/context';
 import { LanguageSwitch } from './LanguageSwitch';
 import { buttonClass, Icon, LiveDot } from './ui';
 
-function NavItems({ onNavigate, vertical = false }: { onNavigate?: () => void; vertical?: boolean }) {
+function NavItems({
+  onNavigate,
+  vertical = false,
+}: {
+  onNavigate?: () => void;
+  vertical?: boolean;
+}) {
   const { t } = useTranslation();
   const links = [
     { to: '/', label: t('nav.dashboard'), icon: 'space_dashboard', end: true },
     { to: '/classes', label: t('nav.classes'), icon: 'school', end: false },
     { to: '/sessions', label: t('nav.sessions'), icon: 'event_available', end: false },
+    { to: '/locations', label: t('nav.locations'), icon: 'pin_drop', end: false },
     { to: '/settings', label: t('nav.settings'), icon: 'settings', end: false },
   ];
 
@@ -42,7 +49,9 @@ function Brand() {
   return (
     <Link to="/" className="flex items-center gap-2">
       <img src="/logo.svg" alt="" className="h-8 w-8" />
-      <span className="font-display text-lg font-semibold tracking-tight text-ink">Attendence-Up</span>
+      <span className="font-display text-lg font-semibold tracking-tight text-ink">
+        Attendence-Up
+      </span>
     </Link>
   );
 }
@@ -53,7 +62,8 @@ function LiveIndicator() {
   const sessions = useQuery({
     queryKey: ['sessions', 'all'],
     queryFn: () => api.sessions('all'),
-    refetchInterval: (query) => (query.state.data?.some((session) => session.status === 'OPEN') ? 8000 : false),
+    refetchInterval: (query) =>
+      query.state.data?.some((session) => session.status === 'OPEN') ? 8000 : false,
   });
   const open = sessions.data?.filter((session) => session.status === 'OPEN') ?? [];
   const first = open[0];
@@ -64,7 +74,9 @@ function LiveIndicator() {
       className="hidden items-center gap-2 rounded-full border border-teal/20 bg-teal-soft/50 px-3 py-1 text-xs font-semibold text-teal transition hover:bg-teal-soft lg:flex"
     >
       <LiveDot className="h-2 w-2" />
-      {open.length === 1 ? t('shell.liveNamed', { name: first.name }) : t('shell.liveCount', { count: open.length })}
+      {open.length === 1
+        ? t('shell.liveNamed', { name: first.name })
+        : t('shell.liveCount', { count: open.length })}
     </Link>
   );
 }

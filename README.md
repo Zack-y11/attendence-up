@@ -30,14 +30,13 @@ Checked against the [v0.1.0](https://github.com/Zack-y11/attendence-up/releases/
 
 **v0.2.1** closes the check-in window. There is no background job. The next time the API reads an open session whose `attendanceClosesAt` is already past — the public page, a check-in, that session, the instructor's session list, or its class — it stores the session as closed. The close instant itself still accepts a check-in. To take attendance again, set a later close time, then reopen.
 
-After the v0.2.1 tag, `master` also adds a contributor section on the landing page (GitHub profile, this repository, X, and LinkedIn) over an animated grid. That section is not part of the v0.2.1 release.
+After the v0.2.1 tag, `master` also adds a contributor section on the landing page (GitHub profile, this repository, X, and LinkedIn) over an animated grid, and saved classroom locations an instructor can pick when creating a class or a session. A session keeps its own copy of the coordinates. That work is not part of the v0.2.1 release.
 
 ## In progress
 
-Not yet released. Not in v0.1.0, v0.2.0, or v0.2.1, and not on `master`. Both are coming in open pull requests:
+Not yet released. Not in v0.1.0, v0.2.0, or v0.2.1, and not on `master`. Coming in an open pull request:
 
 - Attendance percentage per student for a class
-- Saved classroom locations
 
 ## Architecture
 

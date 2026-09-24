@@ -6,6 +6,8 @@ const KNOWN: Record<string, string> = {
   'Sign in required.': 'errors.signInRequired',
   'Session not found.': 'errors.sessionNotFound',
   'Class not found.': 'errors.classNotFound',
+  'Saved location not found.': 'errors.savedLocationNotFound',
+  'A saved location with this name already exists.': 'errors.savedLocationNameTaken',
   'Archived classes cannot accept new sessions.': 'errors.archivedNoSessions',
   'This attendance link is not valid.': 'errors.invalidLink',
   'Reopen the session before editing it.': 'errors.reopenBeforeEdit',
@@ -43,5 +45,6 @@ export function localizeMessage(message: string, translate: (key: string) => str
 
 export function useLocalizedMessage() {
   const { t } = useTranslation();
-  return (message: string | null | undefined) => (message ? localizeMessage(message, (key) => t(key)) : message);
+  return (message: string | null | undefined) =>
+    message ? localizeMessage(message, (key) => t(key)) : message;
 }

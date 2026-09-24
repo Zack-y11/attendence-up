@@ -11,6 +11,7 @@ import { AppError } from './lib/errors';
 import { prisma } from './lib/prisma';
 import { classRoutes } from './modules/classes';
 import { exportRoutes } from './modules/exports';
+import { locationRoutes } from './modules/locations';
 import { meRoutes } from './modules/me';
 import { publicAttendanceRoutes } from './modules/public-attendance';
 import { sessionRoutes } from './modules/sessions';
@@ -86,6 +87,7 @@ export async function buildApp() {
       await privateApp.register(meRoutes);
       await privateApp.register(classRoutes);
       await privateApp.register(sessionRoutes);
+      await privateApp.register(locationRoutes);
       await privateApp.register(exportRoutes);
     },
     { prefix: '/api' },

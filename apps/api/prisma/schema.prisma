@@ -51,8 +51,25 @@ model User {
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 
-  classes  Class[]
-  sessions AttendanceSession[]
+  classes        Class[]
+  sessions       AttendanceSession[]
+  savedLocations SavedLocation[]
+}
+
+/// Classroom preset owned by one instructor. Sessions copy the coordinates
+/// onto their own columns and do not reference this row.
+model SavedLocation {
+  id            String   @id @default(uuid())
+  instructorId  String
+  instructor    User     @relation(fields: [instructorId], references: [id])
+  name          String
+  latitude      Float
+  longitude     Float
+  radiusMeters  Int
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  @@unique([instructorId, name])
 }
 
 model Class {

@@ -11,10 +11,16 @@ import type { Prisma } from '@prisma/client';
 import type { FastifyInstance } from 'fastify';
 import type { ZodTypeProvider } from 'fastify-type-provider-zod';
 import { AppError } from '../lib/errors';
-import { dateColumns, presentRecord, presentSession, sessionLocationColumns } from '../lib/presenters';
+import {
+  dateColumns,
+  presentRecord,
+  presentSession,
+  sessionLocationColumns,
+} from '../lib/presenters';
 import { prisma } from '../lib/prisma';
 import { closeExpiredSessions } from '../domain/close-expired-sessions';
 import { attendanceWindowEnded } from '../domain/attendance-gate';
+import { resolveInstructorLocation } from '../domain/saved-location';
 import { shiftByDays } from '../domain/shift-days';
 import { createPublicToken } from '../domain/tokens';
 
@@ -52,6 +58,7 @@ export async function sessionRoutes(app: FastifyInstance) {
   });
 
   api.post('/sessions', { schema: { body: sessionWriteSchema } }, async (request, reply) => {
+    const requested = await resolveInstructorLocation(request.instructor.id, request.body);
     const created = await prisma.attendanceSession.create({
       data: {
         publicToken: createPublicToken(),
@@ -59,7 +66,7 @@ export async function sessionRoutes(app: FastifyInstance) {
         name: request.body.name,
         description: request.body.description ?? '',
         ...dateColumns(request.body),
-        ...sessionLocationColumns(request.body.location ?? null),
+        ...sessionLocationColumns(requested === undefined ? null : requested),
       },
       include: sessionInclude,
     });
@@ -109,13 +116,16 @@ export async function sessionRoutes(app: FastifyInstance) {
     { schema: { params: idParamSchema, body: updateSessionSchema } },
     async (request) => {
       const session = await ownedSession(request.params.id, request.instructor.id);
+      const requested = await resolveInstructorLocation(request.instructor.id, request.body);
       const updated = await prisma.attendanceSession.update({
         where: { id: session.id },
         data: {
           ...(request.body.name !== undefined ? { name: request.body.name } : {}),
-          ...(request.body.description !== undefined ? { description: request.body.description } : {}),
+          ...(request.body.description !== undefined
+            ? { description: request.body.description }
+            : {}),
           ...dateColumns(request.body),
-          ...sessionLocationColumns(request.body.location),
+          ...sessionLocationColumns(requested),
         },
         include: sessionInclude,
       });
@@ -127,7 +137,10 @@ export async function sessionRoutes(app: FastifyInstance) {
     const session = await ownedSession(request.params.id, request.instructor.id);
     if (session.status === 'OPEN') return presentSession(session);
     if (session.status !== 'DRAFT') {
-      throw new AppError(409, 'Only a draft session can be opened. Reopen a closed session instead.');
+      throw new AppError(
+        409,
+        'Only a draft session can be opened. Reopen a closed session instead.',
+      );
     }
     if (attendanceWindowEnded(session.attendanceClosesAt, new Date())) {
       throw new AppError(409, 'The attendance window has closed.');

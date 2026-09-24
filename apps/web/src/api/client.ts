@@ -5,13 +5,16 @@ import type {
   ClassDetailDto,
   ClassDto,
   CreateClassInput,
+  CreateSavedLocationInput,
   InstructorDto,
   PublicSessionDto,
+  SavedLocationDto,
   SessionDto,
   SessionWriteInput,
   SubmitAttendanceInput,
   UpdateClassInput,
   UpdatePrintSettingsInput,
+  UpdateSavedLocationInput,
 } from '@attendence-up/shared';
 
 export class ApiError extends Error {
@@ -49,6 +52,15 @@ export function createApiClient(getToken: () => Promise<string | null>) {
     me: () => request<InstructorDto>('/api/me'),
     updateMe: (body: UpdatePrintSettingsInput) =>
       request<InstructorDto>('/api/me', { method: 'PATCH', body: JSON.stringify(body) }),
+    locations: () => request<SavedLocationDto[]>('/api/locations'),
+    createLocation: (body: CreateSavedLocationInput) =>
+      request<SavedLocationDto>('/api/locations', { method: 'POST', body: JSON.stringify(body) }),
+    updateLocation: (id: string, body: UpdateSavedLocationInput) =>
+      request<SavedLocationDto>(`/api/locations/${id}`, {
+        method: 'PATCH',
+        body: JSON.stringify(body),
+      }),
+    deleteLocation: (id: string) => request<void>(`/api/locations/${id}`, { method: 'DELETE' }),
     classes: () => request<ClassDto[]>('/api/classes'),
     class: (id: string) => request<ClassDetailDto>(`/api/classes/${id}`),
     createClass: (body: CreateClassInput) =>
@@ -72,13 +84,19 @@ export function createApiClient(getToken: () => Promise<string | null>) {
       }),
     updateSession: (id: string, body: SessionWriteInput) =>
       request<SessionDto>(`/api/sessions/${id}`, { method: 'PATCH', body: JSON.stringify(body) }),
-    openSession: (id: string) => request<SessionDto>(`/api/sessions/${id}/open`, { method: 'POST' }),
-    closeSession: (id: string) => request<SessionDto>(`/api/sessions/${id}/close`, { method: 'POST' }),
+    openSession: (id: string) =>
+      request<SessionDto>(`/api/sessions/${id}/open`, { method: 'POST' }),
+    closeSession: (id: string) =>
+      request<SessionDto>(`/api/sessions/${id}/close`, { method: 'POST' }),
     reopenSession: (id: string) =>
       request<SessionDto>(`/api/sessions/${id}/reopen`, { method: 'POST' }),
     deleteSession: (id: string) => request<void>(`/api/sessions/${id}`, { method: 'DELETE' }),
     attendance: (id: string) => request<AttendanceRecordDto[]>(`/api/sessions/${id}/attendance`),
-    updateAttendanceStatus: (sessionId: string, recordId: string, attendanceStatus: AttendanceStatus) =>
+    updateAttendanceStatus: (
+      sessionId: string,
+      recordId: string,
+      attendanceStatus: AttendanceStatus,
+    ) =>
       request<AttendanceRecordDto>(`/api/sessions/${sessionId}/attendance/${recordId}`, {
         method: 'PATCH',
         body: JSON.stringify({ attendanceStatus }),

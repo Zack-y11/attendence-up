@@ -5,10 +5,17 @@ import type {
   InstructorDto,
   LocationDto,
   PublicSessionDto,
+  SavedLocationDto,
   SessionDto,
   SessionSummaryDto,
 } from '@attendence-up/shared';
-import type { AttendanceRecord, AttendanceSession, Class, User } from '@prisma/client';
+import type {
+  AttendanceRecord,
+  AttendanceSession,
+  Class,
+  SavedLocation,
+  User,
+} from '@prisma/client';
 import { attendanceGate } from '../domain/attendance-gate';
 
 export function toLocation(
@@ -46,7 +53,8 @@ export function sessionLocationColumns(location: LocationDto | null | undefined)
 
 export function classScheduleColumns(input: { startsAt?: string | null; endsAt?: string | null }) {
   const data: { startsAt?: Date | null; endsAt?: Date | null } = {};
-  if (input.startsAt !== undefined) data.startsAt = input.startsAt ? new Date(input.startsAt) : null;
+  if (input.startsAt !== undefined)
+    data.startsAt = input.startsAt ? new Date(input.startsAt) : null;
   if (input.endsAt !== undefined) data.endsAt = input.endsAt ? new Date(input.endsAt) : null;
   return data;
 }
@@ -174,6 +182,18 @@ export function presentPublicSession(
     endsAt: item.class?.endsAt?.toISOString() ?? null,
     attendanceOpensAt: item.attendanceOpensAt?.toISOString() ?? null,
     attendanceClosesAt: item.attendanceClosesAt?.toISOString() ?? null,
+  };
+}
+
+export function presentSavedLocation(item: SavedLocation): SavedLocationDto {
+  return {
+    id: item.id,
+    name: item.name,
+    latitude: item.latitude,
+    longitude: item.longitude,
+    radiusMeters: item.radiusMeters,
+    createdAt: item.createdAt.toISOString(),
+    updatedAt: item.updatedAt.toISOString(),
   };
 }
 
