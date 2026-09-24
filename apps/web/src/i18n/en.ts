@@ -285,7 +285,7 @@ export const en = {
     description: 'Description',
     starts: 'Starts',
     ends: 'Ends',
-    startsHint: 'When this class meets. Each session only sets its check-in window.',
+    startsHint: 'Usual meeting time. It stays the same each week. Set the day on each session.',
     opens: 'Attendance opens',
     opensHint: 'Leave blank to allow check-in whenever the session is open.',
     closes: 'Attendance closes',

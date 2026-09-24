@@ -287,7 +287,7 @@ export const es: typeof en = {
     description: 'Descripción',
     starts: 'Empieza',
     ends: 'Termina',
-    startsHint: 'Cuándo se reúne esta clase. Cada sesión solo define su ventana de registro.',
+    startsHint: 'Hora habitual. Se mantiene cada semana. El día se define en cada sesión.',
     opens: 'Se abre la asistencia',
     opensHint: 'Déjalo vacío para permitir el registro mientras la sesión esté abierta.',
     closes: 'Se cierra la asistencia',
