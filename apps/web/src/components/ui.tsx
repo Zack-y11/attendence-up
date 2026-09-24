@@ -1,6 +1,8 @@
 import type { SessionStatus } from '@attendence-up/shared';
 import type { ButtonHTMLAttributes, ReactNode } from 'react';
+import { useTranslation } from 'react-i18next';
 import { Link } from 'react-router';
+import { useLocalizedMessage } from '../i18n/known';
 
 export const inputClass =
   'h-10 w-full rounded-lg border border-line bg-white px-3 text-sm text-ink outline-none placeholder:text-[#94a3b8] focus:border-accent focus:ring-[3px] focus:ring-accent/15';
@@ -44,12 +46,13 @@ export function Field({
   error?: string;
   children: ReactNode;
 }) {
+  const localize = useLocalizedMessage();
   return (
     <label className="block">
       <span className="mb-1.5 block text-xs font-semibold tracking-wide text-muted uppercase">{label}</span>
       {children}
       {hint && !error && <span className="mt-1 block text-sm text-muted">{hint}</span>}
-      {error && <span className="mt-1 block text-sm text-danger">{error}</span>}
+      {error && <span className="mt-1 block text-sm text-danger">{localize(error)}</span>}
     </label>
   );
 }
@@ -89,17 +92,20 @@ export function PageHeader({
   );
 }
 
-export function LoadingBlock({ label = 'Loading' }: { label?: string }) {
+export function LoadingBlock({ label }: { label?: string }) {
+  const { t } = useTranslation();
   return (
     <div className="flex items-center gap-3 py-8 text-sm text-muted" role="status">
       <span className="h-4 w-4 animate-spin rounded-full border-2 border-line border-t-accent" />
-      {label}
+      {label ?? t('common.loading')}
     </div>
   );
 }
 
 export function ErrorBlock({ error }: { error: unknown }) {
-  const message = error instanceof Error ? error.message : 'Something went wrong.';
+  const { t } = useTranslation();
+  const localize = useLocalizedMessage();
+  const message = error instanceof Error ? localize(error.message) : t('errors.generic');
   return (
     <div className="flex items-start gap-2 rounded-lg border border-danger/20 bg-danger-soft px-4 py-3 text-sm text-danger">
       <Icon name="error" className="text-[18px]" />

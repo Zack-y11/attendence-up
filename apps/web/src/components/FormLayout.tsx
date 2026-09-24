@@ -1,4 +1,5 @@
 import type { ReactNode } from 'react';
+import { useTranslation } from 'react-i18next';
 import { Card, Icon } from './ui';
 
 export function FormLayout({
@@ -8,11 +9,12 @@ export function FormLayout({
   children: ReactNode;
   tips: { icon: string; title: string; body: string }[];
 }) {
+  const { t } = useTranslation();
   return (
     <div className="grid gap-4 lg:grid-cols-3">
       <Card className="p-5 lg:col-span-2">{children}</Card>
       <Card className="h-fit p-5">
-        <p className="text-xs font-semibold tracking-wider text-muted uppercase">How it works</p>
+        <p className="text-xs font-semibold tracking-wider text-muted uppercase">{t('form.howItWorks')}</p>
         <ul className="mt-3 grid gap-4">
           {tips.map((tip) => (
             <li key={tip.title} className="flex gap-3">
