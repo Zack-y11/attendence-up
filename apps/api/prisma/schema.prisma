@@ -1,33 +1,9 @@
-generator client {
-  provider = "prisma-client-js"
-}
-
-datasource db {
-  provider = "postgresql"
-  url      = env("DATABASE_URL")
-}
-
-enum UserRole {
-  INSTRUCTOR
-}
-
-enum ClassStatus {
-  ACTIVE
-  ARCHIVED
-}
-
-enum SessionStatus {
-  DRAFT
-  OPEN
-  CLOSED
-}
-
-enum LocationStatus {
-  WITHIN_RADIUS
-  OUTSIDE_RADIUS
-  LOCATION_UNAVAILABLE
-  LOW_ACCURACY
-  NO_EXPECTED_LOCATION
+/// Grading meaning of a check-in. Location status stays on its own field.
+enum AttendanceStatus {
+  PRESENT
+  LATE
+  ABSENT
+  EXCUSED
 }
 
 model User {
@@ -100,6 +76,8 @@ model AttendanceRecord {
   locationAccuracyMeters    Float?
   distanceFromSessionMeters Float?
   locationStatus            LocationStatus
+  attendanceStatus          AttendanceStatus  @default(PRESENT)
+  absenceNote               String?
   createdAt                 DateTime          @default(now())
 
   @@unique([sessionId, studentCode])
