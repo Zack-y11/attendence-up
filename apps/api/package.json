@@ -5,6 +5,7 @@
   "type": "module",
   "scripts": {
     "dev": "tsx watch src/main.ts",
+    "start": "tsx src/main.ts",
     "typecheck": "tsc --noEmit",
     "test": "vitest run",
     "postinstall": "prisma generate"
@@ -14,6 +15,8 @@
     "@clerk/backend": "^3.19.0",
     "@fastify/cors": "^11.3.0",
     "@fastify/rate-limit": "^11.2.0",
+    "@neon/config": "^1.7.3",
+    "@neon/env": "^1.4.4",
     "@prisma/client": "^6.19.3",
     "dotenv": "^18.0.3",
     "exceljs": "^4.4.0",
