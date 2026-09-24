@@ -17,6 +17,7 @@ import { SessionCreatePage } from './routes/SessionCreatePage';
 import { SessionDetailPage } from './routes/SessionDetailPage';
 import { SettingsPage } from './routes/SettingsPage';
 import { SessionsPage } from './routes/SessionsPage';
+import { LandingPage } from './routes/LandingPage';
 import { SignInPage } from './routes/SignInPage';
 import { SignUpPage } from './routes/SignUpPage';
 
@@ -88,9 +89,18 @@ export function App() {
           <Route element={<ClerkGate />}>
             <Route path="/sign-in/*" element={<SignInPage />} />
             <Route path="/sign-up/*" element={<SignUpPage />} />
+            <Route
+              path="/"
+              element={
+                <Show when="signed-in" fallback={<LandingPage />}>
+                  <AppShell />
+                </Show>
+              }
+            >
+              <Route index element={<DashboardPage />} />
+            </Route>
             <Route element={<RequireAuth />}>
               <Route element={<AppShell />}>
-                <Route index element={<DashboardPage />} />
                 <Route path="classes" element={<ClassesPage />} />
                 <Route path="classes/new" element={<ClassCreatePage />} />
                 <Route path="classes/:id" element={<ClassDetailPage />} />
