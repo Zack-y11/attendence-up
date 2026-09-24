@@ -169,6 +169,7 @@ export function presentPublicSession(
     acceptingAttendance: gate.ok,
     closedReason: gate.ok ? null : gate.reason,
     requestsLocation: item.locationLatitude != null && item.locationLongitude != null,
+    location: toLocation(item.locationLatitude, item.locationLongitude, item.locationRadiusMeters),
     startsAt: item.class?.startsAt?.toISOString() ?? null,
     endsAt: item.class?.endsAt?.toISOString() ?? null,
     attendanceOpensAt: item.attendanceOpensAt?.toISOString() ?? null,
