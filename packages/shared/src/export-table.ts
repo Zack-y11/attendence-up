@@ -6,6 +6,7 @@ import {
   type AttendanceStatus,
   type LocationStatus,
 } from './labels';
+import { signatureLabel } from './signature';
 
 export type ExportRecord = {
   studentCode: string;
@@ -36,7 +37,7 @@ function cell(
     case 'studentName':
       return record.studentName;
     case 'signature':
-      return record.signature ?? '';
+      return signatureLabel(record.signature);
     case 'attendanceTime':
       return formatInstant(record.createdAt, timeZone);
     case 'distance':
