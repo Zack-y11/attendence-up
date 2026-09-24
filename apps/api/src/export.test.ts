@@ -49,6 +49,48 @@ describe('buildExportTable', () => {
     expect(table.rows[0]).toEqual(['Juan Pérez', '24 m', '±8 m', 'Near session']);
   });
 
+  it('keeps a written name and leaves drawn signatures out of the text cell', () => {
+    const table = buildExportTable({
+      columns: ['studentName', 'signature'],
+      sessionName: 'September 23',
+      className: null,
+      timeZone: 'UTC',
+      records: [
+        {
+          studentCode: 'SM001',
+          studentName: 'Ana',
+          signature: 'Ana Ruiz',
+          createdAt: '2026-09-23T14:03:00.000Z',
+          distanceFromSessionMeters: null,
+          locationAccuracyMeters: null,
+          locationStatus: 'LOCATION_UNAVAILABLE',
+          attendanceStatus: 'PRESENT',
+          absenceNote: null,
+          latitude: null,
+          longitude: null,
+        },
+        {
+          studentCode: 'SM002',
+          studentName: 'Luis',
+          signature: 'data:image/png;base64,iVBORw0KGgo=',
+          createdAt: '2026-09-23T14:04:00.000Z',
+          distanceFromSessionMeters: null,
+          locationAccuracyMeters: null,
+          locationStatus: 'LOCATION_UNAVAILABLE',
+          attendanceStatus: 'PRESENT',
+          absenceNote: null,
+          latitude: null,
+          longitude: null,
+        },
+      ],
+    });
+
+    expect(table.rows).toEqual([
+      ['Ana', 'Ana Ruiz'],
+      ['Luis', ''],
+    ]);
+  });
+
   it('labels Present, Late, and the written reason for being away', () => {
     expect(resolveExportColumns(undefined)).toContain('attendanceStatus');
     expect(resolveExportColumns(undefined)).toContain('absenceNote');
