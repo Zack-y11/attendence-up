@@ -13,8 +13,9 @@ export function SignInPage() {
       <div className="grid w-full max-w-4xl items-center gap-10 md:grid-cols-2">
         <div>
           <img src="/logo.svg" alt="" className="mb-4 h-12 w-12" />
-          <p className="font-display text-4xl font-semibold tracking-tight">Attendence-Up</p>
-          <p className="mt-3 max-w-sm text-sm text-muted">{t('signIn.blurb')}</p>
+          <p className="text-sm font-semibold tracking-wide">Attendence-Up</p>
+          <h1 className="mt-2 font-display text-4xl font-semibold tracking-tight">{t('signIn.title')}</h1>
+          <p className="mt-3 max-w-sm text-sm text-muted">{t('seo.signInDescription')}</p>
         </div>
         <SignIn routing="path" path="/sign-in" signUpUrl="/sign-up" appearance={clerkAppearance} />
       </div>
