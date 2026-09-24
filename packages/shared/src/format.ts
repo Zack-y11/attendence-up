@@ -12,6 +12,14 @@ export function formatAccuracy(meters: number | null): string {
   return `±${Math.round(meters)} m`;
 }
 
+/** Empty when there is no denominator. Whole numbers omit the decimal. */
+export function formatAttendancePercentage(percentage: number | null): string {
+  if (percentage == null || Number.isNaN(percentage)) return '';
+  const tenths = Math.round(percentage * 10) / 10;
+  const text = Number.isInteger(tenths) ? String(tenths) : tenths.toFixed(1);
+  return `${text}%`;
+}
+
 export function formatCoordinate(value: number | null): string {
   if (value == null || Number.isNaN(value)) return '';
   return value.toFixed(6);

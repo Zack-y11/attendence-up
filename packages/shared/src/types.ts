@@ -109,3 +109,21 @@ export type AttendanceSubmissionDto = {
   studentName: string;
   createdAt: string;
 };
+
+/** One student who has checked in to at least one session of a class. */
+export type ClassStudentAttendanceDto = {
+  studentCode: string;
+  /** Name from the latest check-in, including sessions that are still open. */
+  studentName: string;
+  attended: number;
+  total: number;
+  /** Null when this student has no sessions in the denominator. */
+  percentage: number | null;
+};
+
+export type ClassAttendanceDto = {
+  closedSessionCount: number;
+  /** Mirrors the API constant so the class page can describe the total. */
+  excusedCountsInDenominator: boolean;
+  students: ClassStudentAttendanceDto[];
+};
