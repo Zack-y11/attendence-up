@@ -82,6 +82,12 @@ export const es: typeof en = {
   landing: {
     signIn: 'Entrar',
     signUp: 'Crear cuenta',
+    contribute: 'Conviértete en colaborador',
+    contributeBody: 'Attendence-Up es abierto. Sigue el trabajo, abre un issue o envía un cambio.',
+    github: 'GitHub',
+    repo: 'Repositorio',
+    x: 'X',
+    linkedin: 'LinkedIn',
   },
   errors: {
     generic: 'Algo salió mal.',
