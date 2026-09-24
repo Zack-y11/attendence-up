@@ -1,6 +1,8 @@
 import { z } from 'zod';
 import { ABSENCE_NOTE_MAX } from './absence-note';
 import { ATTENDANCE_STATUSES } from './labels';
+import { isClassLogo } from './logo';
+import { isAcceptableSignature } from './signature';
 
 export const locationSchema = z.object({
   latitude: z.number().min(-90).max(90),
@@ -43,12 +45,27 @@ function assertTimeOrder(
   }
 }
 
+const printLogoSchema = z
+  .string()
+  .trim()
+  .refine((value) => value === '' || isClassLogo(value), { message: 'Use a PNG or JPEG logo.' })
+  .nullable()
+  .optional();
+
 const classFieldsSchema = z.object({
   name: z.string().trim().min(1).max(120),
   description: z.string().trim().max(2000).optional(),
   location: locationSchema.nullable().optional(),
   startsAt: optionalDate,
   endsAt: optionalDate,
+});
+
+export const updatePrintSettingsSchema = z.object({
+  university: z.string().trim().max(160).optional(),
+  faculty: z.string().trim().max(160).optional(),
+  career: z.string().trim().max(160).optional(),
+  printName: z.string().trim().max(160).optional(),
+  logo: printLogoSchema,
 });
 
 export const createClassSchema = classFieldsSchema.superRefine(assertTimeOrder);
@@ -86,7 +103,15 @@ export const submitAttendanceSchema = z
       .max(32)
       .regex(/^[A-Za-z0-9-]+$/, 'Use letters, numbers, or hyphens.'),
     studentName: z.string().trim().min(1).max(120),
-    signature: z.string().trim().max(500).nullable().optional(),
+    signature: z
+      .string()
+      .trim()
+      .max(100_000, 'Signature is too large.')
+      .nullable()
+      .optional()
+      .refine((value) => value == null || value === '' || isAcceptableSignature(value), {
+        message: 'Draw or write a signature.',
+      }),
     latitude: z.number().min(-90).max(90).nullable().optional(),
     longitude: z.number().min(-180).max(180).nullable().optional(),
     locationAccuracyMeters: z.number().min(0).max(100_000).nullable().optional(),
@@ -111,6 +136,7 @@ export const exportQuerySchema = z.object({
   format: z.enum(['xlsx', 'pdf']),
   columns: z.string().optional(),
   timezone: z.string().optional(),
+  locale: z.enum(['es', 'en']).optional(),
 });
 
 export const idParamSchema = z.object({
@@ -127,6 +153,7 @@ export const tokenParamSchema = z.object({
 });
 
 export type LocationInput = z.infer<typeof locationSchema>;
+export type UpdatePrintSettingsInput = z.infer<typeof updatePrintSettingsSchema>;
 export type CreateClassInput = z.infer<typeof createClassSchema>;
 export type UpdateClassInput = z.infer<typeof updateClassSchema>;
 export type SessionWriteInput = z.infer<typeof sessionWriteSchema>;
