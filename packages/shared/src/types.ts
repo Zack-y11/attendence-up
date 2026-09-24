@@ -89,6 +89,7 @@ export type PublicSessionDto = {
   acceptingAttendance: boolean;
   closedReason: AttendanceGateReason | null;
   requestsLocation: boolean;
+  location: LocationDto | null;
   startsAt: string | null;
   endsAt: string | null;
   attendanceOpensAt: string | null;
