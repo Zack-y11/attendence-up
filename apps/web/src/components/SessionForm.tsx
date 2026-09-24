@@ -1,6 +1,7 @@
 import { sessionWriteSchema, type LocationDto, type SessionWriteInput } from '@attendence-up/shared';
 import { useState } from 'react';
 import { useForm } from 'react-hook-form';
+import { useTranslation } from 'react-i18next';
 import { fromDatetimeLocal, numberOrNan, toDatetimeLocal } from '../lib/datetime';
 import { LocationFields, locationFromDto, type LocationFormValue } from './LocationFields';
 import { Button, ErrorBlock, Field, inputClass } from './ui';
@@ -31,6 +32,7 @@ export function SessionForm({
   error?: unknown;
   onSubmit: (values: SessionWriteInput) => void;
 }) {
+  const { t } = useTranslation();
   const form = useForm<SessionFormValues>({
     defaultValues: {
       name: initial?.name ?? '',
@@ -82,24 +84,24 @@ export function SessionForm({
   return (
     <form className="grid max-w-2xl gap-5" onSubmit={form.handleSubmit(handleSubmit)} noValidate>
       {error ? <ErrorBlock error={error} /> : null}
-      <Field label="Name" error={form.formState.errors.name?.message}>
+      <Field label={t('form.name')} error={form.formState.errors.name?.message}>
         <input className={inputClass} {...form.register('name')} />
       </Field>
-      <Field label="Description" error={form.formState.errors.description?.message}>
+      <Field label={t('form.description')} error={form.formState.errors.description?.message}>
         <textarea className={`${inputClass} min-h-24`} {...form.register('description')} />
       </Field>
       <div className="grid gap-4 sm:grid-cols-2">
-        <Field label="Attendance opens" hint="Leave blank to allow check-in whenever the session is open.">
+        <Field label={t('form.opens')} hint={t('form.opensHint')}>
           <input type="datetime-local" className={inputClass} {...form.register('attendanceOpensAt')} />
         </Field>
-        <Field label="Attendance closes" error={form.formState.errors.attendanceClosesAt?.message}>
+        <Field label={t('form.closes')} error={form.formState.errors.attendanceClosesAt?.message}>
           <input type="datetime-local" className={inputClass} {...form.register('attendanceClosesAt')} />
         </Field>
       </div>
       <LocationFields value={location} onChange={setLocation} error={formError} />
       <div>
         <Button type="submit" disabled={pending}>
-          {pending ? 'Saving…' : submitLabel}
+          {pending ? t('common.saving') : submitLabel}
         </Button>
       </div>
     </form>

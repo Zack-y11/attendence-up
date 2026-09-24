@@ -1,5 +1,7 @@
 import type { LocationDto } from '@attendence-up/shared';
 import { useState } from 'react';
+import { useTranslation } from 'react-i18next';
+import { useLocalizedMessage } from '../i18n/known';
 import { Button, Field, Icon, inputClass } from './ui';
 
 const PRESETS = ['200', '300', '500'];
@@ -34,15 +36,17 @@ export function LocationFields({
   onChange: (value: LocationFormValue) => void;
   error?: string;
 }) {
+  const { t } = useTranslation();
+  const localize = useLocalizedMessage();
   const [geoMessage, setGeoMessage] = useState<string | null>(null);
   const preset = PRESETS.includes(value.radiusMeters);
 
   function useCurrentLocation() {
     if (!navigator.geolocation) {
-      setGeoMessage('This browser cannot read location.');
+      setGeoMessage(t('location.unsupported'));
       return;
     }
-    setGeoMessage('Requesting location…');
+    setGeoMessage(t('location.requesting'));
     navigator.geolocation.getCurrentPosition(
       (position) => {
         onChange({
@@ -51,9 +55,9 @@ export function LocationFields({
           latitude: position.coords.latitude.toFixed(6),
           longitude: position.coords.longitude.toFixed(6),
         });
-        setGeoMessage(`Accuracy about ±${Math.round(position.coords.accuracy)} m.`);
+        setGeoMessage(t('location.accuracy', { meters: Math.round(position.coords.accuracy) }));
       },
-      () => setGeoMessage('Location permission was denied.'),
+      () => setGeoMessage(t('location.denied')),
       { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 },
     );
   }
@@ -62,7 +66,7 @@ export function LocationFields({
     <fieldset className="rounded-xl border border-line bg-paper p-4">
       <legend className="flex items-center gap-1.5 px-1 text-xs font-semibold tracking-wider text-muted uppercase">
         <Icon name="my_location" className="text-[16px] text-teal" />
-        Classroom location
+        {t('location.title')}
       </legend>
       <label className="mt-1 flex items-start gap-2.5 text-sm text-muted">
         <input
@@ -71,14 +75,11 @@ export function LocationFields({
           checked={value.enabled}
           onChange={(event) => onChange({ ...value, enabled: event.target.checked })}
         />
-        <span>
-          Record an expected location. Students are never rejected for being outside the radius.
-          The distance is only shown to you.
-        </span>
+        <span>{t('location.hint')}</span>
       </label>
       {value.enabled && (
         <div className="mt-4 grid gap-4 sm:grid-cols-2">
-          <Field label="Latitude">
+          <Field label={t('location.latitude')}>
             <input
               className={inputClass}
               inputMode="decimal"
@@ -86,7 +87,7 @@ export function LocationFields({
               onChange={(event) => onChange({ ...value, latitude: event.target.value })}
             />
           </Field>
-          <Field label="Longitude">
+          <Field label={t('location.longitude')}>
             <input
               className={inputClass}
               inputMode="decimal"
@@ -94,7 +95,7 @@ export function LocationFields({
               onChange={(event) => onChange({ ...value, longitude: event.target.value })}
             />
           </Field>
-          <Field label="Expected radius" hint="200, 300, and 500 meters are the usual choices.">
+          <Field label={t('location.radius')} hint={t('location.radiusHint')}>
             <select
               className={inputClass}
               value={preset ? value.radiusMeters : 'custom'}
@@ -108,14 +109,14 @@ export function LocationFields({
             >
               {PRESETS.map((meters) => (
                 <option key={meters} value={meters}>
-                  {meters} meters
+                  {t('location.meters', { count: Number(meters) })}
                 </option>
               ))}
-              <option value="custom">Custom</option>
+              <option value="custom">{t('location.custom')}</option>
             </select>
           </Field>
           {!preset && (
-            <Field label="Custom radius (meters)">
+            <Field label={t('location.customRadius')}>
               <input
                 className={inputClass}
                 inputMode="numeric"
@@ -127,13 +128,13 @@ export function LocationFields({
           <div className="sm:col-span-2">
             <Button type="button" variant="secondary" onClick={useCurrentLocation}>
               <Icon name="near_me" className="text-[18px]" />
-              Use my current location
+              {t('location.useCurrent')}
             </Button>
             {geoMessage && <p className="mt-2 text-sm text-muted">{geoMessage}</p>}
           </div>
         </div>
       )}
-      {error && <p className="mt-3 text-sm text-danger">{error}</p>}
+      {error && <p className="mt-3 text-sm text-danger">{localize(error)}</p>}
     </fieldset>
   );
 }

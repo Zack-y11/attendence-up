@@ -1,6 +1,7 @@
 import { createClassSchema, type CreateClassInput, type LocationDto } from '@attendence-up/shared';
 import { useState } from 'react';
 import { useForm } from 'react-hook-form';
+import { useTranslation } from 'react-i18next';
 import { fromDatetimeLocal, numberOrNan, toDatetimeLocal } from '../lib/datetime';
 import { LocationFields, locationFromDto, type LocationFormValue } from './LocationFields';
 import { Button, ErrorBlock, Field, inputClass } from './ui';
@@ -31,6 +32,7 @@ export function ClassForm({
   error?: unknown;
   onSubmit: (values: CreateClassInput) => void;
 }) {
+  const { t } = useTranslation();
   const form = useForm<ClassFormValues>({
     defaultValues: {
       name: initial?.name ?? '',
@@ -75,24 +77,24 @@ export function ClassForm({
   return (
     <form className="grid max-w-2xl gap-5" onSubmit={form.handleSubmit(handleSubmit)} noValidate>
       {error ? <ErrorBlock error={error} /> : null}
-      <Field label="Name" error={form.formState.errors.name?.message}>
+      <Field label={t('form.name')} error={form.formState.errors.name?.message}>
         <input className={inputClass} {...form.register('name')} />
       </Field>
-      <Field label="Description" error={form.formState.errors.description?.message}>
+      <Field label={t('form.description')} error={form.formState.errors.description?.message}>
         <textarea className={`${inputClass} min-h-28`} {...form.register('description')} />
       </Field>
       <div className="grid gap-4 sm:grid-cols-2">
-        <Field label="Starts" hint="When this class meets. Each session only sets its check-in window.">
+        <Field label={t('form.starts')} hint={t('form.startsHint')}>
           <input type="datetime-local" className={inputClass} {...form.register('startsAt')} />
         </Field>
-        <Field label="Ends" error={form.formState.errors.endsAt?.message}>
+        <Field label={t('form.ends')} error={form.formState.errors.endsAt?.message}>
           <input type="datetime-local" className={inputClass} {...form.register('endsAt')} />
         </Field>
       </div>
       <LocationFields value={location} onChange={setLocation} error={locationError} />
       <div>
         <Button type="submit" disabled={pending}>
-          {pending ? 'Saving…' : submitLabel}
+          {pending ? t('common.saving') : submitLabel}
         </Button>
       </div>
     </form>
