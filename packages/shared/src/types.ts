@@ -14,6 +14,11 @@ export type InstructorDto = {
   email: string;
   displayName: string;
   role: 'INSTRUCTOR';
+  university: string;
+  faculty: string;
+  career: string;
+  printName: string;
+  logo: string | null;
 };
 
 export type ClassDto = {
