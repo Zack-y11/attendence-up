@@ -6,6 +6,7 @@ import {
 } from '@attendence-up/shared';
 import type { FastifyInstance } from 'fastify';
 import type { ZodTypeProvider } from 'fastify-type-provider-zod';
+import { closeExpiredSessions } from '../domain/close-expired-sessions';
 import { resolveSessionLocation } from '../domain/session-location';
 import { createPublicToken } from '../domain/tokens';
 import { AppError } from '../lib/errors';
@@ -63,6 +64,7 @@ export async function classRoutes(app: FastifyInstance) {
 
   api.get('/classes/:id', { schema: { params: idParamSchema } }, async (request) => {
     const item = await ownedClass(request.params.id, request.instructor.id);
+    await closeExpiredSessions({ classId: item.id });
     const sessions = await prisma.attendanceSession.findMany({
       where: { classId: item.id },
       include: { _count: { select: { records: true } } },

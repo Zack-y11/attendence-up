@@ -13,6 +13,7 @@ import type { ZodTypeProvider } from 'fastify-type-provider-zod';
 import { AppError } from '../lib/errors';
 import { dateColumns, presentRecord, presentSession, sessionLocationColumns } from '../lib/presenters';
 import { prisma } from '../lib/prisma';
+import { closeExpiredSessions, attendanceWindowEnded } from '../domain/close-expired-sessions';
 import { createPublicToken } from '../domain/tokens';
 
 function shiftByDays(value: Date | null, days: number): Date | null {
@@ -28,6 +29,7 @@ const sessionInclude = {
 } as const;
 
 async function ownedSession(id: string, instructorId: string) {
+  await closeExpiredSessions({ id, instructorId });
   const session = await prisma.attendanceSession.findFirst({
     where: { id, instructorId },
     include: sessionInclude,
@@ -41,6 +43,7 @@ export async function sessionRoutes(app: FastifyInstance) {
 
   api.get('/sessions', { schema: { querystring: sessionListQuerySchema } }, async (request) => {
     const scope = request.query.scope ?? 'all';
+    await closeExpiredSessions({ instructorId: request.instructor.id });
     const where: Prisma.AttendanceSessionWhereInput = { instructorId: request.instructor.id };
     if (scope === 'open') where.status = 'OPEN';
     if (scope === 'draft') where.status = 'DRAFT';
@@ -111,9 +114,6 @@ export async function sessionRoutes(app: FastifyInstance) {
     { schema: { params: idParamSchema, body: updateSessionSchema } },
     async (request) => {
       const session = await ownedSession(request.params.id, request.instructor.id);
-      if (session.status === 'CLOSED') {
-        throw new AppError(409, 'Reopen the session before editing it.');
-      }
       const updated = await prisma.attendanceSession.update({
         where: { id: session.id },
         data: {
@@ -133,6 +133,9 @@ export async function sessionRoutes(app: FastifyInstance) {
     if (session.status === 'OPEN') return presentSession(session);
     if (session.status !== 'DRAFT') {
       throw new AppError(409, 'Only a draft session can be opened. Reopen a closed session instead.');
+    }
+    if (attendanceWindowEnded(session.attendanceClosesAt, new Date())) {
+      throw new AppError(409, 'The attendance window has closed.');
     }
     const updated = await prisma.attendanceSession.update({
       where: { id: session.id },
@@ -161,6 +164,9 @@ export async function sessionRoutes(app: FastifyInstance) {
     if (session.status === 'OPEN') return presentSession(session);
     if (session.status !== 'CLOSED') {
       throw new AppError(409, 'Only a closed session can be reopened.');
+    }
+    if (attendanceWindowEnded(session.attendanceClosesAt, new Date())) {
+      throw new AppError(409, 'The attendance window has closed.');
     }
     const updated = await prisma.attendanceSession.update({
       where: { id: session.id },
