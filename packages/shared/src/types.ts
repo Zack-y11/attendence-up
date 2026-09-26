@@ -9,6 +9,13 @@ import type { LocationInput } from './schemas';
 
 export type LocationDto = LocationInput;
 
+export type SavedLocationDto = LocationDto & {
+  id: string;
+  name: string;
+  createdAt: string;
+  updatedAt: string;
+};
+
 export type InstructorDto = {
   id: string;
   email: string;

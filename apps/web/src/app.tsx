@@ -11,6 +11,7 @@ import { AppShell } from './components/AppShell';
 import { ClassCreatePage } from './routes/ClassCreatePage';
 import { ClassDetailPage } from './routes/ClassDetailPage';
 import { ClassesPage } from './routes/ClassesPage';
+import { LocationsPage } from './routes/LocationsPage';
 import { DashboardPage } from './routes/DashboardPage';
 import { PublicAttendancePage } from './routes/PublicAttendancePage';
 import { SessionCreatePage } from './routes/SessionCreatePage';
@@ -38,7 +39,9 @@ function MissingClerkConfig() {
   return (
     <div className="grid min-h-screen place-items-center bg-paper px-4">
       <div className="max-w-lg rounded-xl border border-line bg-card p-6 shadow-card">
-        <h1 className="font-display text-2xl font-semibold tracking-tight">{t('missingClerk.title')}</h1>
+        <h1 className="font-display text-2xl font-semibold tracking-tight">
+          {t('missingClerk.title')}
+        </h1>
         <p className="mt-3 text-muted">{t('missingClerk.body')}</p>
         <p className="mt-3 text-sm text-muted">{t('missingClerk.public')}</p>
       </div>
@@ -106,6 +109,7 @@ export function App() {
                 <Route path="classes/:id" element={<ClassDetailPage />} />
                 <Route path="classes/:classId/sessions/new" element={<SessionCreatePage />} />
                 <Route path="sessions" element={<SessionsPage />} />
+                <Route path="locations" element={<LocationsPage />} />
                 <Route path="sessions/new" element={<SessionCreatePage />} />
                 <Route path="sessions/:id" element={<SessionDetailPage />} />
                 <Route path="settings" element={<SettingsPage />} />
@@ -167,7 +171,12 @@ function RouteSeo() {
       });
       return;
     }
-    setPageMeta({ title: t('seo.appTitle'), description: t('seo.appDescription'), index: false, language });
+    setPageMeta({
+      title: t('seo.appTitle'),
+      description: t('seo.appDescription'),
+      index: false,
+      language,
+    });
   }, [pathname, t, language]);
   return null;
 }

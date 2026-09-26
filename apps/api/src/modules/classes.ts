@@ -7,6 +7,7 @@ import {
 import type { FastifyInstance } from 'fastify';
 import type { ZodTypeProvider } from 'fastify-type-provider-zod';
 import { closeExpiredSessions } from '../domain/close-expired-sessions';
+import { resolveInstructorLocation } from '../domain/saved-location';
 import { resolveSessionLocation } from '../domain/session-location';
 import { createPublicToken } from '../domain/tokens';
 import { AppError } from '../lib/errors';
@@ -82,7 +83,9 @@ export async function classRoutes(app: FastifyInstance) {
         where: { id: request.params.id },
         data: {
           ...(request.body.name !== undefined ? { name: request.body.name } : {}),
-          ...(request.body.description !== undefined ? { description: request.body.description } : {}),
+          ...(request.body.description !== undefined
+            ? { description: request.body.description }
+            : {}),
           ...(request.body.status !== undefined ? { status: request.body.status } : {}),
           ...classScheduleColumns(request.body),
           ...classLocationColumns(request.body.location),
@@ -101,8 +104,9 @@ export async function classRoutes(app: FastifyInstance) {
       if (course.status === 'ARCHIVED') {
         throw new AppError(409, 'Archived classes cannot accept new sessions.');
       }
+      const requested = await resolveInstructorLocation(request.instructor.id, request.body);
       const location = resolveSessionLocation(
-        request.body.location,
+        requested,
         toLocation(course.defaultLatitude, course.defaultLongitude, course.defaultRadiusMeters),
       );
       const created = await prisma.attendanceSession.create({

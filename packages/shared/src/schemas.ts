@@ -75,12 +75,23 @@ export const updateClassSchema = classFieldsSchema
   .extend({ status: z.enum(['ACTIVE', 'ARCHIVED']).optional() })
   .superRefine(assertTimeOrder);
 
+const savedLocationNameSchema = z.string().trim().min(1).max(120);
+
+export const createSavedLocationSchema = locationSchema.extend({
+  name: savedLocationNameSchema,
+});
+
+export const updateSavedLocationSchema = locationSchema.partial().extend({
+  name: savedLocationNameSchema.optional(),
+});
+
 const sessionFieldsSchema = z.object({
   name: z.string().trim().min(1).max(160),
   description: z.string().trim().max(2000).optional(),
   attendanceOpensAt: optionalDate,
   attendanceClosesAt: optionalDate,
   location: locationSchema.nullable().optional(),
+  savedLocationId: z.uuid().optional(),
 });
 
 export const sessionWriteSchema = sessionFieldsSchema.superRefine(assertTimeOrder);
@@ -153,6 +164,8 @@ export const tokenParamSchema = z.object({
 });
 
 export type LocationInput = z.infer<typeof locationSchema>;
+export type CreateSavedLocationInput = z.infer<typeof createSavedLocationSchema>;
+export type UpdateSavedLocationInput = z.infer<typeof updateSavedLocationSchema>;
 export type UpdatePrintSettingsInput = z.infer<typeof updatePrintSettingsSchema>;
 export type CreateClassInput = z.infer<typeof createClassSchema>;
 export type UpdateClassInput = z.infer<typeof updateClassSchema>;

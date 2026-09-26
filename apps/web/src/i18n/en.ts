@@ -33,6 +33,7 @@ export const en = {
     dashboard: 'Dashboard',
     classes: 'Classes',
     sessions: 'Sessions',
+    locations: 'Locations',
     settings: 'Settings',
   },
   language: {
@@ -60,7 +61,8 @@ export const en = {
     instructor: 'Instructor',
     instructorHint: 'Leave this blank to use {{name}}.',
     logo: 'Logo',
-    logoHint: 'PNG or JPEG. It prints on the left of the PDF. Excel keeps the text heading. Clear it to use the Attendence-Up mark.',
+    logoHint:
+      'PNG or JPEG. It prints on the left of the PDF. Excel keeps the text heading. Clear it to use the Attendence-Up mark.',
     chooseLogo: 'Choose logo',
     removeLogo: 'Use Attendence-Up logo',
     save: 'Save heading',
@@ -70,7 +72,8 @@ export const en = {
   missingClerk: {
     title: 'Add your Clerk keys',
     body: 'Instructor sign-in uses Clerk. Copy apps/web/.env.example to apps/web/.env and set VITE_CLERK_PUBLISHABLE_KEY. Set CLERK_SECRET_KEY in apps/api/.env, then restart both apps.',
-    public: 'The public attendance page does not need an account and stays available at /attendance/<token>.',
+    public:
+      'The public attendance page does not need an account and stays available at /attendance/<token>.',
   },
   missingRoute: 'That page does not exist.',
   signIn: {
@@ -93,6 +96,8 @@ export const en = {
     signInRequired: 'Sign in required.',
     sessionNotFound: 'Session not found.',
     classNotFound: 'Class not found.',
+    savedLocationNotFound: 'Saved location not found.',
+    savedLocationNameTaken: 'A saved location with this name already exists.',
     archivedNoSessions: 'Archived classes cannot accept new sessions.',
     invalidLink: 'This attendance link is not valid.',
     reopenBeforeEdit: 'Reopen the session before editing it.',
@@ -175,7 +180,8 @@ export const en = {
     manageClasses: 'Manage all classes →',
     myClasses: 'My active classes',
     noActiveTitle: 'No active classes',
-    noActiveBody: 'A class keeps the history of every session you run for the same course or group.',
+    noActiveBody:
+      'A class keeps the history of every session you run for the same course or group.',
     recent: 'Recent sessions',
     noFilterMatch: 'No sessions match this filter.',
     viewAll_one: 'View all {{count}} session →',
@@ -193,7 +199,8 @@ export const en = {
     new: 'New class',
     loading: 'Loading classes',
     emptyTitle: 'No classes yet',
-    emptyBody: 'Create a class to keep every session for the same course together, or start with a standalone session.',
+    emptyBody:
+      'Create a class to keep every session for the same course together, or start with a standalone session.',
     search: 'Search classes…',
     noMatchTitle: 'No classes match',
     noMatchBody: 'Try another filter or search term.',
@@ -234,7 +241,8 @@ export const en = {
   classCreate: {
     eyebrow: 'Classes',
     title: 'New class',
-    description: 'You can set a default classroom. New sessions copy it, and you can change each one.',
+    description:
+      'You can set a default classroom. New sessions copy it, and you can change each one.',
     submit: 'Create class',
     tipCourseTitle: 'One class per course',
     tipCourseBody: 'Use a class for a course or group that meets more than once.',
@@ -269,15 +277,18 @@ export const en = {
   sessionCreate: {
     newClass: 'New class session',
     newStandalone: 'New standalone session',
-    classDescription: 'This session stays attached to the class. The classroom default is filled in so you can adjust it.',
-    standaloneDescription: 'Use this for a workshop, meetup, or any attendance that does not belong to a class.',
+    classDescription:
+      'This session stays attached to the class. The classroom default is filled in so you can adjust it.',
+    standaloneDescription:
+      'Use this for a workshop, meetup, or any attendance that does not belong to a class.',
     submit: 'Create session',
     tipDraftTitle: 'Starts as a draft',
     tipDraftBody: 'Nobody can check in until you open attendance from the session page.',
     tipLinkTitle: 'Share one link',
     tipLinkBody: 'Each session gets its own public check-in link for students.',
     tipWindowTitle: 'Optional time window',
-    tipWindowBody: 'Set when check-in opens and closes, or leave it open while the session is open.',
+    tipWindowBody:
+      'Set when check-in opens and closes, or leave it open while the session is open.',
   },
   form: {
     howItWorks: 'How it works',
@@ -301,10 +312,37 @@ export const en = {
     custom: 'Custom',
     customRadius: 'Custom radius (meters)',
     useCurrent: 'Use my current location',
+    picker: 'Saved location',
+    pickerPlaceholder: 'Pick a saved classroom',
+    manage: 'Manage saved locations',
+    noneSaved: 'You have no saved locations yet.',
+    saveName: 'Name for this location',
+    saveNameHint: 'Save these coordinates so you can pick them next time.',
+    saveThis: 'Save this location',
+    saved: 'Location saved. Sessions keep their own copy of these coordinates.',
     unsupported: 'This browser cannot read location.',
     requesting: 'Requesting location…',
     accuracy: 'Accuracy about ±{{meters}} m.',
     denied: 'Location permission was denied.',
+  },
+  locations: {
+    eyebrow: 'Classrooms',
+    title: 'Saved locations',
+    description:
+      'Save a classroom once and pick it when you create a class or a session. A session keeps its own copy of the coordinates, so later edits do not change sessions you already created.',
+    loading: 'Loading locations',
+    addTitle: 'Add a location',
+    name: 'Name',
+    nameHint: 'For example, Room 204 or Lab B.',
+    save: 'Save location',
+    saved: 'Location saved.',
+    emptyTitle: 'No saved locations yet',
+    emptyBody: 'Add the rooms you teach in. You can still type coordinates on a session.',
+    rename: 'Rename',
+    saveName: 'Save name',
+    confirmDelete:
+      'Delete this saved location? Sessions that already copied these coordinates stay as they are.',
+    coords: '{{latitude}}, {{longitude}} · {{radius}} m',
   },
   session: {
     loading: 'Loading session',
@@ -389,7 +427,8 @@ export const en = {
     awayToggleHint:
       'You still confirm attendance and are marked present. Write why you are away — work or another reason.',
     awayLabel: 'Why are you not in the classroom?',
-    awayRequiredHint: 'This explains the absence from the room. It does not cancel your attendance.',
+    awayRequiredHint:
+      'This explains the absence from the room. It does not cancel your attendance.',
     awayWorkChip: 'Work',
     awayWork: 'I am at work. ',
     awayPlaceholder: 'Write why you are away',
@@ -449,7 +488,8 @@ export const en = {
     homeDescription:
       'Attendence-Up opens class attendance with a classroom location. Share a check-in link and see who was near the room.',
     signInTitle: 'Sign in · Attendence-Up',
-    signInDescription: 'Sign in to Attendence-Up to open class attendance and share a check-in link.',
+    signInDescription:
+      'Sign in to Attendence-Up to open class attendance and share a check-in link.',
     signUpHeadline: 'Create an instructor account',
     signUpTitle: 'Create an instructor account · Attendence-Up',
     signUpDescription:

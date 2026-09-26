@@ -6,12 +6,29 @@ on:
     branches: [master]
 
 env:
-  COREPACK_ENABLE_DOWNLOAD_PROMPT: "0"
+  COREPACK_ENABLE_DOWNLOAD_PROMPT: '0'
 
 jobs:
   test:
     name: Test
     runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_USER: attendence
+          POSTGRES_PASSWORD: attendence
+          POSTGRES_DB: attendence
+        ports:
+          - 5434:5432
+        options: >-
+          --health-cmd "pg_isready -U attendence -d attendence"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+    env:
+      DATABASE_URL: postgresql://attendence:attendence@localhost:5434/attendence?schema=public
+      CLERK_SECRET_KEY: sk_test_ci
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -23,6 +40,8 @@ jobs:
         run: corepack pnpm install --frozen-lockfile
       - name: Typecheck
         run: corepack pnpm typecheck
+      - name: Apply migrations
+        run: corepack pnpm db:deploy
       - name: Test
         run: corepack pnpm test
 

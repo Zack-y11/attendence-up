@@ -35,6 +35,7 @@ export const es: typeof en = {
     dashboard: 'Inicio',
     classes: 'Clases',
     sessions: 'Sesiones',
+    locations: 'Ubicaciones',
     settings: 'Ajustes',
   },
   language: {
@@ -62,7 +63,8 @@ export const es: typeof en = {
     instructor: 'Instructor',
     instructorHint: 'Déjalo vacío para usar {{name}}.',
     logo: 'Logo',
-    logoHint: 'PNG o JPEG. Se imprime a la izquierda del PDF. Excel conserva el texto. Quítalo para usar la marca de Attendence-Up.',
+    logoHint:
+      'PNG o JPEG. Se imprime a la izquierda del PDF. Excel conserva el texto. Quítalo para usar la marca de Attendence-Up.',
     chooseLogo: 'Elegir logo',
     removeLogo: 'Usar el logo de Attendence-Up',
     save: 'Guardar encabezado',
@@ -72,12 +74,14 @@ export const es: typeof en = {
   missingClerk: {
     title: 'Agrega tus claves de Clerk',
     body: 'El acceso de instructores usa Clerk. Copia apps/web/.env.example a apps/web/.env y define VITE_CLERK_PUBLISHABLE_KEY. Define CLERK_SECRET_KEY en apps/api/.env y reinicia ambas aplicaciones.',
-    public: 'La página pública de asistencia no necesita una cuenta y sigue disponible en /attendance/<token>.',
+    public:
+      'La página pública de asistencia no necesita una cuenta y sigue disponible en /attendance/<token>.',
   },
   missingRoute: 'Esa página no existe.',
   signIn: {
     title: 'Entrar',
-    blurb: 'Abre una sesión de clase o un evento, comparte un enlace y conserva el registro de asistencia.',
+    blurb:
+      'Abre una sesión de clase o un evento, comparte un enlace y conserva el registro de asistencia.',
   },
   landing: {
     signIn: 'Entrar',
@@ -95,10 +99,13 @@ export const es: typeof en = {
     signInRequired: 'Debes iniciar sesión.',
     sessionNotFound: 'No se encontró la sesión.',
     classNotFound: 'No se encontró la clase.',
+    savedLocationNotFound: 'No se encontró la ubicación guardada.',
+    savedLocationNameTaken: 'Ya existe una ubicación guardada con este nombre.',
     archivedNoSessions: 'Las clases archivadas no aceptan sesiones nuevas.',
     invalidLink: 'Este enlace de asistencia no es válido.',
     reopenBeforeEdit: 'Vuelve a abrir la sesión antes de editarla.',
-    openDraftOnly: 'Solo se puede abrir una sesión en borrador. Para una cerrada, vuelve a abrirla.',
+    openDraftOnly:
+      'Solo se puede abrir una sesión en borrador. Para una cerrada, vuelve a abrirla.',
     closeOpenOnly: 'Abre la sesión antes de cerrarla.',
     reopenClosedOnly: 'Solo se puede volver a abrir una sesión cerrada.',
     deleteDraftOnly: 'Solo se puede eliminar un borrador sin asistencia.',
@@ -111,7 +118,8 @@ export const es: typeof en = {
     unknownTimeZone: 'Zona horaria desconocida.',
     selectColumn: 'Selecciona al menos una columna.',
     selectKnownColumn: 'Selecciona al menos una columna conocida.',
-    copyFailed: 'No se pudo copiar el enlace. Revisa el permiso del portapapeles e inténtalo de nuevo.',
+    copyFailed:
+      'No se pudo copiar el enlace. Revisa el permiso del portapapeles e inténtalo de nuevo.',
     checkForm: 'Revisa el formulario e inténtalo de nuevo.',
   },
   validation: {
@@ -191,11 +199,13 @@ export const es: typeof en = {
   classes: {
     eyebrow: 'Lista de cursos',
     title: 'Clases',
-    description: 'Una clase es el curso o el grupo. Cada encuentro es su propia sesión de asistencia.',
+    description:
+      'Una clase es el curso o el grupo. Cada encuentro es su propia sesión de asistencia.',
     new: 'Nueva clase',
     loading: 'Cargando clases',
     emptyTitle: 'Todavía no hay clases',
-    emptyBody: 'Crea una clase para reunir las sesiones del mismo curso, o empieza con una sesión independiente.',
+    emptyBody:
+      'Crea una clase para reunir las sesiones del mismo curso, o empieza con una sesión independiente.',
     search: 'Buscar clases…',
     noMatchTitle: 'Ninguna clase coincide',
     noMatchBody: 'Prueba otro filtro o término de búsqueda.',
@@ -227,7 +237,8 @@ export const es: typeof en = {
     save: 'Guardar cambios',
     archiveTitle: 'Archivar esta clase',
     restoreTitle: 'Restaurar esta clase',
-    archiveBody: 'Las clases archivadas conservan su historial, pero dejan de aparecer en tu lista activa.',
+    archiveBody:
+      'Las clases archivadas conservan su historial, pero dejan de aparecer en tu lista activa.',
     restoreBody: 'Devuelve la clase a tu lista activa para poder crear sesiones nuevas.',
     archive: 'Archivar clase',
     restore: 'Restaurar clase',
@@ -236,14 +247,17 @@ export const es: typeof en = {
   classCreate: {
     eyebrow: 'Clases',
     title: 'Nueva clase',
-    description: 'Puedes definir un aula predeterminada. Las sesiones nuevas la copian y puedes cambiar cada una.',
+    description:
+      'Puedes definir un aula predeterminada. Las sesiones nuevas la copian y puedes cambiar cada una.',
     submit: 'Crear clase',
     tipCourseTitle: 'Una clase por curso',
     tipCourseBody: 'Usa una clase para un curso o grupo que se reúne más de una vez.',
     tipHistoryTitle: 'Las sesiones guardan el historial',
-    tipHistoryBody: 'Cada encuentro se convierte en su propia sesión, con su propio enlace de registro.',
+    tipHistoryBody:
+      'Cada encuentro se convierte en su propia sesión, con su propio enlace de registro.',
     tipLocationTitle: 'La ubicación es opcional',
-    tipLocationBody: 'La distancia solo se te muestra a ti. Nunca se rechaza a un estudiante por ella.',
+    tipLocationBody:
+      'La distancia solo se te muestra a ti. Nunca se rechaza a un estudiante por ella.',
   },
   sessions: {
     eyebrow: 'Registro de asistencia',
@@ -271,15 +285,20 @@ export const es: typeof en = {
   sessionCreate: {
     newClass: 'Nueva sesión de clase',
     newStandalone: 'Nueva sesión independiente',
-    classDescription: 'Esta sesión queda unida a la clase. El aula predeterminada ya está rellena para que puedas ajustarla.',
-    standaloneDescription: 'Úsala para un taller, un encuentro o cualquier asistencia que no pertenezca a una clase.',
+    classDescription:
+      'Esta sesión queda unida a la clase. El aula predeterminada ya está rellena para que puedas ajustarla.',
+    standaloneDescription:
+      'Úsala para un taller, un encuentro o cualquier asistencia que no pertenezca a una clase.',
     submit: 'Crear sesión',
     tipDraftTitle: 'Empieza como borrador',
-    tipDraftBody: 'Nadie puede registrarse hasta que abras la asistencia desde la página de la sesión.',
+    tipDraftBody:
+      'Nadie puede registrarse hasta que abras la asistencia desde la página de la sesión.',
     tipLinkTitle: 'Comparte un enlace',
-    tipLinkBody: 'Cada sesión tiene su propio enlace público para que los estudiantes se registren.',
+    tipLinkBody:
+      'Cada sesión tiene su propio enlace público para que los estudiantes se registren.',
     tipWindowTitle: 'Horario opcional',
-    tipWindowBody: 'Define cuándo se abre y se cierra el registro, o déjalo abierto mientras la sesión lo esté.',
+    tipWindowBody:
+      'Define cuándo se abre y se cierra el registro, o déjalo abierto mientras la sesión lo esté.',
   },
   form: {
     howItWorks: 'Cómo funciona',
@@ -303,10 +322,38 @@ export const es: typeof en = {
     custom: 'Personalizado',
     customRadius: 'Radio personalizado (metros)',
     useCurrent: 'Usar mi ubicación actual',
+    picker: 'Ubicación guardada',
+    pickerPlaceholder: 'Elige un aula guardada',
+    manage: 'Gestionar ubicaciones guardadas',
+    noneSaved: 'Todavía no tienes ubicaciones guardadas.',
+    saveName: 'Nombre de esta ubicación',
+    saveNameHint: 'Guarda estas coordenadas para elegirlas la próxima vez.',
+    saveThis: 'Guardar esta ubicación',
+    saved: 'Ubicación guardada. Las sesiones conservan su propia copia de estas coordenadas.',
     unsupported: 'Este navegador no puede leer la ubicación.',
     requesting: 'Solicitando ubicación…',
     accuracy: 'Precisión aproximada de ±{{meters}} m.',
     denied: 'Se denegó el permiso de ubicación.',
+  },
+  locations: {
+    eyebrow: 'Aulas',
+    title: 'Ubicaciones guardadas',
+    description:
+      'Guarda un aula una vez y elígela al crear una clase o una sesión. La sesión conserva su propia copia de las coordenadas, así que los cambios posteriores no modifican las sesiones que ya creaste.',
+    loading: 'Cargando ubicaciones',
+    addTitle: 'Agregar una ubicación',
+    name: 'Nombre',
+    nameHint: 'Por ejemplo, Aula 204 o Laboratorio B.',
+    save: 'Guardar ubicación',
+    saved: 'Ubicación guardada.',
+    emptyTitle: 'Todavía no hay ubicaciones guardadas',
+    emptyBody:
+      'Agrega las aulas donde das clase. Igual puedes escribir las coordenadas en una sesión.',
+    rename: 'Renombrar',
+    saveName: 'Guardar nombre',
+    confirmDelete:
+      '¿Eliminar esta ubicación guardada? Las sesiones que ya copiaron estas coordenadas no cambian.',
+    coords: '{{latitude}}, {{longitude}} · {{radius}} m',
   },
   session: {
     loading: 'Cargando sesión',
@@ -451,7 +498,8 @@ export const es: typeof en = {
     homeDescription:
       'Attendence-Up abre la asistencia de clase con ubicación del aula. Comparte un enlace de registro y mira quién estuvo cerca.',
     signInTitle: 'Entrar · Attendence-Up',
-    signInDescription: 'Entra a Attendence-Up para abrir la asistencia y compartir el enlace de registro.',
+    signInDescription:
+      'Entra a Attendence-Up para abrir la asistencia y compartir el enlace de registro.',
     signUpHeadline: 'Crear cuenta de instructor',
     signUpTitle: 'Crear cuenta de instructor · Attendence-Up',
     signUpDescription:
