@@ -11,6 +11,7 @@ WORKDIR /app
 COPY package.json pnpm-lock.yaml pnpm-workspace.yaml ./
 COPY apps/api/package.json apps/api/package.json
 COPY apps/api/prisma apps/api/prisma
+COPY apps/api/scripts/postinstall.mjs apps/api/scripts/postinstall.mjs
 COPY packages/shared/package.json packages/shared/package.json
 
 # `prisma generate` reads DATABASE_URL from the schema. It does not connect.
