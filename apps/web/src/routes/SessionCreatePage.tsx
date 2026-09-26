@@ -6,6 +6,7 @@ import { FormLayout } from '../components/FormLayout';
 import { SessionForm } from '../components/SessionForm';
 import { ErrorBlock, LoadingBlock, PageHeader } from '../components/ui';
 import { applyTimeOnDate } from '../lib/datetime';
+import { paths } from '../lib/paths';
 
 export function SessionCreatePage() {
   const { t } = useTranslation();
@@ -24,7 +25,7 @@ export function SessionCreatePage() {
     onSuccess: async (created) => {
       await queryClient.invalidateQueries({ queryKey: ['sessions'] });
       if (classId) await queryClient.invalidateQueries({ queryKey: ['class', classId] });
-      navigate(`/sessions/${created.id}`);
+      navigate(paths.session(created.id));
     },
   });
 

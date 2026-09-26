@@ -33,6 +33,7 @@ import {
   trClass,
 } from '../components/ui';
 import { formatClock, formatTime, formatWhen } from '../lib/datetime';
+import { paths } from '../lib/paths';
 import { publicAttendanceUrl } from '../lib/publicAttendanceUrl';
 import { useCopy } from '../lib/useCopy';
 
@@ -110,7 +111,7 @@ export function SessionDetailPage() {
       if (session.data?.classId) {
         await queryClient.invalidateQueries({ queryKey: ['class', session.data.classId] });
       }
-      navigate(`/sessions/${created.id}`);
+      navigate(paths.session(created.id));
     },
   });
   const setStatus = useMutation({
@@ -174,7 +175,7 @@ export function SessionDetailPage() {
     <div className="flex flex-col gap-6">
       <div>
         <Link
-          to={item.classId ? `/classes/${item.classId}` : '/sessions'}
+          to={item.classId ? paths.class(item.classId) : paths.sessions}
           className="mb-3 inline-flex items-center gap-1 text-xs font-semibold text-muted hover:text-accent"
         >
           <Icon name="arrow_back" className="text-[16px]" />

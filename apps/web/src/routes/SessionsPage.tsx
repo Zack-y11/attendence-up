@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Link } from 'react-router';
 import { useApi } from '../api/context';
+import { paths } from '../lib/paths';
 import { SessionsTable } from '../components/SessionsTable';
 import {
   buttonClass,
@@ -44,7 +45,7 @@ export function SessionsPage() {
         title={t('sessions.title')}
         description={t('sessions.description')}
         action={
-          <Link to="/sessions/new" className={buttonClass()}>
+          <Link to={paths.sessionNew} className={buttonClass()}>
             <Icon name="add" className="text-[18px]" />
             {t('sessions.standalone')}
           </Link>
