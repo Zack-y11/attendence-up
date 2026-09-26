@@ -9,6 +9,7 @@ Sitemap: https://attendence-up.vercel.app/sitemap.xml
 Disallow: /a/
 Disallow: /attendance/
 Disallow: /c
+Allow: /sitemap.xml
 Disallow: /s
 Disallow: /l
 Disallow: /p
