@@ -75,7 +75,7 @@ export const es: typeof en = {
     title: 'Agrega tus claves de Clerk',
     body: 'El acceso de instructores usa Clerk. Copia apps/web/.env.example a apps/web/.env y define VITE_CLERK_PUBLISHABLE_KEY. Define CLERK_SECRET_KEY en apps/api/.env y reinicia ambas aplicaciones.',
     public:
-      'La página pública de asistencia no necesita una cuenta y sigue disponible en /attendance/<token>.',
+      'La página pública de asistencia no necesita una cuenta y sigue disponible en /a/<token>.',
   },
   missingRoute: 'Esa página no existe.',
   signIn: {

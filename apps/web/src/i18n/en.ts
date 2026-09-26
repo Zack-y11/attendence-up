@@ -73,7 +73,7 @@ export const en = {
     title: 'Add your Clerk keys',
     body: 'Instructor sign-in uses Clerk. Copy apps/web/.env.example to apps/web/.env and set VITE_CLERK_PUBLISHABLE_KEY. Set CLERK_SECRET_KEY in apps/api/.env, then restart both apps.',
     public:
-      'The public attendance page does not need an account and stays available at /attendance/<token>.',
+      'The public attendance page does not need an account and stays available at /a/<token>.',
   },
   missingRoute: 'That page does not exist.',
   signIn: {
