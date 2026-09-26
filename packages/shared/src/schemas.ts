@@ -150,6 +150,11 @@ export const exportQuerySchema = z.object({
   locale: z.enum(['es', 'en']).optional(),
 });
 
+export const classAttendanceExportQuerySchema = z.object({
+  format: z.enum(['csv', 'xlsx']),
+  locale: z.enum(['es', 'en']).optional(),
+});
+
 export const idParamSchema = z.object({
   id: z.uuid(),
 });

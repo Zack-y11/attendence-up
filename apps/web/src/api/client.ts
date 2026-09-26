@@ -2,6 +2,7 @@ import type {
   AttendanceRecordDto,
   AttendanceStatus,
   AttendanceSubmissionDto,
+  ClassAttendanceDto,
   ClassDetailDto,
   ClassDto,
   CreateClassInput,
@@ -63,6 +64,19 @@ export function createApiClient(getToken: () => Promise<string | null>) {
     deleteLocation: (id: string) => request<void>(`/api/locations/${id}`, { method: 'DELETE' }),
     classes: () => request<ClassDto[]>('/api/classes'),
     class: (id: string) => request<ClassDetailDto>(`/api/classes/${id}`),
+    classAttendance: (id: string) => request<ClassAttendanceDto>(`/api/classes/${id}/attendance`),
+    exportClassAttendance: async (id: string, format: 'csv' | 'xlsx', locale: 'en' | 'es') => {
+      const token = await getToken();
+      const headers = new Headers();
+      if (token) headers.set('Authorization', `Bearer ${token}`);
+      const params = new URLSearchParams({ format, locale });
+      const response = await fetch(`/api/classes/${id}/attendance/export?${params}`, { headers });
+      if (!response.ok) throw await parseError(response);
+      const blob = await response.blob();
+      const disposition = response.headers.get('Content-Disposition') ?? '';
+      const match = disposition.match(/filename="([^"]+)"/);
+      return { blob, filename: match?.[1] ?? `attendance.${format}` };
+    },
     createClass: (body: CreateClassInput) =>
       request<ClassDto>('/api/classes', { method: 'POST', body: JSON.stringify(body) }),
     updateClass: (id: string, body: UpdateClassInput) =>

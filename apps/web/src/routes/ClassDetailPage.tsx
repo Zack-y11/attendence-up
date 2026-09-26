@@ -2,6 +2,7 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
 import { Link, useNavigate, useParams } from 'react-router';
 import { useApi } from '../api/context';
+import { ClassAttendanceSection } from '../components/ClassAttendanceTable';
 import { ClassForm } from '../components/ClassForm';
 import { SessionsTable } from '../components/SessionsTable';
 import {
@@ -110,6 +111,8 @@ export function ClassDetailPage() {
           caption={average === null ? t('classDetail.avgEmpty') : t('classDetail.avgCaption')}
         />
       </section>
+
+      <ClassAttendanceSection classId={item.id} />
 
       <section>
         <SectionTitle>{t('classDetail.history')}</SectionTitle>

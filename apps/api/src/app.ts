@@ -9,6 +9,7 @@ import {
 import { config } from './config';
 import { AppError } from './lib/errors';
 import { prisma } from './lib/prisma';
+import { classAttendanceRoutes } from './modules/class-attendance';
 import { classRoutes } from './modules/classes';
 import { exportRoutes } from './modules/exports';
 import { locationRoutes } from './modules/locations';
@@ -86,6 +87,7 @@ export async function buildApp() {
       privateApp.addHook('preHandler', requireInstructor);
       await privateApp.register(meRoutes);
       await privateApp.register(classRoutes);
+      await privateApp.register(classAttendanceRoutes);
       await privateApp.register(sessionRoutes);
       await privateApp.register(locationRoutes);
       await privateApp.register(exportRoutes);
