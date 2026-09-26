@@ -27,6 +27,10 @@ export function ApiProvider({ children }: { children: ReactNode }) {
   return <ApiContext.Provider value={client}>{children}</ApiContext.Provider>;
 }
 
+export function ApiClientProvider({ client, children }: { client: ApiClient; children: ReactNode }) {
+  return <ApiContext.Provider value={client}>{children}</ApiContext.Provider>;
+}
+
 export function useApi(): ApiClient {
   const client = useContext(ApiContext);
   if (!client) throw new Error('API client is unavailable.');

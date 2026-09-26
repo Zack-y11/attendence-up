@@ -1,5 +1,10 @@
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import type { ReactNode } from 'react';
 import { renderToStaticMarkup } from 'react-dom/server';
+import { MemoryRouter } from 'react-router';
 import { describe, expect, it, vi } from 'vitest';
+import type { ApiClient } from '../api/client';
+import { ApiClientProvider } from '../api/context';
 
 vi.mock('../i18n', () => ({
   default: { resolvedLanguage: 'es', language: 'es' },
@@ -26,9 +31,21 @@ vi.mock('react-i18next', () => ({
 import { ClassForm } from './ClassForm';
 import { fromTimeLocal } from '../lib/meeting-time';
 
+function renderForm(form: ReactNode) {
+  const queryClient = new QueryClient({ defaultOptions: { queries: { retry: false } } });
+  const api = { locations: async () => [] } as unknown as ApiClient;
+  return renderToStaticMarkup(
+    <QueryClientProvider client={queryClient}>
+      <MemoryRouter>
+        <ApiClientProvider client={api}>{form}</ApiClientProvider>
+      </MemoryRouter>
+    </QueryClientProvider>,
+  );
+}
+
 describe('ClassForm meeting time', () => {
   it('asks for the hour and keeps an existing clock time', () => {
-    const html = renderToStaticMarkup(
+    const html = renderForm(
       <ClassForm
         initial={{
           name: 'Intro',
