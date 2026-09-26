@@ -12,7 +12,7 @@ import { ApiError, fetchPublicSession, submitPublicAttendance } from '../api/cli
 import { SignaturePad } from '../components/SignaturePad';
 import { LanguageSwitch } from '../components/LanguageSwitch';
 import { Button, ErrorBlock, Field, LoadingBlock, inputClass } from '../components/ui';
-import { formatWhen } from '../lib/datetime';
+import { formatMeeting, formatWhen } from '../lib/datetime';
 import { setPageMeta } from '../lib/seo';
 
 type Reading = {
@@ -160,9 +160,11 @@ export function PublicAttendancePage() {
         <div className="mt-2 space-y-1 text-sm text-muted">
           {item.className && <p className="font-medium text-ink">{item.className}</p>}
           {item.description && <p>{item.description}</p>}
-          {(item.startsAt || item.attendanceClosesAt) && (
+          {(item.startsAt || item.endsAt || item.attendanceClosesAt) && (
             <p>
-              {item.startsAt ? t('public.meets', { when: formatWhen(item.startsAt) }) : ''}
+              {item.startsAt || item.endsAt
+                ? t('public.meets', { when: formatMeeting(item.startsAt, item.endsAt) })
+                : ''}
               {item.attendanceClosesAt ? ` · ${t('public.closes', { when: formatWhen(item.attendanceClosesAt) })}` : ''}
             </p>
           )}

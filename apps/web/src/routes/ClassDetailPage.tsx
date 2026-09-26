@@ -16,7 +16,7 @@ import {
   SectionTitle,
   StatusPill,
 } from '../components/ui';
-import { formatWhen } from '../lib/datetime';
+import { formatMeeting, formatWhen } from '../lib/datetime';
 
 export function ClassDetailPage() {
   const { t } = useTranslation();
@@ -69,6 +69,12 @@ export function ClassDetailPage() {
                 })
               : t('classes.noLocation')}
           </span>
+          {(item.startsAt || item.endsAt) && (
+            <span className="inline-flex items-center gap-1.5 rounded-full bg-mist px-2.5 py-1 font-medium text-muted">
+              <Icon name="schedule" className="text-[14px]" />
+              {formatMeeting(item.startsAt, item.endsAt)}
+            </span>
+          )}
           <span className="inline-flex items-center gap-1.5 rounded-full bg-mist px-2.5 py-1 font-medium text-muted">
             <Icon name="calendar_today" className="text-[14px]" />
             {t('common.created', { when: formatWhen(item.createdAt) })}

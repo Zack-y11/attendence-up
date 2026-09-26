@@ -16,7 +16,28 @@ export function useCopy() {
   async function copy(text: string) {
     setError(null);
     try {
-      await navigator.clipboard.writeText(text);
+      if (navigator.clipboard?.writeText) {
+        await navigator.clipboard.writeText(text);
+        setCopied(true);
+        return;
+      }
+    } catch {
+      // Fall through to the selection fallback.
+    }
+    try {
+      const area = document.createElement('textarea');
+      area.value = text;
+      area.setAttribute('readonly', '');
+      area.style.position = 'fixed';
+      area.style.left = '-9999px';
+      document.body.appendChild(area);
+      try {
+        area.select();
+        const ok = document.execCommand('copy');
+        if (!ok) throw new Error('copy failed');
+      } finally {
+        area.remove();
+      }
       setCopied(true);
     } catch {
       setCopied(false);

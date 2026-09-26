@@ -1,7 +1,7 @@
 import type { SessionStatus } from '@attendence-up/shared';
 import { useTranslation } from 'react-i18next';
 import { Link } from 'react-router';
-import { formatWhen } from '../lib/datetime';
+import { formatClock, formatWhen } from '../lib/datetime';
 import { Card, Icon, StatusPill, sessionTone, tableHeadClass, tdClass, thClass, trClass } from './ui';
 
 export type SessionRow = {
@@ -69,7 +69,9 @@ export function SessionsTable({
                   </td>
                 )}
                 <td className={`${tdClass} whitespace-nowrap text-muted`}>
-                  {formatWhen(row.startsAt ?? row.attendanceOpensAt ?? null)}
+                  {row.attendanceOpensAt
+                    ? formatWhen(row.attendanceOpensAt)
+                    : formatClock(row.startsAt ?? null)}
                 </td>
                 <td className={`${tdClass} text-right font-semibold tabular-nums`}>{row.attendanceCount}</td>
                 <td className={tdClass}>

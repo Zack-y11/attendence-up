@@ -15,14 +15,8 @@ import { dateColumns, presentRecord, presentSession, sessionLocationColumns } fr
 import { prisma } from '../lib/prisma';
 import { closeExpiredSessions } from '../domain/close-expired-sessions';
 import { attendanceWindowEnded } from '../domain/attendance-gate';
+import { shiftByDays } from '../domain/shift-days';
 import { createPublicToken } from '../domain/tokens';
-
-function shiftByDays(value: Date | null, days: number): Date | null {
-  if (!value || days === 0) return value;
-  const next = new Date(value);
-  next.setUTCDate(next.getUTCDate() + days);
-  return next;
-}
 
 const sessionInclude = {
   class: { select: { name: true, startsAt: true, endsAt: true } },
