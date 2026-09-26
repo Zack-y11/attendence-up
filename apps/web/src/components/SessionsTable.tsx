@@ -2,6 +2,7 @@ import type { SessionStatus } from '@attendence-up/shared';
 import { useTranslation } from 'react-i18next';
 import { Link } from 'react-router';
 import { formatClock, formatWhen } from '../lib/datetime';
+import { paths } from '../lib/paths';
 import { Card, Icon, StatusPill, sessionTone, tableHeadClass, tdClass, thClass, trClass } from './ui';
 
 export type SessionRow = {
@@ -52,7 +53,7 @@ export function SessionsTable({
             {rows.map((row) => (
               <tr key={row.id} className={trClass}>
                 <td className={tdClass}>
-                  <Link to={`/sessions/${row.id}`} className="font-semibold text-ink hover:text-accent">
+                  <Link to={paths.session(row.id)} className="font-semibold text-ink hover:text-accent">
                     {row.name}
                   </Link>
                   <span className="block text-xs text-muted">{t('common.created', { when: formatWhen(row.createdAt) })}</span>
@@ -79,7 +80,7 @@ export function SessionsTable({
                 </td>
                 <td className={`${tdClass} text-right`}>
                   <Link
-                    to={`/sessions/${row.id}`}
+                    to={paths.session(row.id)}
                     className={`inline-flex items-center gap-1 rounded-md px-2.5 py-1 text-xs font-semibold whitespace-nowrap transition ${
                       row.status === 'OPEN'
                         ? 'bg-accent-soft text-accent hover:bg-accent hover:text-white'
