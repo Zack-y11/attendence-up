@@ -18,6 +18,7 @@ import {
   StatusPill,
 } from '../components/ui';
 import { formatFullDate, formatWhen } from '../lib/datetime';
+import { paths } from '../lib/paths';
 import { publicAttendanceUrl } from '../lib/publicAttendanceUrl';
 import { useCopy } from '../lib/useCopy';
 
@@ -82,11 +83,11 @@ export function DashboardPage() {
             </p>
           </div>
           <div className="flex flex-wrap gap-2">
-            <Link to="/classes/new" className={buttonClass('secondary')}>
+            <Link to={paths.classNew} className={buttonClass('secondary')}>
               <Icon name="add_circle" className="text-[18px]" />
               {t('dashboard.newClass')}
             </Link>
-            <Link to="/sessions/new" className={buttonClass()}>
+            <Link to={paths.sessionNew} className={buttonClass()}>
               <Icon name="sensors" className="text-[18px]" />
               {t('dashboard.standalone')}
             </Link>
@@ -135,7 +136,7 @@ export function DashboardPage() {
       <section>
         <SectionTitle
           action={
-            <Link to="/classes" className="text-xs font-semibold text-accent hover:underline">
+            <Link to={paths.classes} className="text-xs font-semibold text-accent hover:underline">
               {t('dashboard.manageClasses')}
             </Link>
           }
@@ -148,7 +149,7 @@ export function DashboardPage() {
             title={t('dashboard.noActiveTitle')}
             body={t('dashboard.noActiveBody')}
             action={
-              <Link to="/classes/new" className={buttonClass()}>
+              <Link to={paths.classNew} className={buttonClass()}>
                 {t('dashboard.newClass')}
               </Link>
             }
@@ -182,7 +183,7 @@ export function DashboardPage() {
         <SessionsTable rows={filtered.slice(0, 8)} empty={t('dashboard.noFilterMatch')} />
         {filtered.length > 8 && (
           <div className="mt-3 text-right">
-            <Link to="/sessions" className="text-xs font-semibold text-accent hover:underline">
+            <Link to={paths.sessions} className="text-xs font-semibold text-accent hover:underline">
               {t('dashboard.viewAll', { count: filtered.length })}
             </Link>
           </div>
@@ -227,7 +228,7 @@ function LiveSpotlight({ session }: { session: SessionDto }) {
             <span className="text-muted">{t('dashboard.closes')}</span>
             <span className="font-semibold">{formatWhen(session.attendanceClosesAt)}</span>
           </span>
-          <Link to={`/sessions/${session.id}`} className={buttonClass()}>
+          <Link to={paths.session(session.id)} className={buttonClass()}>
             <Icon name="monitoring" className="text-[18px]" />
             {t('dashboard.inspectLive')}
           </Link>
@@ -267,7 +268,7 @@ function ClassTile({ item, sessions }: { item: ClassDto; sessions: SessionDto[] 
 
   return (
     <Link
-      to={`/classes/${item.id}`}
+      to={paths.class(item.id)}
       className={`group flex flex-col rounded-xl border bg-card p-4 shadow-card transition hover:border-line-strong hover:shadow-[0_4px_6px_-1px_rgba(15,23,42,0.07)] ${
         liveCount ? 'border-accent/40 ring-1 ring-accent/20' : 'border-line'
       }`}
