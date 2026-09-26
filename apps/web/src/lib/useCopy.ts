@@ -31,10 +31,13 @@ export function useCopy() {
       area.style.position = 'fixed';
       area.style.left = '-9999px';
       document.body.appendChild(area);
-      area.select();
-      const ok = document.execCommand('copy');
-      area.remove();
-      if (!ok) throw new Error('copy failed');
+      try {
+        area.select();
+        const ok = document.execCommand('copy');
+        if (!ok) throw new Error('copy failed');
+      } finally {
+        area.remove();
+      }
       setCopied(true);
     } catch {
       setCopied(false);
