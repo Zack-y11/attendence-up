@@ -186,9 +186,6 @@ export async function sessionRoutes(app: FastifyInstance) {
 
   api.delete('/sessions/:id', { schema: { params: idParamSchema } }, async (request, reply) => {
     const session = await ownedSession(request.params.id, request.instructor.id);
-    if (session.status !== 'DRAFT' || session._count.records > 0) {
-      throw new AppError(409, 'Only a draft session with no attendance can be deleted.');
-    }
     await prisma.attendanceSession.delete({ where: { id: session.id } });
     return reply.status(204).send();
   });
