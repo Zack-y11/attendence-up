@@ -150,7 +150,15 @@ function RouteSeo() {
   const { t, i18n } = useTranslation();
   const language = i18n.language === 'es' ? 'es' : 'en';
   useEffect(() => {
-    if (isAttendancePath(pathname)) return;
+if (isAttendancePath(pathname)) {
+      setPageMeta({
+        title: t('seo.appTitle'),
+        description: t('seo.appDescription'),
+        index: false,
+        language,
+      });
+      return;
+    }
     if (pathname === '/') {
       setPageMeta({
         title: t('seo.homeTitle'),
