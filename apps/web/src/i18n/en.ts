@@ -366,11 +366,15 @@ export const en = {
     duplicate: 'Duplicate',
     nextWeek: 'Next week',
     export: 'Export',
-    deleteDraft: 'Delete draft',
+    delete: 'Delete session',
     open: 'Open attendance',
     close: 'Close attendance',
     reopen: 'Reopen attendance',
-    confirmDelete: 'Delete this draft session? This cannot be undone.',
+    confirmDelete: 'Delete this session? This cannot be undone.',
+    confirmDeleteWithRecords_one:
+      'Delete this session and its {{count}} check-in? The public link will stop working. This cannot be undone.',
+    confirmDeleteWithRecords_other:
+      'Delete this session and its {{count}} check-ins? The public link will stop working. This cannot be undone.',
     linkTitle: 'Public attendance link',
     linkOpen: 'Share this with students to check in.',
     linkClosed: 'Students cannot check in until the session is open.',
