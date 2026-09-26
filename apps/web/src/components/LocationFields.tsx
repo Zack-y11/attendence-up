@@ -6,6 +6,7 @@ import { Link } from 'react-router';
 import { useApi } from '../api/context';
 import { useLocalizedMessage } from '../i18n/known';
 import { numberOrNan } from '../lib/datetime';
+import { paths } from '../lib/paths';
 import { Button, ErrorBlock, Field, Icon, inputClass } from './ui';
 
 const PRESETS = ['200', '300', '500'];
@@ -221,7 +222,7 @@ export function LocationFields({
               {saved.isLoading ? t('locations.loading') : t('location.noneSaved')}
             </p>
           )}
-          <Link to="/locations" className="text-sm font-medium text-accent hover:underline">
+          <Link to={paths.locations} className="text-sm font-medium text-accent hover:underline">
             {t('location.manage')}
           </Link>
         </div>

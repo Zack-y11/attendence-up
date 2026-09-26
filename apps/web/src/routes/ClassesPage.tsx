@@ -16,6 +16,7 @@ import {
   StatusPill,
 } from '../components/ui';
 import { formatWhen } from '../lib/datetime';
+import { paths } from '../lib/paths';
 
 type Filter = ClassStatus | 'ALL';
 
@@ -43,7 +44,7 @@ export function ClassesPage() {
         title={t('classes.title')}
         description={t('classes.description')}
         action={
-          <Link to="/classes/new" className={buttonClass()}>
+          <Link to={paths.classNew} className={buttonClass()}>
             <Icon name="add" className="text-[18px]" />
             {t('classes.new')}
           </Link>
@@ -57,7 +58,7 @@ export function ClassesPage() {
           title={t('classes.emptyTitle')}
           body={t('classes.emptyBody')}
           action={
-            <Link to="/classes/new" className={buttonClass()}>
+            <Link to={paths.classNew} className={buttonClass()}>
               {t('classes.new')}
             </Link>
           }
@@ -108,7 +109,7 @@ function ClassCard({ item, sessions }: { item: ClassDto; sessions: SessionDto[] 
       <div className="flex items-start justify-between gap-3">
         <div className="min-w-0">
           <Link
-            to={`/classes/${item.id}`}
+            to={paths.class(item.id)}
             className="block truncate font-display text-lg font-semibold tracking-tight hover:text-accent"
           >
             {item.name}
@@ -152,18 +153,18 @@ function ClassCard({ item, sessions }: { item: ClassDto; sessions: SessionDto[] 
       )}
 
       <div className="mt-5 flex gap-2 border-t border-mist pt-4">
-        <Link to={`/classes/${item.id}`} className={buttonClass('secondary', 'flex-1')}>
+        <Link to={paths.class(item.id)} className={buttonClass('secondary', 'flex-1')}>
           <Icon name="tune" className="text-[18px]" />
           {t('common.manage')}
         </Link>
         {live ? (
-          <Link to={`/sessions/${live.id}`} className={buttonClass('primary', 'flex-1')}>
+          <Link to={paths.session(live.id)} className={buttonClass('primary', 'flex-1')}>
             <Icon name="monitoring" className="text-[18px]" />
             {t('dashboard.inspectLive')}
           </Link>
         ) : (
           !archived && (
-            <Link to={`/classes/${item.id}/sessions/new`} className={buttonClass('primary', 'flex-1')}>
+            <Link to={paths.classSessionNew(item.id)} className={buttonClass('primary', 'flex-1')}>
               <Icon name="play_arrow" className="text-[18px]" />
               {t('classes.newSession')}
             </Link>

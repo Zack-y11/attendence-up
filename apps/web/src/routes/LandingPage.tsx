@@ -3,6 +3,7 @@ import { Link } from 'react-router';
 import { AnimatedGridBackground } from '../components/AnimatedGridBackground';
 import { LanguageSwitch } from '../components/LanguageSwitch';
 import { buttonClass } from '../components/ui';
+import { paths } from '../lib/paths';
 
 export function LandingPage() {
   const { t } = useTranslation();
@@ -27,10 +28,10 @@ export function LandingPage() {
         <h1 className="font-display text-4xl font-semibold tracking-tight">{t('seo.headline')}</h1>
         <p className="mt-4 max-w-lg text-sm text-muted">{t('seo.snippet')}</p>
         <div className="mt-8 flex flex-wrap gap-3">
-          <Link to="/sign-in" className={buttonClass()}>
+          <Link to={paths.signIn} className={buttonClass()}>
             {t('landing.signIn')}
           </Link>
-          <Link to="/sign-up" className={buttonClass('secondary')}>
+          <Link to={paths.signUp} className={buttonClass('secondary')}>
             {t('landing.signUp')}
           </Link>
         </div>

@@ -3,8 +3,9 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { SpeedInsights } from '@vercel/speed-insights/react';
-import { Navigate, Outlet, Route, BrowserRouter, Routes, useLocation } from 'react-router';
+import { Navigate, Outlet, Route, BrowserRouter, Routes, useLocation, useParams } from 'react-router';
 import { setPageMeta } from './lib/seo';
+import { isAttendancePath, paths } from './lib/paths';
 import { applyDocumentLanguage, clerkLocalization } from './i18n';
 import { ApiProvider } from './api/context';
 import { AppShell } from './components/AppShell';
@@ -56,8 +57,8 @@ function ClerkGate() {
   return (
     <ClerkProvider
       publishableKey={key}
-      signInUrl="/sign-in"
-      signUpUrl="/sign-up"
+      signInUrl={paths.signIn}
+      signUpUrl={paths.signUp}
       localization={clerkLocalization()}
       key={i18n.resolvedLanguage}
     >
@@ -70,7 +71,7 @@ function ClerkGate() {
 
 function RequireAuth() {
   return (
-    <Show when="signed-in" fallback={<Navigate to="/sign-in" replace />}>
+    <Show when="signed-in" fallback={<Navigate to={paths.signIn} replace />}>
       <Outlet />
     </Show>
   );
@@ -88,7 +89,13 @@ export function App() {
         <RouteSeo />
         <SpeedInsightsRoute />
         <Routes>
-          <Route path="/attendance/:token" element={<PublicAttendancePage />} />
+          <Route path="/a/:token" element={<PublicAttendancePage />} />
+          <Route path="/attendance/:token" element={<LegacyAttendance />} />
+          <Route path="/classes/:classId/sessions/new" element={<LegacyClassSessionNew />} />
+          <Route path="/classes/*" element={<LegacyPrefix from="/classes" to={paths.classes} />} />
+          <Route path="/sessions/*" element={<LegacyPrefix from="/sessions" to={paths.sessions} />} />
+          <Route path="/locations" element={<Navigate to={paths.locations} replace />} />
+          <Route path="/settings" element={<Navigate to={paths.settings} replace />} />
           <Route element={<ClerkGate />}>
             <Route path="/sign-in/*" element={<SignInPage />} />
             <Route path="/sign-up/*" element={<SignUpPage />} />
@@ -104,15 +111,15 @@ export function App() {
             </Route>
             <Route element={<RequireAuth />}>
               <Route element={<AppShell />}>
-                <Route path="classes" element={<ClassesPage />} />
-                <Route path="classes/new" element={<ClassCreatePage />} />
-                <Route path="classes/:id" element={<ClassDetailPage />} />
-                <Route path="classes/:classId/sessions/new" element={<SessionCreatePage />} />
-                <Route path="sessions" element={<SessionsPage />} />
-                <Route path="locations" element={<LocationsPage />} />
-                <Route path="sessions/new" element={<SessionCreatePage />} />
-                <Route path="sessions/:id" element={<SessionDetailPage />} />
-                <Route path="settings" element={<SettingsPage />} />
+                <Route path="c" element={<ClassesPage />} />
+                <Route path="c/new" element={<ClassCreatePage />} />
+                <Route path="c/:id" element={<ClassDetailPage />} />
+                <Route path="c/:classId/s/new" element={<SessionCreatePage />} />
+                <Route path="s" element={<SessionsPage />} />
+                <Route path="s/new" element={<SessionCreatePage />} />
+                <Route path="s/:id" element={<SessionDetailPage />} />
+                <Route path="l" element={<LocationsPage />} />
+                <Route path="p" element={<SettingsPage />} />
               </Route>
             </Route>
           </Route>
@@ -124,12 +131,12 @@ export function App() {
 }
 
 function insightRoute(pathname: string): string {
-  if (pathname.startsWith('/attendance/')) return '/attendance/:token';
+  if (isAttendancePath(pathname)) return '/a/:token';
   if (pathname.startsWith('/sign-in')) return '/sign-in';
   if (pathname.startsWith('/sign-up')) return '/sign-up';
-  if (/^\/classes\/[^/]+\/sessions\/new$/.test(pathname)) return '/classes/:classId/sessions/new';
-  if (/^\/classes\/[^/]+$/.test(pathname) && pathname !== '/classes/new') return '/classes/:id';
-  if (/^\/sessions\/[^/]+$/.test(pathname) && pathname !== '/sessions/new') return '/sessions/:id';
+  if (/^\/c\/[^/]+\/s\/new$/.test(pathname)) return '/c/:classId/s/new';
+  if (/^\/c\/[^/]+$/.test(pathname) && pathname !== '/c/new') return '/c/:id';
+  if (/^\/s\/[^/]+$/.test(pathname) && pathname !== '/s/new') return '/s/:id';
   return pathname;
 }
 
@@ -143,7 +150,15 @@ function RouteSeo() {
   const { t, i18n } = useTranslation();
   const language = i18n.language === 'es' ? 'es' : 'en';
   useEffect(() => {
-    if (pathname.startsWith('/attendance/')) return;
+if (isAttendancePath(pathname)) {
+      setPageMeta({
+        title: t('seo.appTitle'),
+        description: t('seo.appDescription'),
+        index: false,
+        language,
+      });
+      return;
+    }
     if (pathname === '/') {
       setPageMeta({
         title: t('seo.homeTitle'),
@@ -179,6 +194,21 @@ function RouteSeo() {
     });
   }, [pathname, t, language]);
   return null;
+}
+
+function LegacyAttendance() {
+  const { token = '' } = useParams();
+  return <Navigate to={paths.attendance(token)} replace />;
+}
+
+function LegacyClassSessionNew() {
+  const { classId = '' } = useParams();
+  return <Navigate to={paths.classSessionNew(classId)} replace />;
+}
+
+function LegacyPrefix({ from, to }: { from: string; to: string }) {
+  const { pathname, search, hash } = useLocation();
+  return <Navigate to={`${to}${pathname.slice(from.length)}${search}${hash}`} replace />;
 }
 
 function MissingRoute() {

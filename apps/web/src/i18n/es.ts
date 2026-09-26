@@ -75,7 +75,7 @@ export const es: typeof en = {
     title: 'Agrega tus claves de Clerk',
     body: 'El acceso de instructores usa Clerk. Copia apps/web/.env.example a apps/web/.env y define VITE_CLERK_PUBLISHABLE_KEY. Define CLERK_SECRET_KEY en apps/api/.env y reinicia ambas aplicaciones.',
     public:
-      'La página pública de asistencia no necesita una cuenta y sigue disponible en /attendance/<token>.',
+      'La página pública de asistencia no necesita una cuenta y sigue disponible en /a/<token>.',
   },
   missingRoute: 'Esa página no existe.',
   signIn: {
@@ -377,11 +377,15 @@ export const es: typeof en = {
     duplicate: 'Duplicar',
     nextWeek: 'Próxima semana',
     export: 'Exportar',
-    deleteDraft: 'Eliminar borrador',
+    delete: 'Eliminar sesión',
     open: 'Abrir asistencia',
     close: 'Cerrar asistencia',
     reopen: 'Reabrir asistencia',
-    confirmDelete: '¿Eliminar este borrador? Esta acción no se puede deshacer.',
+    confirmDelete: '¿Eliminar esta sesión? Esta acción no se puede deshacer.',
+    confirmDeleteWithRecords_one:
+      '¿Eliminar esta sesión y su {{count}} registro? El enlace público dejará de funcionar. Esta acción no se puede deshacer.',
+    confirmDeleteWithRecords_other:
+      '¿Eliminar esta sesión y sus {{count}} registros? El enlace público dejará de funcionar. Esta acción no se puede deshacer.',
     linkTitle: 'Enlace público de asistencia',
     linkOpen: 'Compártelo con los estudiantes para que se registren.',
     linkClosed: 'Los estudiantes no pueden registrarse hasta que la sesión esté abierta.',

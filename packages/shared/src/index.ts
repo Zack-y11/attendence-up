@@ -5,6 +5,7 @@ export * from './format';
 export * from './haversine';
 export * from './labels';
 export * from './location-status';
+export * from './paths';
 export * from './logo';
 export * from './schemas';
 export * from './signature';

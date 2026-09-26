@@ -18,6 +18,7 @@ import {
   StatusPill,
 } from '../components/ui';
 import { formatMeeting, formatWhen } from '../lib/datetime';
+import { paths } from '../lib/paths';
 
 export function ClassDetailPage() {
   const { t } = useTranslation();
@@ -42,7 +43,7 @@ export function ClassDetailPage() {
         <PageHeader
           eyebrow={
             <span className="flex items-center gap-1.5 normal-case">
-              <Link to="/classes" className="text-muted hover:text-accent">
+              <Link to={paths.classes} className="text-muted hover:text-accent">
                 {t('nav.classes')}
               </Link>
               <Icon name="chevron_right" className="text-[14px] text-muted" />
@@ -138,7 +139,7 @@ function ClassSessionActions({ classId, latestSessionId }: { classId: string; la
     onSuccess: async (created) => {
       await queryClient.invalidateQueries({ queryKey: ['sessions'] });
       await queryClient.invalidateQueries({ queryKey: ['class', classId] });
-      navigate(`/sessions/${created.id}`);
+      navigate(paths.session(created.id));
     },
   });
 
@@ -150,7 +151,7 @@ function ClassSessionActions({ classId, latestSessionId }: { classId: string; la
           {t('classDetail.nextWeek')}
         </Button>
       )}
-      <Link to={`/classes/${classId}/sessions/new`} className={buttonClass()}>
+      <Link to={paths.classSessionNew(classId)} className={buttonClass()}>
         <Icon name="play_circle" className="text-[18px]" />
         {t('classes.newSession')}
       </Link>
@@ -211,7 +212,7 @@ function ClassSettings({ classId }: { classId: string }) {
               { status: next },
               {
                 onSuccess: () => {
-                  if (next === 'ARCHIVED') navigate('/classes');
+                  if (next === 'ARCHIVED') navigate(paths.classes);
                 },
               },
             );

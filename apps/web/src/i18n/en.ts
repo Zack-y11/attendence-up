@@ -73,7 +73,7 @@ export const en = {
     title: 'Add your Clerk keys',
     body: 'Instructor sign-in uses Clerk. Copy apps/web/.env.example to apps/web/.env and set VITE_CLERK_PUBLISHABLE_KEY. Set CLERK_SECRET_KEY in apps/api/.env, then restart both apps.',
     public:
-      'The public attendance page does not need an account and stays available at /attendance/<token>.',
+      'The public attendance page does not need an account and stays available at /a/<token>.',
   },
   missingRoute: 'That page does not exist.',
   signIn: {
@@ -366,11 +366,15 @@ export const en = {
     duplicate: 'Duplicate',
     nextWeek: 'Next week',
     export: 'Export',
-    deleteDraft: 'Delete draft',
+    delete: 'Delete session',
     open: 'Open attendance',
     close: 'Close attendance',
     reopen: 'Reopen attendance',
-    confirmDelete: 'Delete this draft session? This cannot be undone.',
+    confirmDelete: 'Delete this session? This cannot be undone.',
+    confirmDeleteWithRecords_one:
+      'Delete this session and its {{count}} check-in? The public link will stop working. This cannot be undone.',
+    confirmDeleteWithRecords_other:
+      'Delete this session and its {{count}} check-ins? The public link will stop working. This cannot be undone.',
     linkTitle: 'Public attendance link',
     linkOpen: 'Share this with students to check in.',
     linkClosed: 'Students cannot check in until the session is open.',

@@ -13,13 +13,13 @@ Checked against the [v0.1.0](https://github.com/Zack-y11/attendence-up/releases/
 **v0.1.0** (pre-release) is the instructor app:
 
 - Clerk sign-up and sign-in for instructors. Classes can be active or archived. A session can belong to a class or stand alone.
-- Students open `/attendance/{publicToken}`. The internal session id stays private. A duplicate student code on the same session is rejected.
+- Students open `/a/{publicToken}`. Older `/attendance/{publicToken}` links redirect there. The internal session id stays private. A duplicate student code on the same session is rejected.
 - Optional classroom point and radius on the class (copied onto a new class session) or on the session. The browser asks for location only when a classroom location is set. The server computes distance with the Haversine formula and stores a location status (`WITHIN_RADIUS`, `OUTSIDE_RADIUS`, `LOW_ACCURACY`, `LOCATION_UNAVAILABLE`, or `NO_EXPECTED_LOCATION`). None of those statuses rejects the check-in.
 - Excel and PDF export from one column allowlist. Latitude and longitude are off unless the instructor selects those columns.
 
 **v0.2.0** adds the roster, the public page, and search metadata:
 
-- The live session view shows a QR code for the public link, next to copy link. Scanning it opens the same `/attendance/{publicToken}` page.
+- The live session view shows a QR code for the public link, next to copy link. Scanning it opens the same `/a/{publicToken}` page.
 - A check-in is stored as Present. On the roster, including after the session is closed, the instructor can set Present, Late, Absent, or Excused. That status is separate from location status and is included in the default export.
 - A student can say they are not in the classroom and leave an absence note (8 to 500 characters). The check-in stays Present. The note is required only when they say they are away, and it is dropped otherwise. If the location preview is outside the radius, the page suggests that toggle.
 - Optional signature on the check-in form, drawn or written. A written signature is stored as text. A drawn signature is a PNG: the export preview shows it, and the Excel and PDF files embed that image.

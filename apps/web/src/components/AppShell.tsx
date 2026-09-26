@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Link, NavLink, Outlet } from 'react-router';
 import { useApi } from '../api/context';
+import { paths } from '../lib/paths';
 import { LanguageSwitch } from './LanguageSwitch';
 import { buttonClass, Icon, LiveDot } from './ui';
 
@@ -16,11 +17,11 @@ function NavItems({
 }) {
   const { t } = useTranslation();
   const links = [
-    { to: '/', label: t('nav.dashboard'), icon: 'space_dashboard', end: true },
-    { to: '/classes', label: t('nav.classes'), icon: 'school', end: false },
-    { to: '/sessions', label: t('nav.sessions'), icon: 'event_available', end: false },
-    { to: '/locations', label: t('nav.locations'), icon: 'pin_drop', end: false },
-    { to: '/settings', label: t('nav.settings'), icon: 'settings', end: false },
+    { to: paths.home, label: t('nav.dashboard'), icon: 'space_dashboard', end: true },
+    { to: paths.classes, label: t('nav.classes'), icon: 'school', end: false },
+    { to: paths.sessions, label: t('nav.sessions'), icon: 'event_available', end: false },
+    { to: paths.locations, label: t('nav.locations'), icon: 'pin_drop', end: false },
+    { to: paths.settings, label: t('nav.settings'), icon: 'settings', end: false },
   ];
 
   return (
@@ -70,7 +71,7 @@ function LiveIndicator() {
   if (!first) return null;
   return (
     <Link
-      to={open.length === 1 ? `/sessions/${first.id}` : '/sessions'}
+      to={open.length === 1 ? paths.session(first.id) : paths.sessions}
       className="hidden items-center gap-2 rounded-full border border-teal/20 bg-teal-soft/50 px-3 py-1 text-xs font-semibold text-teal transition hover:bg-teal-soft lg:flex"
     >
       <LiveDot className="h-2 w-2" />
@@ -97,7 +98,7 @@ export function AppShell() {
           </div>
           <div className="flex items-center gap-3">
             <LiveIndicator />
-            <Link to="/sessions/new" className={buttonClass('primary', 'hidden sm:inline-flex')}>
+            <Link to={paths.sessionNew} className={buttonClass('primary', 'hidden sm:inline-flex')}>
               <Icon name="add" className="text-[18px]" />
               {t('shell.newSession')}
             </Link>
@@ -136,7 +137,7 @@ export function AppShell() {
           <div className="absolute inset-y-0 left-0 flex w-72 flex-col gap-8 bg-card px-4 py-6 shadow-[0_20px_25px_-5px_rgba(15,23,42,0.08)]">
             <Brand />
             <NavItems vertical onNavigate={() => setMenuOpen(false)} />
-            <Link to="/sessions/new" className={buttonClass()} onClick={() => setMenuOpen(false)}>
+            <Link to={paths.sessionNew} className={buttonClass()} onClick={() => setMenuOpen(false)}>
               <Icon name="add" className="text-[18px]" />
               {t('shell.newSession')}
             </Link>

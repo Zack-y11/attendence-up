@@ -1,13 +1,14 @@
-import type {
-  AttendanceRecordDto,
-  ClassDetailDto,
-  ClassDto,
-  InstructorDto,
-  LocationDto,
-  PublicSessionDto,
-  SavedLocationDto,
-  SessionDto,
-  SessionSummaryDto,
+import {
+  publicAttendancePath,
+  type AttendanceRecordDto,
+  type ClassDetailDto,
+  type ClassDto,
+  type InstructorDto,
+  type LocationDto,
+  type PublicSessionDto,
+  type SavedLocationDto,
+  type SessionDto,
+  type SessionSummaryDto,
 } from '@attendence-up/shared';
 import type {
   AttendanceRecord,
@@ -130,7 +131,7 @@ export function presentSession(item: SessionWithRelations): SessionDto {
   return {
     id: item.id,
     publicToken: item.publicToken,
-    publicPath: `/attendance/${item.publicToken}`,
+    publicPath: publicAttendancePath(item.publicToken),
     classId: item.classId,
     className: item.class?.name ?? null,
     name: item.name,

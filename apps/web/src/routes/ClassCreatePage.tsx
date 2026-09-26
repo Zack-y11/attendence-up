@@ -5,6 +5,7 @@ import { useApi } from '../api/context';
 import { ClassForm } from '../components/ClassForm';
 import { FormLayout } from '../components/FormLayout';
 import { PageHeader } from '../components/ui';
+import { paths } from '../lib/paths';
 
 export function ClassCreatePage() {
   const { t } = useTranslation();
@@ -15,7 +16,7 @@ export function ClassCreatePage() {
     mutationFn: api.createClass,
     onSuccess: async (created) => {
       await queryClient.invalidateQueries({ queryKey: ['classes'] });
-      navigate(`/classes/${created.id}`);
+      navigate(paths.class(created.id));
     },
   });
 

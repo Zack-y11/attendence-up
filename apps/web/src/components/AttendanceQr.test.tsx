@@ -48,9 +48,9 @@ function scan(html: string) {
 }
 
 describe('public attendance QR', () => {
-  it('encodes the same /attendance/{token} URL that Copy link uses', () => {
-    const url = publicAttendanceUrl('https://class.example', '/attendance/token-123');
-    expect(url).toBe('https://class.example/attendance/token-123');
+  it('encodes the same /a/{token} URL that Copy link uses', () => {
+    const url = publicAttendanceUrl('https://class.example', '/a/token-123');
+    expect(url).toBe('https://class.example/a/token-123');
 
     const html = renderToStaticMarkup(
       <AttendanceQr url={url} title={qrTitle} caption={qrCaption} />,

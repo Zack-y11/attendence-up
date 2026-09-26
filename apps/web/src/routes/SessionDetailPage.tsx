@@ -33,6 +33,7 @@ import {
   trClass,
 } from '../components/ui';
 import { formatClock, formatTime, formatWhen } from '../lib/datetime';
+import { paths } from '../lib/paths';
 import { publicAttendanceUrl } from '../lib/publicAttendanceUrl';
 import { useCopy } from '../lib/useCopy';
 
@@ -96,7 +97,13 @@ export function SessionDetailPage() {
     mutationFn: () => api.deleteSession(id),
     onSuccess: async () => {
       await queryClient.invalidateQueries({ queryKey: ['sessions'] });
-      navigate('/sessions');
+      if (session.data?.classId) {
+        await queryClient.invalidateQueries({ queryKey: ['class', session.data.classId] });
+        await queryClient.invalidateQueries({ queryKey: ['class-attendance', session.data.classId] });
+        navigate(paths.class(session.data.classId));
+        return;
+      }
+      navigate(paths.sessions);
     },
   });
   const update = useMutation({
@@ -110,7 +117,7 @@ export function SessionDetailPage() {
       if (session.data?.classId) {
         await queryClient.invalidateQueries({ queryKey: ['class', session.data.classId] });
       }
-      navigate(`/sessions/${created.id}`);
+      navigate(paths.session(created.id));
     },
   });
   const setStatus = useMutation({
@@ -174,7 +181,7 @@ export function SessionDetailPage() {
     <div className="flex flex-col gap-6">
       <div>
         <Link
-          to={item.classId ? `/classes/${item.classId}` : '/sessions'}
+          to={item.classId ? paths.class(item.classId) : paths.sessions}
           className="mb-3 inline-flex items-center gap-1 text-xs font-semibold text-muted hover:text-accent"
         >
           <Icon name="arrow_back" className="text-[16px]" />
@@ -213,12 +220,10 @@ export function SessionDetailPage() {
               <Icon name="download" className="text-[18px]" />
               {t('session.export')}
             </Button>
-            {item.status === 'DRAFT' && item.attendanceCount === 0 && (
-              <Button type="button" variant="ghost" onClick={() => setConfirmDelete(true)}>
-                <Icon name="delete" className="text-[18px]" />
-                {t('session.deleteDraft')}
-              </Button>
-            )}
+            <Button type="button" variant="ghost" onClick={() => setConfirmDelete(true)}>
+              <Icon name="delete" className="text-[18px]" />
+              {t('session.delete')}
+            </Button>
             {item.status === 'DRAFT' && (
               <Button type="button" onClick={() => open.mutate()} disabled={open.isPending}>
                 <Icon name="play_arrow" className="text-[18px]" />
@@ -245,7 +250,11 @@ export function SessionDetailPage() {
       {confirmDelete && (
         <div className="flex flex-wrap items-center gap-3 rounded-xl border border-danger/20 bg-danger-soft px-4 py-3 text-sm">
           <Icon name="warning" className="text-[18px] text-danger" />
-          <span className="flex-1">{t('session.confirmDelete')}</span>
+          <span className="flex-1">
+            {item.attendanceCount > 0
+              ? t('session.confirmDeleteWithRecords', { count: item.attendanceCount })
+              : t('session.confirmDelete')}
+          </span>
           <Button type="button" variant="danger" onClick={() => remove.mutate()} disabled={remove.isPending}>
             {t('common.delete')}
           </Button>
