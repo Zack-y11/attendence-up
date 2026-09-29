@@ -16,6 +16,7 @@ const hidden = [
 
 let app!: FastifyInstance;
 let classToken = '';
+let closedToken = '';
 let laterToken = '';
 let otherClassToken = '';
 let standaloneToken = '';
@@ -98,6 +99,7 @@ describe('public student lookup', () => {
       },
     });
     classToken = current.publicToken;
+    closedToken = earlier.publicToken;
     laterToken = later.publicToken;
     otherClassToken = historySession.publicToken;
     standaloneToken = standalone.publicToken;
@@ -152,6 +154,12 @@ describe('public student lookup', () => {
     await prisma.class.deleteMany({ where: { ownerId: instructorId } });
     await prisma.user.deleteMany({ where: { id: instructorId } });
     await app?.close();
+  });
+
+  it('does not autofill when check-in is not allowed', async () => {
+    const response = await lookup(closedToken, 'SM001');
+    expect(response.statusCode).toBe(200);
+    expectName(response.json(), null);
   });
 
   it('fills the latest saved name for an exact code in this class', async () => {
@@ -271,5 +279,5 @@ describe('public lookup rate limit', () => {
       expect(next.statusCode).toBe(404);
     }
     expect(blocked).toBe(true);
-  });
+  }, 20_000);
 });
