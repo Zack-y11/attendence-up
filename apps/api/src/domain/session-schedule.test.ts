@@ -36,8 +36,9 @@ describe('session attendance window', () => {
     ).toEqual({ ok: true });
   });
 
-  it('stays open until the end and is closed at the end', () => {
+  it('stays open through the end instant and closes afterward', () => {
     const justBeforeEnd = new Date(end.getTime() - 1);
+    const justAfterEnd = new Date(end.getTime() + 1);
     expect(nextStoredStatus('OPEN', start, end, justBeforeEnd)).toBe('OPEN');
     expect(
       attendanceGate(
@@ -45,10 +46,18 @@ describe('session attendance window', () => {
         justBeforeEnd,
       ),
     ).toEqual({ ok: true });
-    expect(attendanceStatusForWindow(start, end, end)).toBe('CLOSED');
-    expect(nextStoredStatus('OPEN', start, end, end)).toBe('CLOSED');
+    expect(attendanceStatusForWindow(start, end, end)).toBe('OPEN');
+    expect(nextStoredStatus('OPEN', start, end, end)).toBe('OPEN');
     expect(
-      attendanceGate({ status: 'CLOSED', attendanceOpensAt: start, attendanceClosesAt: end }, end),
+      attendanceGate({ status: 'OPEN', attendanceOpensAt: start, attendanceClosesAt: end }, end),
+    ).toEqual({ ok: true });
+    expect(attendanceStatusForWindow(start, end, justAfterEnd)).toBe('CLOSED');
+    expect(nextStoredStatus('OPEN', start, end, justAfterEnd)).toBe('CLOSED');
+    expect(
+      attendanceGate(
+        { status: 'CLOSED', attendanceOpensAt: start, attendanceClosesAt: end },
+        justAfterEnd,
+      ),
     ).toEqual({ ok: false, reason: 'TOO_LATE' });
   });
 
@@ -65,11 +74,19 @@ describe('session attendance window', () => {
         laterStart,
       ),
     ).toEqual({ ok: true });
-    expect(nextStoredStatus('OPEN', laterStart, laterEnd, laterEnd)).toBe('CLOSED');
+    expect(nextStoredStatus('OPEN', laterStart, laterEnd, laterEnd)).toBe('OPEN');
+    expect(
+      attendanceGate(
+        { status: 'OPEN', attendanceOpensAt: laterStart, attendanceClosesAt: laterEnd },
+        laterEnd,
+      ),
+    ).toEqual({ ok: true });
+    const afterLaterEnd = new Date(laterEnd.getTime() + 1);
+    expect(nextStoredStatus('OPEN', laterStart, laterEnd, afterLaterEnd)).toBe('CLOSED');
     expect(
       attendanceGate(
         { status: 'CLOSED', attendanceOpensAt: laterStart, attendanceClosesAt: laterEnd },
-        laterEnd,
+        afterLaterEnd,
       ),
     ).toEqual({ ok: false, reason: 'TOO_LATE' });
   });
@@ -80,7 +97,8 @@ describe('session attendance window', () => {
     expect(nextStoredStatus('DRAFT', null, null, start)).toBe('DRAFT');
     expect(nextStoredStatus('DRAFT', start, null, start)).toBe('DRAFT');
     expect(nextStoredStatus('OPEN', null, end, new Date(end.getTime() - 1))).toBe('OPEN');
-    expect(nextStoredStatus('OPEN', null, end, end)).toBe('CLOSED');
+    expect(nextStoredStatus('OPEN', null, end, end)).toBe('OPEN');
+    expect(nextStoredStatus('OPEN', null, end, new Date(end.getTime() + 1))).toBe('CLOSED');
     expect(nextStoredStatus('OPEN', start, null, new Date(start.getTime() - 1))).toBe('DRAFT');
   });
 
@@ -88,7 +106,8 @@ describe('session attendance window', () => {
     const now = new Date(start.getTime() + 60_000);
     expect(endWindowNow(start, end, now)?.toISOString()).toBe(now.toISOString());
     expect(nextStoredStatus('CLOSED', start, now, now)).toBe('CLOSED');
-    expect(endWindowNow(start, end, end)).toBeNull();
+    expect(endWindowNow(start, end, end)?.toISOString()).toBe(end.toISOString());
+    expect(endWindowNow(start, end, new Date(end.getTime() + 1))).toBeNull();
     expect(endWindowNow(null, end, now)).toBeNull();
   });
 });

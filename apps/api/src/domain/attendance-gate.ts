@@ -11,10 +11,10 @@ export type AttendanceGate = { ok: true } | { ok: false; reason: AttendanceGateR
 /**
  * A configured window is checked before status so a scheduled session that is
  * closed still tells students whether they are early or late. The start
- * instant is inside the window. The end instant is not.
+ * instant is inside the window. The end instant still accepts check-in.
  */
 export function attendanceGate(session: SessionGateInput, now: Date): AttendanceGate {
-  if (session.attendanceClosesAt && now >= session.attendanceClosesAt) {
+  if (session.attendanceClosesAt && now > session.attendanceClosesAt) {
     return { ok: false, reason: 'TOO_LATE' };
   }
   if (session.attendanceOpensAt && now < session.attendanceOpensAt) {
@@ -26,9 +26,9 @@ export function attendanceGate(session: SessionGateInput, now: Date): Attendance
   return { ok: true };
 }
 
-/** The end instant has already closed the window. */
+/** The close instant itself still counts as inside the window. */
 export function attendanceWindowEnded(closesAt: Date | null, now: Date): boolean {
-  return closesAt != null && now >= closesAt;
+  return closesAt != null && now > closesAt;
 }
 
 export function attendanceGateMessage(reason: AttendanceGateReason): string {

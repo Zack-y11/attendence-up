@@ -19,7 +19,7 @@ describe('attendanceGate', () => {
     ).toEqual({ ok: true });
   });
 
-  it('opens at the start and closes at the end', () => {
+  it('opens at the start and through the end instant', () => {
     const end = new Date('2026-09-23T15:00:00.000Z');
     expect(
       attendanceGate({ status: 'OPEN', attendanceOpensAt: now, attendanceClosesAt: end }, now),
@@ -32,6 +32,12 @@ describe('attendanceGate', () => {
     ).toEqual({ ok: true });
     expect(
       attendanceGate({ status: 'OPEN', attendanceOpensAt: now, attendanceClosesAt: end }, end),
+    ).toEqual({ ok: true });
+    expect(
+      attendanceGate(
+        { status: 'OPEN', attendanceOpensAt: now, attendanceClosesAt: end },
+        new Date(end.getTime() + 1),
+      ),
     ).toEqual({ ok: false, reason: 'TOO_LATE' });
   });
 
@@ -65,8 +71,9 @@ describe('attendanceWindowEnded', () => {
     expect(attendanceWindowEnded(new Date('2026-09-23T15:00:00.000Z'), now)).toBe(false);
   });
 
-  it('ends when the clock reaches the close time', () => {
-    expect(attendanceWindowEnded(now, now)).toBe(true);
+  it('ends once the clock is past the close time', () => {
+    expect(attendanceWindowEnded(now, now)).toBe(false);
+    expect(attendanceWindowEnded(now, new Date(now.getTime() + 1))).toBe(true);
     expect(attendanceWindowEnded(new Date('2026-09-23T13:00:00.000Z'), now)).toBe(true);
   });
 });

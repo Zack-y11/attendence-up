@@ -2,7 +2,7 @@ import type { SessionStatus } from '@attendence-up/shared';
 
 /**
  * Status implied by a session's check-in window.
- * The start instant is open. The end instant is closed.
+ * The start and end instants are both inside the open window.
  * A missing bound returns null so the instructor still opens that session by hand.
  */
 export function attendanceStatusForWindow(
@@ -11,7 +11,7 @@ export function attendanceStatusForWindow(
   now: Date,
 ): Extract<SessionStatus, 'OPEN' | 'CLOSED'> | null {
   if (opensAt == null || closesAt == null) return null;
-  return now >= opensAt && now < closesAt ? 'OPEN' : 'CLOSED';
+  return now >= opensAt && now <= closesAt ? 'OPEN' : 'CLOSED';
 }
 
 /**
@@ -26,9 +26,12 @@ export function nextStoredStatus(
   now = new Date(),
 ): SessionStatus {
   const scheduled = attendanceStatusForWindow(opensAt, closesAt, now);
-  if (scheduled) return scheduled;
+  if (scheduled) {
+    if (status === 'CLOSED' && closesAt != null && now >= closesAt) return 'CLOSED';
+    return scheduled;
+  }
   if (status === 'OPEN' && opensAt != null && now < opensAt) return 'DRAFT';
-  if (status === 'OPEN' && closesAt != null && now >= closesAt) return 'CLOSED';
+  if (status === 'OPEN' && closesAt != null && now > closesAt) return 'CLOSED';
   return status;
 }
 
@@ -54,6 +57,6 @@ export function resolveAttendanceWindow(
  */
 export function endWindowNow(opensAt: Date | null, closesAt: Date | null, now: Date): Date | null {
   if (opensAt == null || closesAt == null) return null;
-  if (now >= opensAt && now < closesAt) return now;
+  if (now >= opensAt && now <= closesAt) return now;
   return null;
 }
