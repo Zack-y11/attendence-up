@@ -18,8 +18,13 @@ import {
   sessionLocationColumns,
 } from '../lib/presenters';
 import { prisma } from '../lib/prisma';
-import { closeExpiredSessions } from '../domain/close-expired-sessions';
 import { attendanceWindowEnded } from '../domain/attendance-gate';
+import {
+  endWindowNow,
+  nextStoredStatus,
+  resolveAttendanceWindow,
+} from '../domain/session-schedule';
+import { syncAttendanceWindows } from '../domain/sync-attendance-windows';
 import { resolveInstructorLocation } from '../domain/saved-location';
 import { shiftByDays } from '../domain/shift-days';
 import { createPublicToken } from '../domain/tokens';
@@ -30,7 +35,7 @@ const sessionInclude = {
 } as const;
 
 async function ownedSession(id: string, instructorId: string) {
-  await closeExpiredSessions({ id, instructorId });
+  await syncAttendanceWindows({ id, instructorId });
   const session = await prisma.attendanceSession.findFirst({
     where: { id, instructorId },
     include: sessionInclude,
@@ -44,7 +49,7 @@ export async function sessionRoutes(app: FastifyInstance) {
 
   api.get('/sessions', { schema: { querystring: sessionListQuerySchema } }, async (request) => {
     const scope = request.query.scope ?? 'all';
-    await closeExpiredSessions({ instructorId: request.instructor.id });
+    await syncAttendanceWindows({ instructorId: request.instructor.id });
     const where: Prisma.AttendanceSessionWhereInput = { instructorId: request.instructor.id };
     if (scope === 'open') where.status = 'OPEN';
     if (scope === 'draft') where.status = 'DRAFT';
@@ -59,13 +64,16 @@ export async function sessionRoutes(app: FastifyInstance) {
 
   api.post('/sessions', { schema: { body: sessionWriteSchema } }, async (request, reply) => {
     const requested = await resolveInstructorLocation(request.instructor.id, request.body);
+    const columns = dateColumns(request.body);
+    const window = resolveAttendanceWindow(columns);
     const created = await prisma.attendanceSession.create({
       data: {
         publicToken: createPublicToken(),
         instructorId: request.instructor.id,
         name: request.body.name,
         description: request.body.description ?? '',
-        ...dateColumns(request.body),
+        ...columns,
+        status: nextStoredStatus('DRAFT', window.attendanceOpensAt, window.attendanceClosesAt),
         ...sessionLocationColumns(requested === undefined ? null : requested),
       },
       include: sessionInclude,
@@ -92,6 +100,8 @@ export async function sessionRoutes(app: FastifyInstance) {
         }
       }
       const shiftDays = request.body.shiftDays ?? 0;
+      const attendanceOpensAt = shiftByDays(session.attendanceOpensAt, shiftDays);
+      const attendanceClosesAt = shiftByDays(session.attendanceClosesAt, shiftDays);
       const created = await prisma.attendanceSession.create({
         data: {
           publicToken: createPublicToken(),
@@ -99,8 +109,9 @@ export async function sessionRoutes(app: FastifyInstance) {
           instructorId: request.instructor.id,
           name: session.name,
           description: session.description,
-          attendanceOpensAt: shiftByDays(session.attendanceOpensAt, shiftDays),
-          attendanceClosesAt: shiftByDays(session.attendanceClosesAt, shiftDays),
+          attendanceOpensAt,
+          attendanceClosesAt,
+          status: nextStoredStatus('DRAFT', attendanceOpensAt, attendanceClosesAt),
           locationLatitude: session.locationLatitude,
           locationLongitude: session.locationLongitude,
           locationRadiusMeters: session.locationRadiusMeters,
@@ -117,6 +128,8 @@ export async function sessionRoutes(app: FastifyInstance) {
     async (request) => {
       const session = await ownedSession(request.params.id, request.instructor.id);
       const requested = await resolveInstructorLocation(request.instructor.id, request.body);
+      const columns = dateColumns(request.body);
+      const window = resolveAttendanceWindow(columns, session);
       const updated = await prisma.attendanceSession.update({
         where: { id: session.id },
         data: {
@@ -124,7 +137,12 @@ export async function sessionRoutes(app: FastifyInstance) {
           ...(request.body.description !== undefined
             ? { description: request.body.description }
             : {}),
-          ...dateColumns(request.body),
+          ...columns,
+          status: nextStoredStatus(
+            session.status,
+            window.attendanceOpensAt,
+            window.attendanceClosesAt,
+          ),
           ...sessionLocationColumns(requested),
         },
         include: sessionInclude,
@@ -135,15 +153,19 @@ export async function sessionRoutes(app: FastifyInstance) {
 
   api.post('/sessions/:id/open', { schema: { params: idParamSchema } }, async (request) => {
     const session = await ownedSession(request.params.id, request.instructor.id);
+    const now = new Date();
+    if (session.attendanceOpensAt && now < session.attendanceOpensAt) {
+      throw new AppError(409, 'Attendance is not open yet.');
+    }
+    if (attendanceWindowEnded(session.attendanceClosesAt, now)) {
+      throw new AppError(409, 'The attendance window has closed.');
+    }
     if (session.status === 'OPEN') return presentSession(session);
     if (session.status !== 'DRAFT') {
       throw new AppError(
         409,
         'Only a draft session can be opened. Reopen a closed session instead.',
       );
-    }
-    if (attendanceWindowEnded(session.attendanceClosesAt, new Date())) {
-      throw new AppError(409, 'The attendance window has closed.');
     }
     const updated = await prisma.attendanceSession.update({
       where: { id: session.id },
@@ -159,9 +181,11 @@ export async function sessionRoutes(app: FastifyInstance) {
     if (session.status !== 'OPEN') {
       throw new AppError(409, 'Open the session before closing it.');
     }
+    const now = new Date();
+    const endedAt = endWindowNow(session.attendanceOpensAt, session.attendanceClosesAt, now);
     const updated = await prisma.attendanceSession.update({
       where: { id: session.id },
-      data: { status: 'CLOSED' },
+      data: { status: 'CLOSED', ...(endedAt ? { attendanceClosesAt: endedAt } : {}) },
       include: sessionInclude,
     });
     return presentSession(updated);
@@ -169,12 +193,16 @@ export async function sessionRoutes(app: FastifyInstance) {
 
   api.post('/sessions/:id/reopen', { schema: { params: idParamSchema } }, async (request) => {
     const session = await ownedSession(request.params.id, request.instructor.id);
+    const now = new Date();
+    if (session.attendanceOpensAt && now < session.attendanceOpensAt) {
+      throw new AppError(409, 'Attendance is not open yet.');
+    }
+    if (attendanceWindowEnded(session.attendanceClosesAt, now)) {
+      throw new AppError(409, 'The attendance window has closed.');
+    }
     if (session.status === 'OPEN') return presentSession(session);
     if (session.status !== 'CLOSED') {
       throw new AppError(409, 'Only a closed session can be reopened.');
-    }
-    if (attendanceWindowEnded(session.attendanceClosesAt, new Date())) {
-      throw new AppError(409, 'The attendance window has closed.');
     }
     const updated = await prisma.attendanceSession.update({
       where: { id: session.id },

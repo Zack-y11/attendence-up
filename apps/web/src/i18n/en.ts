@@ -296,13 +296,14 @@ export const en = {
     standaloneDescription:
       'Use this for a workshop, meetup, or any attendance that does not belong to a class.',
     submit: 'Create session',
-    tipDraftTitle: 'Starts as a draft',
-    tipDraftBody: 'Nobody can check in until you open attendance from the session page.',
+    tipDraftTitle: 'Opens from the schedule',
+    tipDraftBody:
+      'With a start and an end, attendance opens and closes by itself. Leave both blank and it stays a draft until you open it.',
     tipLinkTitle: 'Share one link',
     tipLinkBody: 'Each session gets its own public check-in link for students.',
-    tipWindowTitle: 'Optional time window',
+    tipWindowTitle: 'Start and end',
     tipWindowBody:
-      'Set when check-in opens and closes, or leave it open while the session is open.',
+      'Those times are the check-in window. It opens at the start, closes at the end, and a later window opens the same way.',
   },
   form: {
     howItWorks: 'How it works',
@@ -312,7 +313,7 @@ export const en = {
     ends: 'Ends',
     startsHint: 'Usual meeting time. It stays the same each week. Set the day on each session.',
     opens: 'Attendance opens',
-    opensHint: 'Leave blank to allow check-in whenever the session is open.',
+    opensHint: 'Set both times and attendance follows them. Leave both blank to open it yourself.',
     closes: 'Attendance closes',
   },
   location: {
@@ -378,6 +379,9 @@ export const en = {
     linkTitle: 'Public attendance link',
     linkOpen: 'Share this with students to check in.',
     linkClosed: 'Students cannot check in until the session is open.',
+    linkScheduled: 'Students can check in only while this start and end window is open.',
+    scheduleHint: 'Attendance opens {{start}} and closes {{end}}, without an extra click.',
+    scheduleEnded: 'This window has ended. Set a later start and end to open attendance again.',
     qrTitle: 'QR code for the public attendance page',
     qrCaption: 'Scan to open the same check-in page as Copy link.',
     openPage: 'Open check-in page',

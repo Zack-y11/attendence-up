@@ -32,6 +32,7 @@ import {
   thClass,
   trClass,
 } from '../components/ui';
+import { attendanceStillScheduled } from '../lib/attendance-window';
 import { formatClock, formatTime, formatWhen } from '../lib/datetime';
 import { paths } from '../lib/paths';
 import { publicAttendanceUrl } from '../lib/publicAttendanceUrl';
@@ -60,7 +61,9 @@ export function SessionDetailPage() {
   const [confirmDelete, setConfirmDelete] = useState(false);
   const [filter, setFilter] = useState<RosterFilter>('ALL');
   const [search, setSearch] = useState('');
-  const [pinnedStatus, setPinnedStatus] = useState<ReadonlyMap<string, AttendanceStatus>>(new Map());
+  const [pinnedStatus, setPinnedStatus] = useState<ReadonlyMap<string, AttendanceStatus>>(
+    new Map(),
+  );
   const [savingStatusIds, setSavingStatusIds] = useState<ReadonlySet<string>>(new Set());
 
   const session = useQuery({
@@ -72,7 +75,17 @@ export function SessionDetailPage() {
       }
       return item;
     },
-    refetchInterval: (query) => (query.state.data?.status === 'OPEN' ? 4000 : false),
+    refetchInterval: (query) => {
+      const current = query.state.data;
+      if (!current) return false;
+      if (
+        current.status === 'OPEN' ||
+        attendanceStillScheduled(current.attendanceOpensAt, current.attendanceClosesAt)
+      ) {
+        return 4000;
+      }
+      return false;
+    },
   });
   const attendance = useQuery({
     queryKey: ['attendance', id],
@@ -99,7 +112,9 @@ export function SessionDetailPage() {
       await queryClient.invalidateQueries({ queryKey: ['sessions'] });
       if (session.data?.classId) {
         await queryClient.invalidateQueries({ queryKey: ['class', session.data.classId] });
-        await queryClient.invalidateQueries({ queryKey: ['class-attendance', session.data.classId] });
+        await queryClient.invalidateQueries({
+          queryKey: ['class-attendance', session.data.classId],
+        });
         navigate(paths.class(session.data.classId));
         return;
       }
@@ -160,6 +175,11 @@ export function SessionDetailPage() {
   if (!session.data) return null;
   const item = session.data;
   const isOpen = item.status === 'OPEN';
+  const followsSchedule = Boolean(item.attendanceOpensAt && item.attendanceClosesAt);
+  const windowEnded =
+    followsSchedule &&
+    item.attendanceClosesAt != null &&
+    new Date(item.attendanceClosesAt).getTime() <= Date.now();
   const link = publicAttendanceUrl(window.location.origin, item.publicPath);
   const actionError = open.error || close.error || reopen.error || remove.error || duplicate.error;
 
@@ -196,7 +216,9 @@ export function SessionDetailPage() {
                   {t('session.live')}
                 </span>
               ) : (
-                <StatusPill tone={sessionTone(item.status)}>{t(`status.session.${item.status}`)}</StatusPill>
+                <StatusPill tone={sessionTone(item.status)}>
+                  {t(`status.session.${item.status}`)}
+                </StatusPill>
               )}
               <span className="text-xs font-semibold tracking-wider text-muted uppercase">
                 {item.className ?? t('session.standalone')}
@@ -205,14 +227,26 @@ export function SessionDetailPage() {
             <h1 className="font-display text-2xl font-semibold tracking-tight sm:text-[2rem] sm:leading-10">
               {item.name}
             </h1>
-            {item.description && <p className="mt-1.5 max-w-2xl text-sm text-muted">{item.description}</p>}
+            {item.description && (
+              <p className="mt-1.5 max-w-2xl text-sm text-muted">{item.description}</p>
+            )}
           </div>
           <div className="flex flex-wrap gap-2">
-            <Button type="button" variant="secondary" onClick={() => duplicate.mutate(0)} disabled={duplicate.isPending}>
+            <Button
+              type="button"
+              variant="secondary"
+              onClick={() => duplicate.mutate(0)}
+              disabled={duplicate.isPending}
+            >
               <Icon name="content_copy" className="text-[18px]" />
               {t('session.duplicate')}
             </Button>
-            <Button type="button" variant="secondary" onClick={() => duplicate.mutate(7)} disabled={duplicate.isPending}>
+            <Button
+              type="button"
+              variant="secondary"
+              onClick={() => duplicate.mutate(7)}
+              disabled={duplicate.isPending}
+            >
               <Icon name="event_repeat" className="text-[18px]" />
               {t('session.nextWeek')}
             </Button>
@@ -224,19 +258,24 @@ export function SessionDetailPage() {
               <Icon name="delete" className="text-[18px]" />
               {t('session.delete')}
             </Button>
-            {item.status === 'DRAFT' && (
+            {item.status === 'DRAFT' && !followsSchedule && (
               <Button type="button" onClick={() => open.mutate()} disabled={open.isPending}>
                 <Icon name="play_arrow" className="text-[18px]" />
                 {t('session.open')}
               </Button>
             )}
             {isOpen && (
-              <Button type="button" variant="danger" onClick={() => close.mutate()} disabled={close.isPending}>
+              <Button
+                type="button"
+                variant="danger"
+                onClick={() => close.mutate()}
+                disabled={close.isPending}
+              >
                 <Icon name="stop_circle" className="text-[18px]" />
                 {t('session.close')}
               </Button>
             )}
-            {item.status === 'CLOSED' && (
+            {item.status === 'CLOSED' && !followsSchedule && (
               <Button type="button" onClick={() => reopen.mutate()} disabled={reopen.isPending}>
                 <Icon name="replay" className="text-[18px]" />
                 {t('session.reopen')}
@@ -246,6 +285,16 @@ export function SessionDetailPage() {
         </div>
       </div>
 
+      {followsSchedule ? (
+        <p className="text-sm text-muted">
+          {windowEnded
+            ? t('session.scheduleEnded')
+            : t('session.scheduleHint', {
+                start: formatWhen(item.attendanceOpensAt),
+                end: formatWhen(item.attendanceClosesAt),
+              })}
+        </p>
+      ) : null}
       {actionError ? <ErrorBlock error={actionError} /> : null}
       {confirmDelete && (
         <div className="flex flex-wrap items-center gap-3 rounded-xl border border-danger/20 bg-danger-soft px-4 py-3 text-sm">
@@ -255,7 +304,12 @@ export function SessionDetailPage() {
               ? t('session.confirmDeleteWithRecords', { count: item.attendanceCount })
               : t('session.confirmDelete')}
           </span>
-          <Button type="button" variant="danger" onClick={() => remove.mutate()} disabled={remove.isPending}>
+          <Button
+            type="button"
+            variant="danger"
+            onClick={() => remove.mutate()}
+            disabled={remove.isPending}
+          >
             {t('common.delete')}
           </Button>
           <Button type="button" variant="secondary" onClick={() => setConfirmDelete(false)}>
@@ -268,18 +322,33 @@ export function SessionDetailPage() {
         <Card className="p-5 lg:col-span-7">
           <div className="flex items-center justify-between gap-3">
             <div>
-              <p className="text-xs font-semibold tracking-wider text-muted uppercase">{t('session.linkTitle')}</p>
+              <p className="text-xs font-semibold tracking-wider text-muted uppercase">
+                {t('session.linkTitle')}
+              </p>
               <p className="mt-0.5 text-sm text-muted">
-                {isOpen ? t('session.linkOpen') : t('session.linkClosed')}
+                {isOpen
+                  ? t('session.linkOpen')
+                  : followsSchedule
+                    ? t('session.linkScheduled')
+                    : t('session.linkClosed')}
               </p>
             </div>
-            <span className={`grid h-9 w-9 place-items-center rounded-lg ${isOpen ? 'bg-teal-soft text-teal' : 'bg-mist text-muted'}`}>
-              <Icon name={isOpen ? 'wifi_tethering' : 'wifi_tethering_off'} className="text-[20px]" />
+            <span
+              className={`grid h-9 w-9 place-items-center rounded-lg ${isOpen ? 'bg-teal-soft text-teal' : 'bg-mist text-muted'}`}
+            >
+              <Icon
+                name={isOpen ? 'wifi_tethering' : 'wifi_tethering_off'}
+                className="text-[20px]"
+              />
             </span>
           </div>
           <div className="mt-4 flex flex-col gap-4 sm:flex-row sm:items-center">
             {isOpen && (
-              <AttendanceQr url={link} title={t('session.qrTitle')} caption={t('session.qrCaption')} />
+              <AttendanceQr
+                url={link}
+                title={t('session.qrTitle')}
+                caption={t('session.qrCaption')}
+              />
             )}
             <div className="min-w-0 flex-1">
               <div className="flex min-w-0 items-center gap-2 rounded-lg border border-line bg-paper px-3 py-2.5">
@@ -287,12 +356,30 @@ export function SessionDetailPage() {
                 <span className="min-w-0 flex-1 truncate font-mono text-xs">{link}</span>
               </div>
               <div className="mt-3 flex flex-wrap gap-2">
-                <Button type="button" variant={copyError ? 'danger' : 'primary'} onClick={() => void copy(link)}>
-                  <Icon name={copied ? 'check' : copyError ? 'error' : 'content_copy'} className="text-[18px]" />
-                  {copied ? t('common.copied') : copyError ? t('common.copyFailed') : t('common.copyLink')}
+                <Button
+                  type="button"
+                  variant={copyError ? 'danger' : 'primary'}
+                  onClick={() => void copy(link)}
+                >
+                  <Icon
+                    name={copied ? 'check' : copyError ? 'error' : 'content_copy'}
+                    className="text-[18px]"
+                  />
+                  {copied
+                    ? t('common.copied')
+                    : copyError
+                      ? t('common.copyFailed')
+                      : t('common.copyLink')}
                 </Button>
-                {copyError ? <p className="w-full text-sm text-danger">{t('errors.copyFailed')}</p> : null}
-                <a href={link} target="_blank" rel="noreferrer" className="inline-flex items-center gap-1.5 rounded-lg border border-line bg-card px-3.5 py-2 text-sm font-medium hover:bg-mist">
+                {copyError ? (
+                  <p className="w-full text-sm text-danger">{t('errors.copyFailed')}</p>
+                ) : null}
+                <a
+                  href={link}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="inline-flex items-center gap-1.5 rounded-lg border border-line bg-card px-3.5 py-2 text-sm font-medium hover:bg-mist"
+                >
                   <Icon name="open_in_new" className="text-[18px]" />
                   {t('session.openPage')}
                 </a>
@@ -303,7 +390,9 @@ export function SessionDetailPage() {
 
         <Card className="p-5 lg:col-span-5">
           <div className="flex items-center justify-between">
-            <p className="text-xs font-semibold tracking-wider text-muted uppercase">{t('session.telemetry')}</p>
+            <p className="text-xs font-semibold tracking-wider text-muted uppercase">
+              {t('session.telemetry')}
+            </p>
             {isOpen && (
               <span className="inline-flex items-center gap-1.5 text-xs font-medium text-teal">
                 <LiveDot className="h-2 w-2" />
@@ -329,20 +418,38 @@ export function SessionDetailPage() {
       <Card className="grid gap-4 p-5 sm:grid-cols-2 lg:grid-cols-5">
         <Detail icon="event" label={t('session.starts')} value={formatClock(item.startsAt)} />
         <Detail icon="event_busy" label={t('session.ends')} value={formatClock(item.endsAt)} />
-        <Detail icon="login" label={t('session.opens')} value={formatWhen(item.attendanceOpensAt)} />
-        <Detail icon="logout" label={t('session.closes')} value={formatWhen(item.attendanceClosesAt)} />
+        <Detail
+          icon="login"
+          label={t('session.opens')}
+          value={formatWhen(item.attendanceOpensAt)}
+        />
+        <Detail
+          icon="logout"
+          label={t('session.closes')}
+          value={formatWhen(item.attendanceClosesAt)}
+        />
         <Detail
           icon={item.location ? 'my_location' : 'location_off'}
           label={t('session.classroom')}
-          value={item.location ? t('session.radius', { radius: item.location.radiusMeters }) : t('session.notConfigured')}
-          sub={item.location ? `${item.location.latitude.toFixed(5)}, ${item.location.longitude.toFixed(5)}` : undefined}
+          value={
+            item.location
+              ? t('session.radius', { radius: item.location.radiusMeters })
+              : t('session.notConfigured')
+          }
+          sub={
+            item.location
+              ? `${item.location.latitude.toFixed(5)}, ${item.location.longitude.toFixed(5)}`
+              : undefined
+          }
         />
       </Card>
 
       <section>
         <div className="mb-3 flex flex-col gap-3 lg:flex-row lg:items-end lg:justify-between">
           <div>
-            <h2 className="font-display text-lg font-semibold tracking-tight">{t('session.roster')}</h2>
+            <h2 className="font-display text-lg font-semibold tracking-tight">
+              {t('session.roster')}
+            </h2>
             <p className="text-sm text-muted">
               {isOpen ? t('session.rosterLive') : t('session.rosterClosed')}
             </p>
@@ -391,7 +498,9 @@ export function SessionDetailPage() {
                   <tbody>
                     {visible.map((record) => (
                       <tr key={record.id} className={trClass}>
-                        <td className={`${tdClass} whitespace-nowrap text-xs text-muted tabular-nums`}>
+                        <td
+                          className={`${tdClass} whitespace-nowrap text-xs text-muted tabular-nums`}
+                        >
                           {formatTime(record.createdAt)}
                         </td>
                         <td className="px-4 py-2 align-middle">
@@ -414,7 +523,9 @@ export function SessionDetailPage() {
                               )}
                               {record.absenceNote && (
                                 <span className="mt-1 block max-w-xs text-xs leading-snug text-ink">
-                                  <span className="font-semibold text-muted">{t('session.away')}: </span>
+                                  <span className="font-semibold text-muted">
+                                    {t('session.away')}:{' '}
+                                  </span>
                                   {record.absenceNote}
                                 </span>
                               )}
@@ -435,7 +546,9 @@ export function SessionDetailPage() {
                         <td className={`${tdClass} whitespace-nowrap text-xs tabular-nums`}>
                           {formatAccuracy(record.locationAccuracyMeters) ? (
                             <span className="font-medium">
-                              {t('session.gps', { accuracy: formatAccuracy(record.locationAccuracyMeters) })}
+                              {t('session.gps', {
+                                accuracy: formatAccuracy(record.locationAccuracyMeters),
+                              })}
                             </span>
                           ) : (
                             <span className="text-muted">—</span>
@@ -486,7 +599,15 @@ export function SessionDetailPage() {
   );
 }
 
-function TelemetryBar({ near, flagged, noLocation }: { near: number; flagged: number; noLocation: number }) {
+function TelemetryBar({
+  near,
+  flagged,
+  noLocation,
+}: {
+  near: number;
+  flagged: number;
+  noLocation: number;
+}) {
   const total = near + flagged + noLocation;
   if (total === 0) return <div className="mt-4 h-2 rounded-full bg-mist" />;
   const pct = (value: number) => `${(value / total) * 100}%`;
@@ -511,14 +632,26 @@ function Legend({ color, label, value }: { color: string; label: string; value: 
   );
 }
 
-function Detail({ icon, label, value, sub }: { icon: string; label: string; value: ReactNode; sub?: string }) {
+function Detail({
+  icon,
+  label,
+  value,
+  sub,
+}: {
+  icon: string;
+  label: string;
+  value: ReactNode;
+  sub?: string;
+}) {
   return (
     <div className="flex items-start gap-3">
       <span className="grid h-8 w-8 shrink-0 place-items-center rounded-lg bg-mist text-muted">
         <Icon name={icon} className="text-[18px]" />
       </span>
       <div className="min-w-0">
-        <span className="block text-xs font-semibold tracking-wider text-muted uppercase">{label}</span>
+        <span className="block text-xs font-semibold tracking-wider text-muted uppercase">
+          {label}
+        </span>
         <span className="block truncate text-sm font-medium">{value}</span>
         {sub && <span className="block truncate font-mono text-[11px] text-muted">{sub}</span>}
       </div>

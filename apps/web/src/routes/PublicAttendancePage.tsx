@@ -12,6 +12,7 @@ import { ApiError, fetchPublicSession, submitPublicAttendance } from '../api/cli
 import { SignaturePad } from '../components/SignaturePad';
 import { LanguageSwitch } from '../components/LanguageSwitch';
 import { Button, ErrorBlock, Field, LoadingBlock, inputClass } from '../components/ui';
+import { attendanceStillScheduled } from '../lib/attendance-window';
 import { formatMeeting, formatWhen } from '../lib/datetime';
 import { setPageMeta } from '../lib/seo';
 
@@ -52,6 +53,13 @@ export function PublicAttendancePage() {
   const session = useQuery({
     queryKey: ['public-session', token],
     queryFn: () => fetchPublicSession(token),
+    refetchInterval: (query) => {
+      const item = query.state.data;
+      if (!item) return false;
+      if (item.acceptingAttendance) return 4000;
+      if (attendanceStillScheduled(item.attendanceOpensAt, item.attendanceClosesAt)) return 4000;
+      return false;
+    },
   });
   const [code, setCode] = useState('');
   const [name, setName] = useState('');
@@ -152,8 +160,12 @@ export function PublicAttendancePage() {
       <div className="rounded-lg bg-mist px-4 py-3.5">
         <div className="flex items-start justify-between gap-2">
           <div className="min-w-0">
-            <p className="text-xs font-semibold tracking-wider text-muted uppercase">{t('public.eyebrow')}</p>
-            <h1 className="truncate font-display text-lg font-semibold tracking-tight">{item.name}</h1>
+            <p className="text-xs font-semibold tracking-wider text-muted uppercase">
+              {t('public.eyebrow')}
+            </p>
+            <h1 className="truncate font-display text-lg font-semibold tracking-tight">
+              {item.name}
+            </h1>
           </div>
           <StatusDot open={item.acceptingAttendance} />
         </div>
@@ -165,7 +177,9 @@ export function PublicAttendancePage() {
               {item.startsAt || item.endsAt
                 ? t('public.meets', { when: formatMeeting(item.startsAt, item.endsAt) })
                 : ''}
-              {item.attendanceClosesAt ? ` · ${t('public.closes', { when: formatWhen(item.attendanceClosesAt) })}` : ''}
+              {item.attendanceClosesAt
+                ? ` · ${t('public.closes', { when: formatWhen(item.attendanceClosesAt) })}`
+                : ''}
             </p>
           )}
         </div>
@@ -176,7 +190,9 @@ export function PublicAttendancePage() {
             {t('public.registered', { name: done.studentName })}
           </p>
           <p className="mt-1 text-sm text-muted">{t('public.confirmedPresent')}</p>
-          {done.explained ? <p className="mt-1 text-sm text-muted">{t('public.reasonSent')}</p> : null}
+          {done.explained ? (
+            <p className="mt-1 text-sm text-muted">{t('public.reasonSent')}</p>
+          ) : null}
           <p className="mt-1 text-sm text-muted">{t('public.closePage')}</p>
         </div>
       ) : (
@@ -199,7 +215,9 @@ export function PublicAttendancePage() {
               onRetry={() => {
                 setLocationState({ status: 'pending' });
                 void requestPosition().then((reading) =>
-                  setLocationState(reading ? { status: 'ready', reading } : { status: 'unavailable' }),
+                  setLocationState(
+                    reading ? { status: 'ready', reading } : { status: 'unavailable' },
+                  ),
                 );
               }}
             />
@@ -239,7 +257,9 @@ export function PublicAttendancePage() {
                 <button
                   type="button"
                   className="mb-2 rounded-full bg-card px-3 py-1 text-xs font-semibold text-ink hover:bg-line"
-                  onClick={() => setAbsenceNote((current) => (current.trim() ? current : t('public.awayWork')))}
+                  onClick={() =>
+                    setAbsenceNote((current) => (current.trim() ? current : t('public.awayWork')))
+                  }
                 >
                   {t('public.awayWorkChip')}
                 </button>
@@ -257,7 +277,11 @@ export function PublicAttendancePage() {
             )}
           </div>
           {(fieldError || submit.error) && <ErrorBlock error={fieldError ?? submit.error} />}
-          <Button type="submit" className="w-full" disabled={!item.acceptingAttendance || submit.isPending}>
+          <Button
+            type="submit"
+            className="w-full"
+            disabled={!item.acceptingAttendance || submit.isPending}
+          >
             {submit.isPending ? t('common.registering') : t('public.submit')}
           </Button>
         </form>
@@ -308,17 +332,26 @@ function LocationCard({ state, onRetry }: { state: LocationState; onRetry: () =>
   const ready = state.status === 'ready';
   const unavailable = state.status === 'unavailable';
   return (
-    <div className={`rounded-lg px-3.5 py-3 text-sm ${unavailable ? 'bg-[#e2e7ff]' : 'bg-[#eaedff]'}`}>
-      <p className="text-xs font-semibold tracking-wider text-muted uppercase">{t('public.location')}</p>
+    <div
+      className={`rounded-lg px-3.5 py-3 text-sm ${unavailable ? 'bg-[#e2e7ff]' : 'bg-[#eaedff]'}`}
+    >
+      <p className="text-xs font-semibold tracking-wider text-muted uppercase">
+        {t('public.location')}
+      </p>
       <p className="mt-1 font-medium text-ink">
         {state.status === 'pending' && t('public.requesting')}
-        {ready && t('public.detected', { meters: Math.round(state.reading.locationAccuracyMeters) })}
+        {ready &&
+          t('public.detected', { meters: Math.round(state.reading.locationAccuracyMeters) })}
         {unavailable && t('public.unavailable')}
         {state.status === 'idle' && t('public.waiting')}
       </p>
       <p className="mt-1 text-muted">{t('public.locationBody')}</p>
       {unavailable && (
-        <button type="button" className="mt-2 text-sm font-medium text-accent underline" onClick={onRetry}>
+        <button
+          type="button"
+          className="mt-2 text-sm font-medium text-accent underline"
+          onClick={onRetry}
+        >
           {t('common.tryAgain')}
         </button>
       )}

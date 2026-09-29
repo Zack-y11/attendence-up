@@ -1,4 +1,5 @@
 export * from './absence-note';
+export * from './attendance-time';
 export * from './export-columns';
 export * from './export-table';
 export * from './format';

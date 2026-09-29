@@ -2,7 +2,7 @@ import { classAttendanceExportQuerySchema, idParamSchema } from '@attendence-up/
 import type { FastifyInstance } from 'fastify';
 import type { ZodTypeProvider } from 'fastify-type-provider-zod';
 import { ownedClassAttendanceQuery, summarizeClassAttendance } from '../domain/class-attendance';
-import { closeExpiredSessions } from '../domain/close-expired-sessions';
+import { syncAttendanceWindows } from '../domain/sync-attendance-windows';
 import {
   classAttendanceFileName,
   renderClassAttendanceCsv,
@@ -18,8 +18,8 @@ async function ownedAttendance(classId: string, ownerId: string) {
     select: { id: true },
   });
   if (!owned) throw new AppError(404, 'Class not found.');
-  // Same auto-close as the class page, so a session whose window has ended counts as closed.
-  await closeExpiredSessions({ classId: owned.id, instructorId: ownerId });
+  // Same schedule sync as the class page, so a session follows its window before it is counted.
+  await syncAttendanceWindows({ classId: owned.id, instructorId: ownerId });
   const course = await prisma.class.findFirst(ownedClassAttendanceQuery(classId, ownerId));
   if (!course) throw new AppError(404, 'Class not found.');
   return course;

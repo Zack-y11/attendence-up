@@ -1,4 +1,9 @@
-import type { AttendanceStatus, ClassAttendanceDto, SessionStatus } from '@attendence-up/shared';
+import {
+  countsAsHeldSession,
+  type AttendanceStatus,
+  type ClassAttendanceDto,
+  type SessionStatus,
+} from '@attendence-up/shared';
 import type { Prisma } from '@prisma/client';
 
 /**
@@ -27,6 +32,7 @@ export type ClassAttendanceRecordInput = {
 
 export type ClassAttendanceSessionInput = {
   status: SessionStatus;
+  attendanceOpensAt?: Date | null;
   records: ClassAttendanceRecordInput[];
 };
 
@@ -64,17 +70,19 @@ function remember(
 
 /**
  * Students are every code that checked in to any session of the class.
- * Only CLOSED sessions are in the total. A missing record on a closed session counts as not attended.
- * Each student is counted at most once per session (the table is unique on session and code).
+ * Only held sessions are in the total. A session that is closed because its
+ * window has not started yet is not held. A missing record on a held session
+ * counts as not attended. Each student is counted at most once per session.
  */
 export function summarizeClassAttendance(
   sessions: ClassAttendanceSessionInput[],
+  now = new Date(),
 ): ClassAttendanceDto {
   const students = new Map<string, StudentTally>();
   let closedSessionCount = 0;
 
   for (const session of sessions) {
-    const closed = session.status === 'CLOSED';
+    const closed = countsAsHeldSession(session.status, session.attendanceOpensAt, now);
     if (closed) closedSessionCount += 1;
     const counted = new Set<string>();
     for (const record of session.records) {
@@ -121,6 +129,7 @@ const attendanceSelect = {
   sessions: {
     select: {
       status: true,
+      attendanceOpensAt: true,
       records: {
         select: {
           studentCode: true,
