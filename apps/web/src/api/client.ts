@@ -9,6 +9,7 @@ import type {
   CreateSavedLocationInput,
   InstructorDto,
   PublicSessionDto,
+  PublicStudentLookupDto,
   SavedLocationDto,
   SessionDto,
   SessionWriteInput,
@@ -135,6 +136,18 @@ export async function fetchPublicSession(token: string): Promise<PublicSessionDt
   const response = await fetch(`/api/public/sessions/${encodeURIComponent(token)}`);
   if (!response.ok) throw await parseError(response);
   return (await response.json()) as PublicSessionDto;
+}
+
+export async function lookupPublicStudent(
+  token: string,
+  studentCode: string,
+): Promise<PublicStudentLookupDto> {
+  const params = new URLSearchParams({ studentCode });
+  const response = await fetch(
+    `/api/public/sessions/${encodeURIComponent(token)}/student?${params}`,
+  );
+  if (!response.ok) throw await parseError(response);
+  return (await response.json()) as PublicStudentLookupDto;
 }
 
 export async function submitPublicAttendance(

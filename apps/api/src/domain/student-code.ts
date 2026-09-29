@@ -1,3 +1,1 @@
-export function normalizeStudentCode(code: string): string {
-  return code.trim().toUpperCase();
-}
+export { normalizeStudentCode } from '@attendence-up/shared';

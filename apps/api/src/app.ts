@@ -27,6 +27,13 @@ function isValidationError(error: unknown): error is { validation: unknown } {
   );
 }
 
+function clientStatus(error: unknown): number | undefined {
+  if (typeof error !== 'object' || error === null || !('statusCode' in error)) return undefined;
+  const statusCode = (error as { statusCode?: unknown }).statusCode;
+  if (typeof statusCode !== 'number' || statusCode < 400 || statusCode >= 500) return undefined;
+  return statusCode;
+}
+
 const instructors = new WeakMap<FastifyRequest, InstructorContext>();
 
 export async function buildApp() {
@@ -76,6 +83,12 @@ export async function buildApp() {
       return reply.status(400).send({
         error: 'Validation failed.',
         details: error.validation,
+      });
+    }
+    if (clientStatus(error) === 429) {
+      return reply.status(429).send({
+        error: 'Too many attempts. Wait a minute and try again.',
+        code: 'RATE_LIMITED',
       });
     }
     request.log.error(error);
