@@ -343,73 +343,59 @@ export function PdfSheet({
   hiddenCount: number;
 }) {
   const { t } = useTranslation();
-  const institution = [heading.university, heading.faculty, heading.career].filter(
-    (line) => line.trim() !== '',
-  );
   return (
-    <div className="mx-auto w-full max-w-3xl bg-white p-6 shadow-[0_8px_24px_rgba(15,23,42,0.12)]">
-      <div className="flex items-center gap-4">
-        <img src={heading.logo} alt="" className="h-16 w-16 shrink-0 rounded-xl object-contain" />
-        <div className="min-w-0 flex-1 text-center">
-          {institution.map((line, index) => (
-            <p
-              key={line}
-              className={
-                index === 0
-                  ? 'text-sm font-bold text-[#1c2430]'
-                  : 'text-xs font-semibold text-[#1c2430]'
-              }
-            >
-              {line}
-            </p>
-          ))}
-        </div>
-      </div>
-      <div className="mt-3 text-left">
-        <p className="text-xs font-bold text-[#1c2430]">{heading.attendance}</p>
-        {heading.instructor ? (
-          <p className="text-xs font-normal text-[#1c2430]">{heading.instructor}</p>
-        ) : null}
-      </div>
-      {rows.length === 0 ? (
-        <p className="mt-4 text-xs text-[#5c6675]">{t('export.noRecords')}</p>
-      ) : (
-        <div className="mt-4 grid grid-cols-2 items-start gap-2.5">
-          {rows.map((row, rowIndex) => (
-            <article
-              key={records[rowIndex]?.id ?? rowIndex}
-              className="min-w-0 break-inside-avoid rounded border border-[#d9d1c3] bg-[#fbfaf8] px-2.5 py-1.5"
-            >
-              {headers.map((header, columnIndex) => (
-                <div
-                  key={`${rowIndex}-${columnIndex}`}
-                  className="grid grid-cols-[minmax(0,42%)_minmax(0,1fr)] gap-x-2 border-b border-[#e4ddd0] py-1 last:border-b-0"
+    <div className="overflow-hidden rounded-lg border border-[#d4d4d4] bg-white shadow-card">
+      <HeadingLines heading={heading} excel />
+      <div className="overflow-x-auto">
+        <table className="min-w-full border-collapse text-left text-xs">
+          <thead>
+            <tr className="bg-[#f3f3f3]">
+              {headers.map((header) => (
+                <th
+                  key={header}
+                  className="border border-[#d4d4d4] px-2 py-1.5 font-bold whitespace-nowrap text-[#1c2430]"
                 >
-                  <p className="min-w-0 text-[10px] leading-snug font-semibold break-words text-[#5c6675]">
-                    {header}
-                  </p>
-                  <div className="min-w-0 text-[11px] leading-snug break-words text-[#1c2430]">
-                    <PreviewCell
-                      value={row[columnIndex] ?? ''}
-                      signature={
-                        columnIndex === signatureColumn
-                          ? (records[rowIndex]?.signature ?? null)
-                          : null
-                      }
-                      blank="—"
-                    />
-                  </div>
-                </div>
+                  {header}
+                </th>
               ))}
-            </article>
-          ))}
-        </div>
-      )}
-      {hiddenCount > 0 ? (
-        <p className="mt-3 text-[11px] text-[#5c6675]">
-          {t('export.morePdf', { count: hiddenCount })}
-        </p>
-      ) : null}
+            </tr>
+          </thead>
+          <tbody>
+            {rows.length === 0 ? (
+              <tr>
+                <td className="px-2 py-3 text-[#5c6675]" colSpan={headers.length}>
+                  {t('export.noRecords')}
+                </td>
+              </tr>
+            ) : (
+              rows.map((row, rowIndex) => (
+                <tr key={records[rowIndex]?.id ?? rowIndex} className="h-9">
+                  {row.map((value, columnIndex) => (
+                    <td
+                      key={`${rowIndex}-${columnIndex}`}
+                      className="border border-[#e5e5e5] px-2 py-1 align-top break-words text-[#1c2430]"
+                    >
+                      <PreviewCell
+                        value={value}
+                        signature={
+                          columnIndex === signatureColumn
+                            ? (records[rowIndex]?.signature ?? null)
+                            : null
+                        }
+                        blank=""
+                      />
+                    </td>
+                  ))}
+                </tr>
+              ))
+            )}
+          </tbody>
+        </table>
+      </div>
+      <div className="border-t border-[#d4d4d4] bg-[#f3f3f3] px-3 py-1.5 text-[11px] font-medium text-[#5c6675]">
+        {t('export.sheet')}
+        {hiddenCount > 0 ? ` · ${t('export.morePdf', { count: hiddenCount })}` : ''}
+      </div>
     </div>
   );
 }

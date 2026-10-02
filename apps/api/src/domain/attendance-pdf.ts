@@ -1,3 +1,4 @@
+import type { ExportColumnId } from '@attendence-up/shared';
 import PDFDocument from 'pdfkit';
 
 export type AttendancePdfHeading = {
@@ -12,78 +13,53 @@ export type AttendancePdfHeading = {
 type PdfDoc = InstanceType<typeof PDFDocument>;
 
 const INK = '#1c2430';
-const MUTED = '#5c6675';
-const RULE = '#e4ddd0';
-const CARD_FILL = '#fbfaf8';
-const CARD_STROKE = '#d9d1c3';
-const GRID_COLUMNS = 2;
-const GRID_GAP = 8;
-const CARD_PAD_X = 7;
-const CARD_PAD_Y = 5;
-const FIELD_GAP = 3;
-const LABEL_FONT = 7;
-const VALUE_FONT = 8.5;
-const LABEL_SHARE = 0.4;
-const SIGNATURE_HEIGHT = 26;
+const HEADER_FILL = '#f3f3f3';
+const GRID = '#d4d4d4';
+const GRID_LIGHT = '#e5e5e5';
 
-type FieldLayout = {
-  labelLines: string[];
-  valueLines: string[];
-  signature: Buffer | null;
-  height: number;
+/** Match Excel export column sizing so PDF columns feel the same. */
+const PDF_COLUMN_WEIGHT: Record<ExportColumnId, number> = {
+  studentCode: 78,
+  studentName: 118,
+  attendanceStatus: 64,
+  absenceNote: 88,
+  signature: 72,
+  attendanceTime: 82,
+  distance: 50,
+  accuracy: 52,
+  locationStatus: 74,
+  sessionName: 92,
+  className: 100,
+  latitude: 64,
+  longitude: 64,
 };
 
-type CardLayout = {
-  fields: FieldLayout[];
-  height: number;
-  labelWidth: number;
-  valueWidth: number;
-};
-
-function drawBrandMark(doc: PdfDoc, x: number, y: number, size: number) {
-  const scale = size / 40;
-  doc.save();
-  doc.translate(x, y);
-  doc.scale(scale);
-  doc.roundedRect(0, 0, 40, 40, 10).fill('#2563EB');
-  doc.save();
-  doc.lineWidth(3.5).lineCap('round').lineJoin('round').strokeColor('#ffffff');
-  doc.moveTo(12, 21).lineTo(17, 26).lineTo(28, 14).stroke();
-  doc.restore();
-  doc.circle(28, 14, 2.5).fill('#14B8A6');
-  doc.save();
-  doc.lineWidth(2).lineCap('round').strokeColor('#ffffff').opacity(0.6);
-  doc.moveTo(22, 28).lineTo(15, 28).stroke();
-  doc.restore();
-  doc.restore();
+function pdfColumnWidths(columns: ExportColumnId[], pageWidth: number): number[] {
+  if (columns.length === 0) return [pageWidth];
+  const weights = columns.map((column) => PDF_COLUMN_WEIGHT[column] ?? 72);
+  const total = weights.reduce((sum, weight) => sum + weight, 0);
+  const widths = weights.map((weight) => (weight / total) * pageWidth);
+  const used = widths.slice(0, -1).reduce((sum, width) => sum + width, 0);
+  widths[widths.length - 1] = pageWidth - used;
+  return widths;
 }
 
-function drawUniversityHeader(doc: PdfDoc, heading: AttendancePdfHeading) {
+/** Same text block as the Excel sheet: institution centered, session lines left. */
+function drawSheetHeading(doc: PdfDoc, heading: AttendancePdfHeading) {
   const pageLeft = doc.page.margins.left;
   const pageWidth = doc.page.width - doc.page.margins.left - doc.page.margins.right;
-  const logoSize = 72;
-  const top = doc.y;
-  if (heading.logo) {
-    doc.image(heading.logo, pageLeft, top, { fit: [logoSize, logoSize] });
-  } else {
-    drawBrandMark(doc, pageLeft, top, logoSize);
-  }
-  const textX = pageLeft + logoSize + 16;
-  const textWidth = pageWidth - logoSize - 16;
   const institution = [heading.university, heading.faculty, heading.career].filter(
     (line) => line.trim() !== '',
   );
-  let textY = top;
   institution.forEach((line, index) => {
     doc
       .font('Helvetica-Bold')
-      .fontSize(index === 0 ? 14 : 11)
+      .fontSize(index === 0 ? 12 : 11)
       .fillColor(INK)
-      .text(line, textX, textY, { width: textWidth, align: 'center' });
-    textY = doc.y + 2;
+      .text(line, pageLeft, doc.y, { width: pageWidth, align: 'center' });
+    doc.y += 2;
   });
-  doc.y = Math.max(textY, top + logoSize) + 10;
-  doc.x = pageLeft;
+  if (institution.length > 0) doc.moveDown(0.4);
   if (heading.attendanceLine) {
     doc.font('Helvetica-Bold').fontSize(11).fillColor(INK).text(heading.attendanceLine, {
       align: 'left',
@@ -96,202 +72,121 @@ function drawUniversityHeader(doc: PdfDoc, heading: AttendancePdfHeading) {
       width: pageWidth,
     });
   }
+  doc.moveDown(0.6);
 }
 
-function wrapLines(measure: (value: string) => number, text: string, width: number): string[] {
-  const source = text.length > 0 ? text : '—';
-  const lines: string[] = [];
-  const limit = Math.max(width, 8);
-  for (const paragraph of source.split('\n')) {
-    let line = '';
-    for (const word of paragraph.split(' ')) {
-      const candidate = line ? `${line} ${word}` : word;
-      if (word.length === 0) continue;
-      if (measure(candidate) <= limit) {
-        line = candidate;
-        continue;
-      }
-      if (line) lines.push(line);
-      if (measure(word) <= limit) {
-        line = word;
-        continue;
-      }
-      let chunk = '';
-      for (const char of word) {
-        const next = chunk + char;
-        if (chunk.length === 0 || measure(next) <= limit) chunk = next;
-        else {
-          lines.push(chunk);
-          chunk = char;
-        }
-      }
-      line = chunk;
-    }
-    lines.push(line);
-  }
-  return lines.length > 0 ? lines : ['—'];
-}
-
-function lineHeight(doc: PdfDoc): number {
-  return doc.currentLineHeight(true);
-}
-
-function paint(doc: PdfDoc, draw: () => void) {
-  const bottom = doc.page.margins.bottom;
-  doc.page.margins.bottom = 0;
-  draw();
-  doc.page.margins.bottom = bottom;
-}
-
-function layoutCard(
-  doc: PdfDoc,
-  headers: string[],
-  cells: string[],
-  signature: Buffer | null,
-  signatureColumn: number,
-  cardWidth: number,
-): CardLayout {
-  const inner = cardWidth - CARD_PAD_X * 2;
-  const labelWidth = Math.max(72, Math.floor(inner * LABEL_SHARE));
-  const valueWidth = Math.max(48, inner - labelWidth - 6);
-  const fields: FieldLayout[] = headers.map((header, index) => {
-    const image = signature && index === signatureColumn ? signature : null;
-    doc.font('Helvetica-Bold').fontSize(LABEL_FONT);
-    const labelLine = lineHeight(doc);
-    const labelLines = wrapLines((value) => doc.widthOfString(value), header, labelWidth);
-    doc.font('Helvetica').fontSize(VALUE_FONT);
-    const valueLine = lineHeight(doc);
-    const valueLines = image
-      ? []
-      : wrapLines((value) => doc.widthOfString(value), cells[index] ?? '', valueWidth);
-    const height = Math.max(
-      labelLines.length * labelLine,
-      image ? SIGNATURE_HEIGHT : valueLines.length * valueLine,
-    );
-    return { labelLines, valueLines, signature: image, height };
-  });
-  const height =
-    fields.length === 0
-      ? CARD_PAD_Y * 2
-      : CARD_PAD_Y * 2 +
-        fields.reduce((sum, field) => sum + field.height, 0) +
-        FIELD_GAP * (fields.length - 1);
-  return { fields, height, labelWidth, valueWidth };
-}
-
-function drawLines(
-  doc: PdfDoc,
-  lines: string[],
-  x: number,
-  y: number,
-  width: number,
-  leading: number,
-) {
-  lines.forEach((line, index) => {
-    paint(doc, () => {
-      doc.text(line, x, y + index * leading, { width, lineBreak: false });
-    });
-  });
-}
-
-function drawCard(
-  doc: PdfDoc,
-  card: CardLayout,
-  x: number,
-  y: number,
-  width: number,
-  boxHeight: number,
-) {
-  doc.save();
-  doc.lineWidth(0.8);
-  doc.roundedRect(x, y, width, boxHeight, 3).fillAndStroke(CARD_FILL, CARD_STROKE);
-  doc.restore();
-
-  const labelX = x + CARD_PAD_X;
-  const valueX = labelX + card.labelWidth + 6;
-  let cursor = y + CARD_PAD_Y;
-  card.fields.forEach((field, index) => {
-    doc.font('Helvetica-Bold').fontSize(LABEL_FONT).fillColor(MUTED);
-    const labelLeading = lineHeight(doc);
-    drawLines(doc, field.labelLines, labelX, cursor, card.labelWidth, labelLeading);
-
-    const signature = field.signature;
-    if (signature) {
-      paint(doc, () => {
-        doc.image(signature, valueX, cursor, {
-          fit: [card.valueWidth, SIGNATURE_HEIGHT],
-        });
-      });
-    } else {
-      doc.font('Helvetica').fontSize(VALUE_FONT).fillColor(INK);
-      const valueLeading = lineHeight(doc);
-      drawLines(doc, field.valueLines, valueX, cursor, card.valueWidth, valueLeading);
-    }
-
-    cursor += field.height;
-    if (index < card.fields.length - 1) {
-      const ruleY = cursor + FIELD_GAP / 2;
-      doc.save();
-      doc
-        .moveTo(labelX, ruleY)
-        .lineTo(x + width - CARD_PAD_X, ruleY)
-        .lineWidth(0.4)
-        .strokeColor(RULE)
-        .stroke();
-      doc.restore();
-      cursor += FIELD_GAP;
-    }
-  });
-}
-
-function drawStudentGrid(
+function drawAttendanceTable(
   doc: PdfDoc,
   input: {
+    columns: ExportColumnId[];
     headers: string[];
     rows: string[][];
     signatures: (Buffer | null)[];
     signatureColumn: number;
   },
 ) {
-  const left = doc.page.margins.left;
-  const pageWidth = doc.page.width - doc.page.margins.left - doc.page.margins.right;
-  const cardWidth = (pageWidth - GRID_GAP * (GRID_COLUMNS - 1)) / GRID_COLUMNS;
-  const top = () => doc.page.margins.top;
-  const bottom = () => doc.page.height - doc.page.margins.bottom;
+  const startX = doc.page.margins.left;
+  const tableWidth = doc.page.width - doc.page.margins.left - doc.page.margins.right;
+  const widths = pdfColumnWidths(input.columns, tableWidth);
+  const padX = 5;
+  const padY = 4;
 
-  if (input.rows.length === 0) {
-    doc.font('Helvetica').fontSize(10).fillColor(INK).text('No attendance records.');
-    return;
-  }
-
-  let y = doc.y;
-  for (let index = 0; index < input.rows.length; index += GRID_COLUMNS) {
-    const cards = input.rows
-      .slice(index, index + GRID_COLUMNS)
-      .map((row, offset) =>
-        layoutCard(
-          doc,
-          input.headers,
-          row,
-          input.signatureColumn >= 0 ? (input.signatures[index + offset] ?? null) : null,
-          input.signatureColumn,
-          cardWidth,
-        ),
-      );
-    const rowHeight = Math.max(...cards.map((card) => card.height));
-    if (y + rowHeight > bottom() && y > top() + 0.5) {
-      doc.addPage();
-      y = top();
-    }
-    cards.forEach((card, offset) => {
-      drawCard(doc, card, left + offset * (cardWidth + GRID_GAP), y, cardWidth, card.height);
+  const textHeight = (value: string, columnWidth: number, header: boolean) => {
+    doc.font(header ? 'Helvetica-Bold' : 'Helvetica').fontSize(header ? 8 : 8);
+    return doc.heightOfString(value || ' ', {
+      width: Math.max(columnWidth - padX * 2, 8),
+      lineGap: 1,
     });
-    y += rowHeight + GRID_GAP;
+  };
+
+  const drawHeader = () => {
+    const contentHeight = Math.max(
+      12,
+      ...input.headers.map((header, index) => textHeight(header, widths[index] ?? tableWidth, true)),
+    );
+    const rowHeight = contentHeight + padY * 2;
+    const y = doc.y;
+    let x = startX;
+    input.headers.forEach((header, index) => {
+      const columnWidth = widths[index] ?? tableWidth;
+      doc.save();
+      doc.rect(x, y, columnWidth, rowHeight).fill(HEADER_FILL);
+      doc.restore();
+      doc.fillColor(INK).font('Helvetica-Bold').fontSize(8).text(header, x + padX, y + padY, {
+        width: columnWidth - padX * 2,
+        height: contentHeight,
+        lineGap: 1,
+      });
+      x += columnWidth;
+    });
+    doc.lineWidth(0.5).strokeColor(GRID);
+    x = startX;
+    input.headers.forEach((_, index) => {
+      const columnWidth = widths[index] ?? tableWidth;
+      doc.rect(x, y, columnWidth, rowHeight).stroke();
+      x += columnWidth;
+    });
+    doc.x = startX;
+    doc.y = y + rowHeight;
+  };
+
+  const drawBody = (cells: string[], signature: Buffer | null) => {
+    const contentHeight = Math.max(
+      11,
+      ...cells.map((cell, index) =>
+        signature && index === input.signatureColumn ? 24 : textHeight(cell, widths[index] ?? tableWidth, false),
+      ),
+    );
+    const rowHeight = contentHeight + padY * 2;
+    const pageBottom = doc.page.height - doc.page.margins.bottom;
+    if (doc.y + rowHeight > pageBottom) {
+      doc.addPage();
+      drawHeader();
+    }
+    const y = doc.y;
+    let x = startX;
+    cells.forEach((cell, index) => {
+      const columnWidth = widths[index] ?? tableWidth;
+      if (signature && index === input.signatureColumn) {
+        doc.image(signature, x + padX, y + padY, {
+          fit: [Math.max(columnWidth - padX * 2, 16), contentHeight],
+        });
+      } else {
+        doc.fillColor(INK).font('Helvetica').fontSize(8).text(cell || ' ', x + padX, y + padY, {
+          width: columnWidth - padX * 2,
+          height: contentHeight,
+          lineGap: 1,
+        });
+      }
+      x += columnWidth;
+    });
+    doc.lineWidth(0.5).strokeColor(GRID_LIGHT);
+    x = startX;
+    cells.forEach((_, index) => {
+      const columnWidth = widths[index] ?? tableWidth;
+      doc.rect(x, y, columnWidth, rowHeight).stroke();
+      x += columnWidth;
+    });
+    doc.x = startX;
+    doc.y = y + rowHeight;
+  };
+
+  drawHeader();
+  if (input.rows.length === 0) {
+    doc.moveDown(0.4);
+    doc.font('Helvetica').fontSize(10).fillColor(INK).text('No attendance records.', startX, doc.y, {
+      width: tableWidth,
+    });
+  } else {
+    input.rows.forEach((row, index) =>
+      drawBody(row, input.signatureColumn >= 0 ? (input.signatures[index] ?? null) : null),
+    );
   }
 }
 
 export function renderAttendancePdf(input: {
   heading: AttendancePdfHeading;
+  columns: ExportColumnId[];
   headers: string[];
   rows: string[][];
   signatures: (Buffer | null)[];
@@ -300,18 +195,17 @@ export function renderAttendancePdf(input: {
   return new Promise((resolve, reject) => {
     const doc = new PDFDocument({
       size: 'LETTER',
-      layout: 'portrait',
-      margin: 40,
+      layout: input.headers.length > 5 ? 'landscape' : 'portrait',
+      margin: 36,
     });
     const chunks: Buffer[] = [];
     doc.on('data', (chunk: Buffer) => chunks.push(chunk));
     doc.on('end', () => resolve(Buffer.concat(chunks)));
     doc.on('error', reject);
 
-    drawUniversityHeader(doc, input.heading);
-    doc.moveDown(0.6);
+    drawSheetHeading(doc, input.heading);
     doc.fillColor(INK);
-    drawStudentGrid(doc, input);
+    drawAttendanceTable(doc, input);
     doc.end();
   });
 }

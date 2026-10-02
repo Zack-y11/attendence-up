@@ -55,7 +55,7 @@ function sheet(headers: string[]) {
 }
 
 describe('PdfSheet', () => {
-  it('shows each student as a labeled block using the existing English and Spanish column names', () => {
+  it('matches the Excel table preview using the existing English and Spanish column names', () => {
     const english = sheet([en.export.columnsById.studentName, en.export.columnsById.absenceNote]);
     const spanish = sheet([es.export.columnsById.studentName, es.export.columnsById.absenceNote]);
 
@@ -65,9 +65,8 @@ describe('PdfSheet', () => {
       expect(html).toContain('Instructor: Ana Ruiz');
       expect(html).toContain('María Alejandra Quintanilla Hernández-Solano');
       expect(html).toContain('Estoy en el trabajo hasta las 5.');
-      expect(html).toContain('grid-cols-2');
-      expect(html).not.toContain('<table');
-      expect(html).not.toContain('whitespace-nowrap');
+      expect(html).toContain('<table');
+      expect(html).toContain('bg-[#f3f3f3]');
       expect(html).toContain('2 more rows are included in the PDF.');
     }
 
@@ -89,6 +88,6 @@ describe('PdfSheet', () => {
       />,
     );
     expect(html).toContain(en.export.noRecords);
-    expect(html).not.toContain('<table');
+    expect(html).toContain('<table');
   });
 });
