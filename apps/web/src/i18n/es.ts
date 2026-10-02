@@ -113,6 +113,7 @@ export const es: typeof en = {
     tooEarly: 'La asistencia todavía no está abierta.',
     tooLate: 'El periodo de asistencia ya cerró.',
     duplicateAttendance: 'Ya se registró la asistencia de este código de estudiante.',
+    rateLimited: 'Demasiados intentos. Espera un minuto e inténtalo de nuevo.',
     recordNotFound: 'No se encontró el registro de asistencia.',
     absenceNote: 'Explica por qué no estás en el aula.',
     unknownTimeZone: 'Zona horaria desconocida.',
@@ -304,15 +305,15 @@ export const es: typeof en = {
     standaloneDescription:
       'Úsala para un taller, un encuentro o cualquier asistencia que no pertenezca a una clase.',
     submit: 'Crear sesión',
-    tipDraftTitle: 'Empieza como borrador',
+    tipDraftTitle: 'Se abre según el horario',
     tipDraftBody:
-      'Nadie puede registrarse hasta que abras la asistencia desde la página de la sesión.',
+      'Con un inicio y un fin, la asistencia se abre y se cierra sola. Si dejas ambos vacíos, sigue en borrador hasta que la abras.',
     tipLinkTitle: 'Comparte un enlace',
     tipLinkBody:
       'Cada sesión tiene su propio enlace público para que los estudiantes se registren.',
-    tipWindowTitle: 'Horario opcional',
+    tipWindowTitle: 'Inicio y fin',
     tipWindowBody:
-      'Define cuándo se abre y se cierra el registro, o déjalo abierto mientras la sesión lo esté.',
+      'Esas horas son la ventana de registro. Se abre al inicio, se cierra al final, y una ventana posterior se abre igual.',
   },
   form: {
     howItWorks: 'Cómo funciona',
@@ -322,7 +323,7 @@ export const es: typeof en = {
     ends: 'Termina',
     startsHint: 'Hora habitual. Se mantiene cada semana. El día se define en cada sesión.',
     opens: 'Se abre la asistencia',
-    opensHint: 'Déjalo vacío para permitir el registro mientras la sesión esté abierta.',
+    opensHint: 'Define ambas horas y la asistencia las sigue. Déjalas vacías para abrirla tú.',
     closes: 'Se cierra la asistencia',
   },
   location: {
@@ -389,6 +390,11 @@ export const es: typeof en = {
     linkTitle: 'Enlace público de asistencia',
     linkOpen: 'Compártelo con los estudiantes para que se registren.',
     linkClosed: 'Los estudiantes no pueden registrarse hasta que la sesión esté abierta.',
+    linkScheduled:
+      'Los estudiantes solo pueden registrarse mientras esta ventana de inicio y fin esté abierta.',
+    scheduleHint: 'La asistencia se abre el {{start}} y se cierra el {{end}}, sin un clic extra.',
+    scheduleEnded:
+      'Esta ventana ya terminó. Indica un inicio y un fin más tarde para volver a abrir la asistencia.',
     qrTitle: 'Código QR de la página pública de asistencia',
     qrCaption: 'Escanéalo para abrir la misma página de registro que Copiar enlace.',
     openPage: 'Abrir página de registro',
@@ -444,6 +450,7 @@ export const es: typeof en = {
     notOpened: 'La asistencia todavía no se ha abierto.',
     code: 'Código de estudiante',
     name: 'Nombre del estudiante',
+    savedName: 'Completado con el nombre guardado para este código.',
     submit: 'Registrar asistencia',
     location: 'Ubicación',
     requesting: 'Solicitando ubicación…',

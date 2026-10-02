@@ -1,4 +1,5 @@
 export * from './absence-note';
+export * from './attendance-time';
 export * from './export-columns';
 export * from './export-table';
 export * from './format';
@@ -8,5 +9,6 @@ export * from './location-status';
 export * from './paths';
 export * from './logo';
 export * from './schemas';
+export * from './student-code';
 export * from './signature';
 export * from './types';

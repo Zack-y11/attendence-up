@@ -21,9 +21,9 @@ Public attendance routes do not use Clerk. A future student account can be anoth
 
 Both use `AttendanceRecord`. There is no second attendance table.
 
-`classId` cannot be changed after creation. A session can be edited while it is `DRAFT` or `OPEN`, and is frozen while `CLOSED`. Reopening returns it to `OPEN`.
+`classId` cannot be changed after creation. A session can be edited while it is draft, open, or closed. Saving a new check-in window on a closed session opens it when that window includes the current time.
 
-`startsAt` and `endsAt` are the schedule. `attendanceOpensAt` and `attendanceClosesAt` are the optional check-in window. Students can submit only when the status is `OPEN` and the current time is inside that window, if one is set.
+`startsAt` and `endsAt` on a class are the usual meeting clock. `attendanceOpensAt` and `attendanceClosesAt` are that session's check-in window. Both are wall times in America/El_Salvador (UTC−6), stored as UTC instants. When a session has both a start and an end, its status follows that window: closed before the start, open at the start, and closed when the end is reached. A later window follows the same rule. Students can check in only while the status is open, and the public link reports the same state. A session with no window still opens and closes by hand. There is no background job; the next read applies the window.
 
 The public URL uses `publicToken`, a 128-bit random value, at `/a/{publicToken}`. Older `/attendance/{publicToken}` links redirect there. The internal session id stays private. The live session view shows a QR code of that same URL, beside Copy link. A later expiring token can be a new table beside this stable token.
 

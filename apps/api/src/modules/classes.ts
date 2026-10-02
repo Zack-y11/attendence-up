@@ -6,7 +6,8 @@ import {
 } from '@attendence-up/shared';
 import type { FastifyInstance } from 'fastify';
 import type { ZodTypeProvider } from 'fastify-type-provider-zod';
-import { closeExpiredSessions } from '../domain/close-expired-sessions';
+import { nextStoredStatus, resolveAttendanceWindow } from '../domain/session-schedule';
+import { syncAttendanceWindows } from '../domain/sync-attendance-windows';
 import { resolveInstructorLocation } from '../domain/saved-location';
 import { resolveSessionLocation } from '../domain/session-location';
 import { createPublicToken } from '../domain/tokens';
@@ -65,7 +66,7 @@ export async function classRoutes(app: FastifyInstance) {
 
   api.get('/classes/:id', { schema: { params: idParamSchema } }, async (request) => {
     const item = await ownedClass(request.params.id, request.instructor.id);
-    await closeExpiredSessions({ classId: item.id });
+    await syncAttendanceWindows({ classId: item.id });
     const sessions = await prisma.attendanceSession.findMany({
       where: { classId: item.id },
       include: { _count: { select: { records: true } } },
@@ -109,6 +110,8 @@ export async function classRoutes(app: FastifyInstance) {
         requested,
         toLocation(course.defaultLatitude, course.defaultLongitude, course.defaultRadiusMeters),
       );
+      const columns = dateColumns(request.body);
+      const window = resolveAttendanceWindow(columns);
       const created = await prisma.attendanceSession.create({
         data: {
           publicToken: createPublicToken(),
@@ -116,7 +119,8 @@ export async function classRoutes(app: FastifyInstance) {
           instructorId: request.instructor.id,
           name: request.body.name,
           description: request.body.description ?? '',
-          ...dateColumns(request.body),
+          ...columns,
+          status: nextStoredStatus('DRAFT', window.attendanceOpensAt, window.attendanceClosesAt),
           ...sessionLocationColumns(location),
         },
         include: sessionInclude,

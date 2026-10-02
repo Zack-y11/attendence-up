@@ -1,13 +1,25 @@
-import { absenceNoteForCheckIn, submitAttendanceSchema, tokenParamSchema } from '@attendence-up/shared';
+import {
+  absenceNoteForCheckIn,
+  publicStudentLookupQuerySchema,
+  submitAttendanceSchema,
+  tokenParamSchema,
+} from '@attendence-up/shared';
 import type { FastifyInstance } from 'fastify';
 import type { ZodTypeProvider } from 'fastify-type-provider-zod';
 import { attendanceGate, attendanceGateMessage } from '../domain/attendance-gate';
-import { closeExpiredSessions } from '../domain/close-expired-sessions';
+import { syncAttendanceWindows } from '../domain/sync-attendance-windows';
 import { deriveLocationStatus } from '../domain/location-status';
+import { lookupSavedStudentName } from '../domain/public-student';
 import { normalizeStudentCode } from '../domain/student-code';
 import { AppError } from '../lib/errors';
 import { presentPublicSession, toLocation } from '../lib/presenters';
 import { isUniqueConstraintError, prisma } from '../lib/prisma';
+
+/** Public check-in and exact-code lookup share this limit. */
+export const publicAttendanceRateLimit = {
+  max: 30,
+  timeWindow: '1 minute',
+} as const;
 
 export async function publicAttendanceRoutes(app: FastifyInstance) {
   const api = app.withTypeProvider<ZodTypeProvider>();
@@ -18,7 +30,7 @@ export async function publicAttendanceRoutes(app: FastifyInstance) {
       include: { class: { select: { name: true, startsAt: true, endsAt: true } } },
     });
     if (!session) throw new AppError(404, 'This attendance link is not valid.');
-    await closeExpiredSessions({ id: session.id });
+    await syncAttendanceWindows({ id: session.id });
     const current = await prisma.attendanceSession.findUnique({
       where: { id: session.id },
       include: { class: { select: { name: true, startsAt: true, endsAt: true } } },
@@ -27,15 +39,12 @@ export async function publicAttendanceRoutes(app: FastifyInstance) {
     return presentPublicSession(current, new Date());
   });
 
-  api.post(
-    '/sessions/:token/attendance',
+  api.get(
+    '/sessions/:token/student',
     {
-      schema: { params: tokenParamSchema, body: submitAttendanceSchema },
+      schema: { params: tokenParamSchema, querystring: publicStudentLookupQuerySchema },
       config: {
-        rateLimit: {
-          max: 30,
-          timeWindow: '1 minute',
-        },
+        rateLimit: publicAttendanceRateLimit,
       },
     },
     async (request, reply) => {
@@ -43,7 +52,36 @@ export async function publicAttendanceRoutes(app: FastifyInstance) {
         where: { publicToken: request.params.token },
       });
       if (!session) throw new AppError(404, 'This attendance link is not valid.');
-      await closeExpiredSessions({ id: session.id });
+      await syncAttendanceWindows({ id: session.id });
+      const current = await prisma.attendanceSession.findUnique({
+        where: { id: session.id },
+      });
+      if (!current) throw new AppError(404, 'This attendance link is not valid.');
+
+      const gate = attendanceGate(current, new Date());
+      if (!gate.ok) {
+        return reply.header('cache-control', 'no-store').send({ studentName: null });
+      }
+
+      const studentName = await lookupSavedStudentName(current.classId, request.query.studentCode);
+      return reply.header('cache-control', 'no-store').send({ studentName });
+    },
+  );
+
+  api.post(
+    '/sessions/:token/attendance',
+    {
+      schema: { params: tokenParamSchema, body: submitAttendanceSchema },
+      config: {
+        rateLimit: publicAttendanceRateLimit,
+      },
+    },
+    async (request, reply) => {
+      const session = await prisma.attendanceSession.findUnique({
+        where: { publicToken: request.params.token },
+      });
+      if (!session) throw new AppError(404, 'This attendance link is not valid.');
+      await syncAttendanceWindows({ id: session.id });
       const current = await prisma.attendanceSession.findUnique({
         where: { id: session.id },
       });
@@ -61,7 +99,11 @@ export async function publicAttendanceRoutes(app: FastifyInstance) {
           longitude: body.longitude ?? null,
           accuracyMeters: body.locationAccuracyMeters ?? null,
         },
-        toLocation(current.locationLatitude, current.locationLongitude, current.locationRadiusMeters),
+        toLocation(
+          current.locationLatitude,
+          current.locationLongitude,
+          current.locationRadiusMeters,
+        ),
       );
       const absence = absenceNoteForCheckIn(body.notInClassroom === true, body.absenceNote);
       if (!absence.ok) {

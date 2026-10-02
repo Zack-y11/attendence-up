@@ -105,14 +105,21 @@ export const updateAttendanceRecordSchema = z.object({
   attendanceStatus: z.enum(ATTENDANCE_STATUSES),
 });
 
+export const studentCodeSchema = z
+  .string()
+  .trim()
+  .min(1)
+  .max(32)
+  .regex(/^[A-Za-z0-9-]+$/, 'Use letters, numbers, or hyphens.');
+
+/** Exact code typed on the public check-in page. No prefix or list query. */
+export const publicStudentLookupQuerySchema = z.object({
+  studentCode: studentCodeSchema,
+});
+
 export const submitAttendanceSchema = z
   .object({
-    studentCode: z
-      .string()
-      .trim()
-      .min(1)
-      .max(32)
-      .regex(/^[A-Za-z0-9-]+$/, 'Use letters, numbers, or hyphens.'),
+    studentCode: studentCodeSchema,
     studentName: z.string().trim().min(1).max(120),
     signature: z
       .string()

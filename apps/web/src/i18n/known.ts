@@ -19,6 +19,7 @@ const KNOWN: Record<string, string> = {
   'Attendance is not open yet.': 'errors.tooEarly',
   'The attendance window has closed.': 'errors.tooLate',
   'Attendance was already recorded for this student code.': 'errors.duplicateAttendance',
+  'Too many attempts. Wait a minute and try again.': 'errors.rateLimited',
   'Attendance record not found.': 'errors.recordNotFound',
   'Say why you are not at the classroom.': 'errors.absenceNote',
   'Unknown time zone.': 'errors.unknownTimeZone',

@@ -1,7 +1,12 @@
+import { ATTENDANCE_TIME_ZONE, wallClockParts, zonedWallTime } from '@attendence-up/shared';
 import i18n from '../i18n';
 import { applyTimeOnDate, fromTimeLocal, toTimeLocal } from './meeting-time';
 
 export { applyTimeOnDate, fromTimeLocal, toTimeLocal };
+
+function pad(value: number): string {
+  return String(value).padStart(2, '0');
+}
 
 function activeLocale(): string {
   return i18n.resolvedLanguage ?? i18n.language ?? 'en';
@@ -11,15 +16,21 @@ export function toDatetimeLocal(iso: string | null): string {
   if (!iso) return '';
   const date = new Date(iso);
   if (Number.isNaN(date.getTime())) return '';
-  const pad = (value: number) => String(value).padStart(2, '0');
-  return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}T${pad(date.getHours())}:${pad(date.getMinutes())}`;
+  const parts = wallClockParts(date);
+  return `${parts.year}-${pad(parts.month)}-${pad(parts.day)}T${pad(parts.hour)}:${pad(parts.minute)}`;
 }
 
+/** A datetime-local value is a wall clock in America/El_Salvador, not the browser zone. */
 export function fromDatetimeLocal(value: string): string | null {
-  if (!value.trim()) return null;
-  const date = new Date(value);
-  if (Number.isNaN(date.getTime())) return null;
-  return date.toISOString();
+  const match = /^(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2})/.exec(value.trim());
+  if (!match) return null;
+  const year = Number(match[1]);
+  const month = Number(match[2]);
+  const day = Number(match[3]);
+  const hour = Number(match[4]);
+  const minute = Number(match[5]);
+  if (month < 1 || month > 12 || day < 1 || day > 31 || hour > 23 || minute > 59) return null;
+  return zonedWallTime(year, month, day, hour, minute).toISOString();
 }
 
 export function formatWhen(iso: string | null): string {
@@ -27,15 +38,22 @@ export function formatWhen(iso: string | null): string {
   return new Intl.DateTimeFormat(activeLocale(), {
     dateStyle: 'medium',
     timeStyle: 'short',
+    timeZone: ATTENDANCE_TIME_ZONE,
   }).format(new Date(iso));
 }
 
 export function formatFullDate(date: Date): string {
-  return new Intl.DateTimeFormat(activeLocale(), { dateStyle: 'full' }).format(date);
+  return new Intl.DateTimeFormat(activeLocale(), {
+    dateStyle: 'full',
+    timeZone: ATTENDANCE_TIME_ZONE,
+  }).format(date);
 }
 
 export function formatTime(iso: string): string {
-  return new Intl.DateTimeFormat(activeLocale(), { timeStyle: 'short' }).format(new Date(iso));
+  return new Intl.DateTimeFormat(activeLocale(), {
+    timeStyle: 'short',
+    timeZone: ATTENDANCE_TIME_ZONE,
+  }).format(new Date(iso));
 }
 
 export function formatClock(iso: string | null): string {

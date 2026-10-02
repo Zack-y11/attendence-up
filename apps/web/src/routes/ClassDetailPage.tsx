@@ -1,3 +1,4 @@
+import { countsAsHeldSession } from '@attendence-up/shared';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
 import { Link, useNavigate, useParams } from 'react-router';
@@ -32,9 +33,12 @@ export function ClassDetailPage() {
   const item = course.data;
   const open = item.sessions.filter((session) => session.status === 'OPEN');
   const checkIns = item.sessions.reduce((sum, session) => sum + session.attendanceCount, 0);
-  const closed = item.sessions.filter((session) => session.status === 'CLOSED');
-  const average = closed.length
-    ? Math.round(closed.reduce((sum, session) => sum + session.attendanceCount, 0) / closed.length)
+  const now = new Date();
+  const held = item.sessions.filter((session) =>
+    countsAsHeldSession(session.status, session.attendanceOpensAt, now),
+  );
+  const average = held.length
+    ? Math.round(held.reduce((sum, session) => sum + session.attendanceCount, 0) / held.length)
     : null;
 
   return (
@@ -89,7 +93,7 @@ export function ClassDetailPage() {
           label={t('common.sessions')}
           value={item.sessions.length}
           icon="event_note"
-          caption={t('classDetail.closedCount', { count: closed.length })}
+          caption={t('classDetail.closedCount', { count: held.length })}
         />
         <MetricCard
           label={t('classDetail.openNow')}
@@ -103,7 +107,13 @@ export function ClassDetailPage() {
               : t('dashboard.nothingOpen')
           }
         />
-        <MetricCard label={t('common.checkIns')} value={checkIns} icon="how_to_reg" tone="teal" caption={t('classDetail.allSessions')} />
+        <MetricCard
+          label={t('common.checkIns')}
+          value={checkIns}
+          icon="how_to_reg"
+          tone="teal"
+          caption={t('classDetail.allSessions')}
+        />
         <MetricCard
           label={t('classDetail.avg')}
           value={average ?? '—'}
@@ -129,7 +139,13 @@ export function ClassDetailPage() {
   );
 }
 
-function ClassSessionActions({ classId, latestSessionId }: { classId: string; latestSessionId?: string }) {
+function ClassSessionActions({
+  classId,
+  latestSessionId,
+}: {
+  classId: string;
+  latestSessionId?: string;
+}) {
   const { t } = useTranslation();
   const api = useApi();
   const navigate = useNavigate();
@@ -146,7 +162,12 @@ function ClassSessionActions({ classId, latestSessionId }: { classId: string; la
   return (
     <div className="flex flex-wrap gap-2">
       {latestSessionId && (
-        <Button type="button" variant="secondary" onClick={() => duplicate.mutate()} disabled={duplicate.isPending}>
+        <Button
+          type="button"
+          variant="secondary"
+          onClick={() => duplicate.mutate()}
+          disabled={duplicate.isPending}
+        >
           <Icon name="event_repeat" className="text-[18px]" />
           {t('classDetail.nextWeek')}
         </Button>
@@ -192,7 +213,9 @@ function ClassSettings({ classId }: { classId: string }) {
         />
       </Card>
       <Card className="h-fit p-5">
-        <div className={`mb-3 grid h-10 w-10 place-items-center rounded-lg ${archiving ? 'bg-amber-soft text-amber' : 'bg-good-soft text-good'}`}>
+        <div
+          className={`mb-3 grid h-10 w-10 place-items-center rounded-lg ${archiving ? 'bg-amber-soft text-amber' : 'bg-good-soft text-good'}`}
+        >
           <Icon name={archiving ? 'inventory_2' : 'unarchive'} className="text-[20px]" />
         </div>
         <h3 className="font-display text-base font-semibold tracking-tight">
