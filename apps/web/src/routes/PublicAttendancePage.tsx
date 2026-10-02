@@ -8,12 +8,24 @@ import { useMutation, useQuery } from '@tanstack/react-query';
 import { useEffect, useRef, useState, type ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useParams } from 'react-router';
-import { ApiError, fetchPublicSession, submitPublicAttendance } from '../api/client';
+import {
+  ApiError,
+  fetchPublicSession,
+  lookupPublicStudent,
+  submitPublicAttendance,
+} from '../api/client';
 import { SignaturePad } from '../components/SignaturePad';
 import { LanguageSwitch } from '../components/LanguageSwitch';
 import { Button, ErrorBlock, Field, LoadingBlock, inputClass } from '../components/ui';
 import { attendanceStillScheduled } from '../lib/attendance-window';
 import { formatMeeting, formatWhen } from '../lib/datetime';
+import {
+  initialCheckInNameState,
+  normalizedStudentCodeOrNull,
+  PUBLIC_STUDENT_LOOKUP_DELAY_MS,
+  reduceCheckInName,
+  type CheckInNameEvent,
+} from '../lib/public-student';
 import { setPageMeta } from '../lib/seo';
 
 type Reading = {
@@ -62,7 +74,9 @@ export function PublicAttendancePage() {
     },
   });
   const [code, setCode] = useState('');
-  const [name, setName] = useState('');
+  const [nameState, setNameState] = useState(initialCheckInNameState);
+  const normalizedCode = normalizedStudentCodeOrNull(code);
+  const [lookupCode, setLookupCode] = useState<string | null>(null);
   const [signature, setSignature] = useState<string | null>(null);
   const [absenceNote, setAbsenceNote] = useState('');
   const [notInClassroom, setNotInClassroom] = useState(false);
@@ -113,6 +127,40 @@ export function PublicAttendancePage() {
     };
   }, [session.data?.requestsLocation]);
 
+  useEffect(() => {
+    if (!normalizedCode) {
+      setLookupCode(null);
+      return;
+    }
+    const timer = window.setTimeout(
+      () => setLookupCode(normalizedCode),
+      PUBLIC_STUDENT_LOOKUP_DELAY_MS,
+    );
+    return () => window.clearTimeout(timer);
+  }, [normalizedCode]);
+
+  const lookup = useQuery({
+    queryKey: ['public-student', token, lookupCode],
+    queryFn: () => lookupPublicStudent(token, lookupCode ?? ''),
+    enabled: Boolean(session.isSuccess && token && lookupCode),
+    retry: false,
+    staleTime: 60_000,
+  });
+
+  function dispatchName(event: CheckInNameEvent) {
+    setNameState((current) => reduceCheckInName(current, event));
+  }
+
+  useEffect(() => {
+    if (!lookup.isSuccess || lookupCode == null || lookupCode !== normalizedCode) return;
+    dispatchName({
+      type: 'lookup',
+      code: lookupCode,
+      activeCode: normalizedCode,
+      savedName: lookup.data.studentName,
+    });
+  }, [lookup.isSuccess, lookup.data, lookupCode, normalizedCode]);
+
   const submit = useMutation({
     mutationFn: () => {
       const reading = locationState.status === 'ready' ? locationState.reading : null;
@@ -122,7 +170,7 @@ export function PublicAttendancePage() {
       }
       const parsed = submitAttendanceSchema.safeParse({
         studentCode: code,
-        studentName: name,
+        studentName: nameState.name,
         signature,
         latitude: reading?.latitude ?? null,
         longitude: reading?.longitude ?? null,
@@ -226,21 +274,37 @@ export function PublicAttendancePage() {
             <input
               className={inputClass}
               value={code}
-              onChange={(event) => setCode(event.target.value)}
+              onChange={(event) => {
+                const value = event.target.value;
+                setCode(value);
+                dispatchName({ type: 'code', code: normalizedStudentCodeOrNull(value) });
+              }}
+              onBlur={() => {
+                if (normalizedCode) setLookupCode(normalizedCode);
+              }}
               autoComplete="off"
+              autoCapitalize="characters"
+              spellCheck={false}
               required
             />
           </Field>
-          <Field label={t('public.name')}>
+          <Field
+            label={t('public.name')}
+            hint={
+              nameState.savedName && nameState.name === nameState.savedName
+                ? t('public.savedName')
+                : undefined
+            }
+          >
             <input
               className={inputClass}
-              value={name}
-              onChange={(event) => setName(event.target.value)}
+              value={nameState.name}
+              onChange={(event) => dispatchName({ type: 'name', name: event.target.value })}
               autoComplete="name"
               required
             />
           </Field>
-          <SignaturePad suggestedName={name} onChange={setSignature} />
+          <SignaturePad suggestedName={nameState.name} onChange={setSignature} />
           <div className="rounded-lg bg-mist px-3.5 py-3">
             <label className="flex items-start gap-2 text-sm font-medium text-ink">
               <input

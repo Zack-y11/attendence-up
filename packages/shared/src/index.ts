@@ -9,5 +9,6 @@ export * from './location-status';
 export * from './paths';
 export * from './logo';
 export * from './schemas';
+export * from './student-code';
 export * from './signature';
 export * from './types';

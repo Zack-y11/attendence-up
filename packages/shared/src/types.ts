@@ -110,6 +110,14 @@ export type AttendanceSubmissionDto = {
   createdAt: string;
 };
 
+/**
+ * Saved check-in details for the exact code the student typed.
+ * `studentName` is null when this class has no row with that code.
+ */
+export type PublicStudentLookupDto = {
+  studentName: string | null;
+};
+
 /** One student who has checked in to at least one session of a class. */
 export type ClassStudentAttendanceDto = {
   studentCode: string;
