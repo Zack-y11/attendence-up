@@ -36,9 +36,10 @@ export function ExportDialog({
   const timeZone = Intl.DateTimeFormat().resolvedOptions().timeZone;
   const locale = i18n.resolvedLanguage?.startsWith('en') ? 'en' : 'es';
   const headingDate = attendanceOpensAt
-    ? new Intl.DateTimeFormat(locale === 'en' ? 'en-GB' : 'es', { dateStyle: 'long', timeZone }).format(
-        new Date(attendanceOpensAt),
-      )
+    ? new Intl.DateTimeFormat(locale === 'en' ? 'en-GB' : 'es', {
+        dateStyle: 'long',
+        timeZone,
+      }).format(new Date(attendanceOpensAt))
     : '';
   const attendanceWord = locale === 'en' ? 'Attendance' : 'Asistencia';
   const instructorName = me.data?.printName || me.data?.displayName || '';
@@ -119,11 +120,21 @@ export function ExportDialog({
             <legend className="text-sm font-medium">{t('export.format')}</legend>
             <div className="mt-2 flex gap-3 text-sm">
               <label className="flex items-center gap-2">
-                <input type="radio" name="format" checked={format === 'xlsx'} onChange={() => setFormat('xlsx')} />
+                <input
+                  type="radio"
+                  name="format"
+                  checked={format === 'xlsx'}
+                  onChange={() => setFormat('xlsx')}
+                />
                 {t('export.excel')}
               </label>
               <label className="flex items-center gap-2">
-                <input type="radio" name="format" checked={format === 'pdf'} onChange={() => setFormat('pdf')} />
+                <input
+                  type="radio"
+                  name="format"
+                  checked={format === 'pdf'}
+                  onChange={() => setFormat('pdf')}
+                />
                 {t('export.pdf')}
               </label>
             </div>
@@ -160,7 +171,6 @@ export function ExportDialog({
         <div className="max-h-[50vh] overflow-auto bg-paper p-4 lg:max-h-[90vh] lg:p-6">
           <p className="mb-3 text-xs font-semibold tracking-wider text-muted uppercase">
             {format === 'xlsx' ? t('export.excelPreview') : t('export.pdfPreview')}
-            {ordered.length > 5 && format === 'pdf' ? ` · ${t('export.landscape')}` : ''}
           </p>
           {ordered.length === 0 ? (
             <p className="text-sm text-muted">{t('export.selectColumn')}</p>
@@ -214,9 +224,13 @@ type PrintHeading = {
 };
 
 function HeadingLines({ heading, excel = false }: { heading: PrintHeading; excel?: boolean }) {
-  const lines = [heading.university, heading.faculty, heading.career, heading.attendance, heading.instructor].filter(
-    (line) => line.trim() !== '',
-  );
+  const lines = [
+    heading.university,
+    heading.faculty,
+    heading.career,
+    heading.attendance,
+    heading.instructor,
+  ].filter((line) => line.trim() !== '');
   if (lines.length === 0) return null;
   return (
     <div className={excel ? 'border-b border-[#d4d4d4] bg-white px-3 py-3' : ''}>
@@ -264,7 +278,10 @@ function ExcelSheet({
           <thead>
             <tr className="bg-[#f3f3f3]">
               {headers.map((header) => (
-                <th key={header} className="border border-[#d4d4d4] px-2 py-1.5 font-bold whitespace-nowrap text-[#1c2430]">
+                <th
+                  key={header}
+                  className="border border-[#d4d4d4] px-2 py-1.5 font-bold whitespace-nowrap text-[#1c2430]"
+                >
                   {header}
                 </th>
               ))}
@@ -281,10 +298,17 @@ function ExcelSheet({
               rows.map((row, rowIndex) => (
                 <tr key={records[rowIndex]?.id ?? rowIndex} className="h-9">
                   {row.map((value, columnIndex) => (
-                    <td key={`${rowIndex}-${columnIndex}`} className="border border-[#e5e5e5] px-2 py-1 whitespace-nowrap text-[#1c2430]">
+                    <td
+                      key={`${rowIndex}-${columnIndex}`}
+                      className="border border-[#e5e5e5] px-2 py-1 whitespace-nowrap text-[#1c2430]"
+                    >
                       <PreviewCell
                         value={value}
-                        signature={columnIndex === signatureColumn ? (records[rowIndex]?.signature ?? null) : null}
+                        signature={
+                          columnIndex === signatureColumn
+                            ? (records[rowIndex]?.signature ?? null)
+                            : null
+                        }
                         blank=""
                       />
                     </td>
@@ -303,7 +327,7 @@ function ExcelSheet({
   );
 }
 
-function PdfSheet({
+export function PdfSheet({
   heading,
   headers,
   rows,
@@ -319,14 +343,23 @@ function PdfSheet({
   hiddenCount: number;
 }) {
   const { t } = useTranslation();
-  const institution = [heading.university, heading.faculty, heading.career].filter((line) => line.trim() !== '');
+  const institution = [heading.university, heading.faculty, heading.career].filter(
+    (line) => line.trim() !== '',
+  );
   return (
-    <div className={`mx-auto bg-white p-6 shadow-[0_8px_24px_rgba(15,23,42,0.12)] ${headers.length > 6 ? 'max-w-none' : 'max-w-3xl'}`}>
+    <div className="mx-auto w-full max-w-3xl bg-white p-6 shadow-[0_8px_24px_rgba(15,23,42,0.12)]">
       <div className="flex items-center gap-4">
         <img src={heading.logo} alt="" className="h-16 w-16 shrink-0 rounded-xl object-contain" />
         <div className="min-w-0 flex-1 text-center">
           {institution.map((line, index) => (
-            <p key={line} className={index === 0 ? 'text-sm font-bold text-[#1c2430]' : 'text-xs font-semibold text-[#1c2430]'}>
+            <p
+              key={line}
+              className={
+                index === 0
+                  ? 'text-sm font-bold text-[#1c2430]'
+                  : 'text-xs font-semibold text-[#1c2430]'
+              }
+            >
               {line}
             </p>
           ))}
@@ -334,46 +367,48 @@ function PdfSheet({
       </div>
       <div className="mt-3 text-left">
         <p className="text-xs font-bold text-[#1c2430]">{heading.attendance}</p>
-        {heading.instructor ? <p className="text-xs font-normal text-[#1c2430]">{heading.instructor}</p> : null}
+        {heading.instructor ? (
+          <p className="text-xs font-normal text-[#1c2430]">{heading.instructor}</p>
+        ) : null}
       </div>
-      <div className="mt-4 overflow-x-auto">
-        <table className="w-full table-fixed border-collapse text-left text-[11px]">
-          <thead>
-            <tr className="bg-[#efe8dc]">
-              {headers.map((header) => (
-                <th key={header} className="border border-[#c4b8a6] px-1.5 py-1 align-bottom font-bold text-[#1c2430]">
-                  {header}
-                </th>
+      {rows.length === 0 ? (
+        <p className="mt-4 text-xs text-[#5c6675]">{t('export.noRecords')}</p>
+      ) : (
+        <div className="mt-4 grid grid-cols-2 items-start gap-2.5">
+          {rows.map((row, rowIndex) => (
+            <article
+              key={records[rowIndex]?.id ?? rowIndex}
+              className="min-w-0 break-inside-avoid rounded border border-[#d9d1c3] bg-[#fbfaf8] px-2.5 py-1.5"
+            >
+              {headers.map((header, columnIndex) => (
+                <div
+                  key={`${rowIndex}-${columnIndex}`}
+                  className="grid grid-cols-[minmax(0,42%)_minmax(0,1fr)] gap-x-2 border-b border-[#e4ddd0] py-1 last:border-b-0"
+                >
+                  <p className="min-w-0 text-[10px] leading-snug font-semibold break-words text-[#5c6675]">
+                    {header}
+                  </p>
+                  <div className="min-w-0 text-[11px] leading-snug break-words text-[#1c2430]">
+                    <PreviewCell
+                      value={row[columnIndex] ?? ''}
+                      signature={
+                        columnIndex === signatureColumn
+                          ? (records[rowIndex]?.signature ?? null)
+                          : null
+                      }
+                      blank="—"
+                    />
+                  </div>
+                </div>
               ))}
-            </tr>
-          </thead>
-          <tbody>
-            {rows.length === 0 ? (
-              <tr>
-                <td className="border border-[#c4b8a6] px-1.5 py-2 text-[#5c6675]" colSpan={headers.length}>
-                  {t('export.noRecords')}
-                </td>
-              </tr>
-            ) : (
-              rows.map((row, rowIndex) => (
-                <tr key={records[rowIndex]?.id ?? rowIndex} className={rowIndex % 2 === 1 ? 'bg-[#faf7f2]' : 'bg-white'}>
-                  {row.map((value, columnIndex) => (
-                    <td key={`${rowIndex}-${columnIndex}`} className="border border-[#c4b8a6] px-1.5 py-1 align-top break-words text-[#1c2430]">
-                      <PreviewCell
-                        value={value}
-                        signature={columnIndex === signatureColumn ? (records[rowIndex]?.signature ?? null) : null}
-                        blank="—"
-                      />
-                    </td>
-                  ))}
-                </tr>
-              ))
-            )}
-          </tbody>
-        </table>
-      </div>
+            </article>
+          ))}
+        </div>
+      )}
       {hiddenCount > 0 ? (
-        <p className="mt-3 text-[11px] text-[#5c6675]">{t('export.morePdf', { count: hiddenCount })}</p>
+        <p className="mt-3 text-[11px] text-[#5c6675]">
+          {t('export.morePdf', { count: hiddenCount })}
+        </p>
       ) : null}
     </div>
   );
