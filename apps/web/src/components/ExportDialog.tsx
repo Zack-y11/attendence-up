@@ -160,7 +160,7 @@ export function ExportDialog({
         <div className="max-h-[50vh] overflow-auto bg-paper p-4 lg:max-h-[90vh] lg:p-6">
           <p className="mb-3 text-xs font-semibold tracking-wider text-muted uppercase">
             {format === 'xlsx' ? t('export.excelPreview') : t('export.pdfPreview')}
-            {ordered.length > 6 && format === 'pdf' ? ` · ${t('export.landscape')}` : ''}
+            {ordered.length > 5 && format === 'pdf' ? ` · ${t('export.landscape')}` : ''}
           </p>
           {ordered.length === 0 ? (
             <p className="text-sm text-muted">{t('export.selectColumn')}</p>
@@ -337,11 +337,11 @@ function PdfSheet({
         {heading.instructor ? <p className="text-xs font-normal text-[#1c2430]">{heading.instructor}</p> : null}
       </div>
       <div className="mt-4 overflow-x-auto">
-        <table className="min-w-full text-left text-[11px]">
+        <table className="w-full table-fixed border-collapse text-left text-[11px]">
           <thead>
-            <tr>
+            <tr className="bg-[#efe8dc]">
               {headers.map((header) => (
-                <th key={header} className="border-b border-[#e4ddd0] px-1.5 py-1 font-bold whitespace-nowrap text-[#1c2430]">
+                <th key={header} className="border border-[#c4b8a6] px-1.5 py-1 align-bottom font-bold text-[#1c2430]">
                   {header}
                 </th>
               ))}
@@ -350,15 +350,15 @@ function PdfSheet({
           <tbody>
             {rows.length === 0 ? (
               <tr>
-                <td className="px-1.5 py-2 text-[#5c6675]" colSpan={headers.length}>
+                <td className="border border-[#c4b8a6] px-1.5 py-2 text-[#5c6675]" colSpan={headers.length}>
                   {t('export.noRecords')}
                 </td>
               </tr>
             ) : (
               rows.map((row, rowIndex) => (
-                <tr key={records[rowIndex]?.id ?? rowIndex}>
+                <tr key={records[rowIndex]?.id ?? rowIndex} className={rowIndex % 2 === 1 ? 'bg-[#faf7f2]' : 'bg-white'}>
                   {row.map((value, columnIndex) => (
-                    <td key={`${rowIndex}-${columnIndex}`} className="border-b border-[#e4ddd0] px-1.5 py-1 whitespace-nowrap text-[#1c2430]">
+                    <td key={`${rowIndex}-${columnIndex}`} className="border border-[#c4b8a6] px-1.5 py-1 align-top break-words text-[#1c2430]">
                       <PreviewCell
                         value={value}
                         signature={columnIndex === signatureColumn ? (records[rowIndex]?.signature ?? null) : null}
