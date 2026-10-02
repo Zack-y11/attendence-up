@@ -175,6 +175,20 @@ export const tokenParamSchema = z.object({
   token: z.string().min(16).max(128),
 });
 
+export const publicExtensionQuerySchema = z.object({
+  e: z.string().min(16).max(128).optional(),
+});
+
+export const createExtensionInviteSchema = z.object({
+  studentCode: studentCodeSchema,
+  expiresInMinutes: z.number().int().min(5).max(1440).optional(),
+});
+
+export const extensionInviteParamSchema = z.object({
+  id: z.uuid(),
+  inviteId: z.uuid(),
+});
+
 export type LocationInput = z.infer<typeof locationSchema>;
 export type CreateSavedLocationInput = z.infer<typeof createSavedLocationSchema>;
 export type UpdateSavedLocationInput = z.infer<typeof updateSavedLocationSchema>;

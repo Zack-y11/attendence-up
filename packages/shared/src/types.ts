@@ -95,12 +95,23 @@ export type PublicSessionDto = {
   status: SessionStatus;
   acceptingAttendance: boolean;
   closedReason: AttendanceGateReason | null;
+  /** True when a valid one-time extension link is on the URL. */
+  extensionCheckIn?: boolean;
   requestsLocation: boolean;
   location: LocationDto | null;
   startsAt: string | null;
   endsAt: string | null;
   attendanceOpensAt: string | null;
   attendanceClosesAt: string | null;
+};
+
+export type AttendanceExtensionInviteDto = {
+  id: string;
+  studentCode: string;
+  publicPath: string;
+  expiresAt: string;
+  usedAt: string | null;
+  createdAt: string;
 };
 
 export type AttendanceSubmissionDto = {

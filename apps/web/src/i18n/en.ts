@@ -421,6 +421,16 @@ export const en = {
     showing: 'Showing {{visible}} of {{total}} check-ins',
     settings: 'Session settings',
     save: 'Save changes',
+    extensionTitle: 'Late check-in link',
+    extensionHint:
+      'Share a private link for one student code. The public link stays closed; this link works once and expires in 30 minutes. Check-ins count as Late.',
+    extensionStudentCode: 'Student code',
+    extensionCreate: 'Create & copy link',
+    extensionCopied: 'Extension link copied.',
+    extensionEmpty: 'No active extension links.',
+    extensionExpires: 'Expires {{when}}',
+    extensionCopy: 'Copy link',
+    extensionRevoke: 'Revoke',
   },
   public: {
     loading: 'Loading attendance',
@@ -435,6 +445,8 @@ export const en = {
     notOpenYet: 'Attendance is not open yet.',
     windowClosed: 'The attendance window has closed.',
     closed: 'Attendance is closed.',
+    extensionBanner:
+      'You have a one-time late check-in for this session. Use the student code this link was created for.',
     notOpened: 'Attendance has not opened yet.',
     code: 'Student code',
     name: 'Student name',

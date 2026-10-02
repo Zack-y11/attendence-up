@@ -433,6 +433,16 @@ export const es: typeof en = {
     showing: 'Mostrando {{visible}} de {{total}} registros',
     settings: 'Ajustes de la sesión',
     save: 'Guardar cambios',
+    extensionTitle: 'Enlace de registro tardío',
+    extensionHint:
+      'Comparte un enlace privado para un código de estudiante. El enlace público sigue cerrado; este enlace funciona una vez y caduca en 30 minutos. Los registros cuentan como Tarde.',
+    extensionStudentCode: 'Código de estudiante',
+    extensionCreate: 'Crear y copiar enlace',
+    extensionCopied: 'Enlace de extensión copiado.',
+    extensionEmpty: 'No hay enlaces de extensión activos.',
+    extensionExpires: 'Caduca {{when}}',
+    extensionCopy: 'Copiar enlace',
+    extensionRevoke: 'Revocar',
   },
   public: {
     loading: 'Cargando asistencia',
@@ -447,6 +457,8 @@ export const es: typeof en = {
     notOpenYet: 'La asistencia todavía no está abierta.',
     windowClosed: 'El periodo de asistencia ya cerró.',
     closed: 'La asistencia está cerrada.',
+    extensionBanner:
+      'Tienes un registro tardío de un solo uso para esta sesión. Usa el código de estudiante para el que se creó este enlace.',
     notOpened: 'La asistencia todavía no se ha abierto.',
     code: 'Código de estudiante',
     name: 'Nombre del estudiante',

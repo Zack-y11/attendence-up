@@ -1,5 +1,7 @@
 import {
+  publicAttendanceExtensionPath,
   publicAttendancePath,
+  type AttendanceExtensionInviteDto,
   type AttendanceRecordDto,
   type ClassDetailDto,
   type ClassDto,
@@ -11,6 +13,7 @@ import {
   type SessionSummaryDto,
 } from '@attendence-up/shared';
 import type {
+  AttendanceExtensionInvite,
   AttendanceRecord,
   AttendanceSession,
   Class,
@@ -168,21 +171,39 @@ export function presentRecord(item: AttendanceRecord): AttendanceRecordDto {
 export function presentPublicSession(
   item: AttendanceSession & { class: ClassSchedule | null },
   now: Date,
+  options?: { extensionCheckIn?: boolean },
 ): PublicSessionDto {
   const gate = attendanceGate(item, now);
+  const extensionCheckIn = options?.extensionCheckIn === true;
+  const acceptingAttendance = gate.ok || extensionCheckIn;
   return {
     name: item.name,
     description: item.description,
     className: item.class?.name ?? null,
     status: item.status,
-    acceptingAttendance: gate.ok,
-    closedReason: gate.ok ? null : gate.reason,
+    acceptingAttendance,
+    closedReason: acceptingAttendance ? null : gate.ok ? null : gate.reason,
+    ...(extensionCheckIn ? { extensionCheckIn: true } : {}),
     requestsLocation: item.locationLatitude != null && item.locationLongitude != null,
     location: toLocation(item.locationLatitude, item.locationLongitude, item.locationRadiusMeters),
     startsAt: item.class?.startsAt?.toISOString() ?? null,
     endsAt: item.class?.endsAt?.toISOString() ?? null,
     attendanceOpensAt: item.attendanceOpensAt?.toISOString() ?? null,
     attendanceClosesAt: item.attendanceClosesAt?.toISOString() ?? null,
+  };
+}
+
+export function presentExtensionInvite(
+  invite: AttendanceExtensionInvite,
+  sessionPublicToken: string,
+): AttendanceExtensionInviteDto {
+  return {
+    id: invite.id,
+    studentCode: invite.studentCode,
+    publicPath: publicAttendanceExtensionPath(sessionPublicToken, invite.token),
+    expiresAt: invite.expiresAt.toISOString(),
+    usedAt: invite.usedAt?.toISOString() ?? null,
+    createdAt: invite.createdAt.toISOString(),
   };
 }
 
