@@ -112,10 +112,26 @@ model AttendanceSession {
   createdAt            DateTime      @default(now())
   updatedAt            DateTime      @updatedAt
 
-  records AttendanceRecord[]
+  records            AttendanceRecord[]
+  extensionInvites   AttendanceExtensionInvite[]
 
   @@index([instructorId])
   @@index([classId])
+}
+
+/// One-time late check-in link for a single student code after the session window closes.
+model AttendanceExtensionInvite {
+  id           String            @id @default(uuid())
+  sessionId    String
+  session      AttendanceSession @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+  instructorId String
+  token        String            @unique
+  studentCode  String
+  expiresAt    DateTime
+  usedAt       DateTime?
+  createdAt    DateTime          @default(now())
+
+  @@index([sessionId])
 }
 
 model AttendanceRecord {

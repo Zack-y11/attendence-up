@@ -7,7 +7,7 @@ import {
 import { useMutation, useQuery } from '@tanstack/react-query';
 import { useEffect, useRef, useState, type ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
-import { useParams } from 'react-router';
+import { useParams, useSearchParams } from 'react-router';
 import {
   ApiError,
   fetchPublicSession,
@@ -62,9 +62,11 @@ function requestPosition(): Promise<Reading | null> {
 export function PublicAttendancePage() {
   const { t, i18n } = useTranslation();
   const { token = '' } = useParams();
+  const [searchParams] = useSearchParams();
+  const extensionToken = searchParams.get('e');
   const session = useQuery({
-    queryKey: ['public-session', token],
-    queryFn: () => fetchPublicSession(token),
+    queryKey: ['public-session', token, extensionToken],
+    queryFn: () => fetchPublicSession(token, extensionToken),
     refetchInterval: (query) => {
       const item = query.state.data;
       if (!item) return false;
@@ -140,8 +142,8 @@ export function PublicAttendancePage() {
   }, [normalizedCode]);
 
   const lookup = useQuery({
-    queryKey: ['public-student', token, lookupCode],
-    queryFn: () => lookupPublicStudent(token, lookupCode ?? ''),
+    queryKey: ['public-student', token, extensionToken, lookupCode],
+    queryFn: () => lookupPublicStudent(token, lookupCode ?? '', extensionToken),
     enabled: Boolean(session.isSuccess && token && lookupCode),
     retry: false,
     staleTime: 60_000,
@@ -181,7 +183,7 @@ export function PublicAttendancePage() {
       if (!parsed.success) {
         throw new ApiError(400, parsed.error.issues[0]?.message ?? t('errors.checkForm'));
       }
-      return submitPublicAttendance(token, parsed.data);
+      return submitPublicAttendance(token, parsed.data, extensionToken);
     },
     onSuccess: (result) => setDone({ studentName: result.studentName, explained: notInClassroom }),
   });
@@ -252,6 +254,11 @@ export function PublicAttendancePage() {
             submit.mutate();
           }}
         >
+          {item.extensionCheckIn ? (
+            <p className="rounded-lg bg-teal-soft px-3 py-2 text-sm text-teal">
+              {t('public.extensionBanner')}
+            </p>
+          ) : null}
           {!item.acceptingAttendance && (
             <p className="rounded-lg bg-amber-soft px-3 py-2 text-sm text-amber">
               {closedMessage(item.closedReason, item.status, t)}

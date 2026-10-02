@@ -13,6 +13,7 @@ import { Link, useNavigate, useParams } from 'react-router';
 import { useApi } from '../api/context';
 import { AttendanceQr } from '../components/AttendanceQr';
 import { ExportDialog } from '../components/ExportDialog';
+import { SessionExtensionPanel } from '../components/SessionExtensionPanel';
 import { SessionForm } from '../components/SessionForm';
 import {
   Avatar,
@@ -386,6 +387,7 @@ export function SessionDetailPage() {
               </div>
             </div>
           </div>
+          <SessionExtensionPanel sessionId={item.id} origin={window.location.origin} />
         </Card>
 
         <Card className="p-5 lg:col-span-5">

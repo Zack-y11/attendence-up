@@ -1,4 +1,5 @@
 import type {
+  AttendanceExtensionInviteDto,
   AttendanceRecordDto,
   AttendanceStatus,
   AttendanceSubmissionDto,
@@ -107,6 +108,15 @@ export function createApiClient(getToken: () => Promise<string | null>) {
       request<SessionDto>(`/api/sessions/${id}/reopen`, { method: 'POST' }),
     deleteSession: (id: string) => request<void>(`/api/sessions/${id}`, { method: 'DELETE' }),
     attendance: (id: string) => request<AttendanceRecordDto[]>(`/api/sessions/${id}/attendance`),
+    extensionInvites: (id: string) =>
+      request<AttendanceExtensionInviteDto[]>(`/api/sessions/${id}/extensions`),
+    createExtensionInvite: (id: string, body: { studentCode: string; expiresInMinutes?: number }) =>
+      request<AttendanceExtensionInviteDto>(`/api/sessions/${id}/extensions`, {
+        method: 'POST',
+        body: JSON.stringify(body),
+      }),
+    revokeExtensionInvite: (sessionId: string, inviteId: string) =>
+      request<void>(`/api/sessions/${sessionId}/extensions/${inviteId}`, { method: 'DELETE' }),
     updateAttendanceStatus: (
       sessionId: string,
       recordId: string,
@@ -132,8 +142,20 @@ export function createApiClient(getToken: () => Promise<string | null>) {
 
 export type ApiClient = ReturnType<typeof createApiClient>;
 
-export async function fetchPublicSession(token: string): Promise<PublicSessionDto> {
-  const response = await fetch(`/api/public/sessions/${encodeURIComponent(token)}`);
+function publicExtensionQuery(extensionToken?: string | null) {
+  const params = new URLSearchParams();
+  if (extensionToken) params.set('e', extensionToken);
+  const query = params.toString();
+  return query ? `?${query}` : '';
+}
+
+export async function fetchPublicSession(
+  token: string,
+  extensionToken?: string | null,
+): Promise<PublicSessionDto> {
+  const response = await fetch(
+    `/api/public/sessions/${encodeURIComponent(token)}${publicExtensionQuery(extensionToken)}`,
+  );
   if (!response.ok) throw await parseError(response);
   return (await response.json()) as PublicSessionDto;
 }
@@ -141,8 +163,10 @@ export async function fetchPublicSession(token: string): Promise<PublicSessionDt
 export async function lookupPublicStudent(
   token: string,
   studentCode: string,
+  extensionToken?: string | null,
 ): Promise<PublicStudentLookupDto> {
   const params = new URLSearchParams({ studentCode });
+  if (extensionToken) params.set('e', extensionToken);
   const response = await fetch(
     `/api/public/sessions/${encodeURIComponent(token)}/student?${params}`,
   );
@@ -153,12 +177,16 @@ export async function lookupPublicStudent(
 export async function submitPublicAttendance(
   token: string,
   body: SubmitAttendanceInput,
+  extensionToken?: string | null,
 ): Promise<AttendanceSubmissionDto> {
-  const response = await fetch(`/api/public/sessions/${encodeURIComponent(token)}/attendance`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(body),
-  });
+  const response = await fetch(
+    `/api/public/sessions/${encodeURIComponent(token)}/attendance${publicExtensionQuery(extensionToken)}`,
+    {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(body),
+    },
+  );
   if (!response.ok) throw await parseError(response);
   return (await response.json()) as AttendanceSubmissionDto;
 }

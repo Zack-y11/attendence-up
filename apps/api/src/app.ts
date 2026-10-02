@@ -15,6 +15,7 @@ import { exportRoutes } from './modules/exports';
 import { locationRoutes } from './modules/locations';
 import { meRoutes } from './modules/me';
 import { publicAttendanceRoutes } from './modules/public-attendance';
+import { sessionExtensionRoutes } from './modules/session-extensions';
 import { sessionRoutes } from './modules/sessions';
 import { requireInstructor, type InstructorContext } from './plugins/auth';
 
@@ -102,6 +103,7 @@ export async function buildApp() {
       await privateApp.register(classRoutes);
       await privateApp.register(classAttendanceRoutes);
       await privateApp.register(sessionRoutes);
+      await privateApp.register(sessionExtensionRoutes);
       await privateApp.register(locationRoutes);
       await privateApp.register(exportRoutes);
     },
