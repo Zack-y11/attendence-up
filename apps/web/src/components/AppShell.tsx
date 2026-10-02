@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Link, NavLink, Outlet } from 'react-router';
 import { useApi } from '../api/context';
+import { attendanceStillScheduled } from '../lib/attendance-window';
 import { paths } from '../lib/paths';
 import { LanguageSwitch } from './LanguageSwitch';
 import { buttonClass, Icon, LiveDot } from './ui';
@@ -63,8 +64,16 @@ function LiveIndicator() {
   const sessions = useQuery({
     queryKey: ['sessions', 'all'],
     queryFn: () => api.sessions('all'),
-    refetchInterval: (query) =>
-      query.state.data?.some((session) => session.status === 'OPEN') ? 8000 : false,
+    refetchInterval: (query) => {
+      const data = query.state.data;
+      if (!data) return false;
+      const watch = data.some(
+        (session) =>
+          session.status === 'OPEN' ||
+          attendanceStillScheduled(session.attendanceOpensAt, session.attendanceClosesAt),
+      );
+      return watch ? 8000 : false;
+    },
   });
   const open = sessions.data?.filter((session) => session.status === 'OPEN') ?? [];
   const first = open[0];
@@ -137,7 +146,11 @@ export function AppShell() {
           <div className="absolute inset-y-0 left-0 flex w-72 flex-col gap-8 bg-card px-4 py-6 shadow-[0_20px_25px_-5px_rgba(15,23,42,0.08)]">
             <Brand />
             <NavItems vertical onNavigate={() => setMenuOpen(false)} />
-            <Link to={paths.sessionNew} className={buttonClass()} onClick={() => setMenuOpen(false)}>
+            <Link
+              to={paths.sessionNew}
+              className={buttonClass()}
+              onClick={() => setMenuOpen(false)}
+            >
               <Icon name="add" className="text-[18px]" />
               {t('shell.newSession')}
             </Link>

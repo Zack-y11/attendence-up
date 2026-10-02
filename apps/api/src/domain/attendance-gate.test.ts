@@ -19,13 +19,26 @@ describe('attendanceGate', () => {
     ).toEqual({ ok: true });
   });
 
-  it('treats the window bounds as inclusive', () => {
+  it('opens at the start and through the end instant', () => {
+    const end = new Date('2026-09-23T15:00:00.000Z');
+    expect(
+      attendanceGate({ status: 'OPEN', attendanceOpensAt: now, attendanceClosesAt: end }, now),
+    ).toEqual({ ok: true });
     expect(
       attendanceGate(
-        { status: 'OPEN', attendanceOpensAt: now, attendanceClosesAt: now },
-        now,
+        { status: 'OPEN', attendanceOpensAt: now, attendanceClosesAt: end },
+        new Date(end.getTime() - 1),
       ),
     ).toEqual({ ok: true });
+    expect(
+      attendanceGate({ status: 'OPEN', attendanceOpensAt: now, attendanceClosesAt: end }, end),
+    ).toEqual({ ok: true });
+    expect(
+      attendanceGate(
+        { status: 'OPEN', attendanceOpensAt: now, attendanceClosesAt: end },
+        new Date(end.getTime() + 1),
+      ),
+    ).toEqual({ ok: false, reason: 'TOO_LATE' });
   });
 
   it('rejects check-in before the window opens and after it closes', () => {
@@ -53,13 +66,14 @@ describe('attendanceGate', () => {
 });
 
 describe('attendanceWindowEnded', () => {
-  it('stays open when no close time is set or the close instant has not passed', () => {
+  it('stays open when no close time is set or the close instant has not been reached', () => {
     expect(attendanceWindowEnded(null, now)).toBe(false);
-    expect(attendanceWindowEnded(now, now)).toBe(false);
     expect(attendanceWindowEnded(new Date('2026-09-23T15:00:00.000Z'), now)).toBe(false);
   });
 
   it('ends once the clock is past the close time', () => {
+    expect(attendanceWindowEnded(now, now)).toBe(false);
+    expect(attendanceWindowEnded(now, new Date(now.getTime() + 1))).toBe(true);
     expect(attendanceWindowEnded(new Date('2026-09-23T13:00:00.000Z'), now)).toBe(true);
   });
 });

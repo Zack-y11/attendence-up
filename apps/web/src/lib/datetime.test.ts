@@ -1,29 +1,40 @@
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
+
+vi.mock('../i18n', () => ({
+  default: { resolvedLanguage: 'en', language: 'en' },
+}));
+
+import { fromDatetimeLocal, toDatetimeLocal } from './datetime';
 import { applyTimeOnDate, fromTimeLocal, toTimeLocal } from './meeting-time';
 
 describe('class meeting clock', () => {
-  it('round-trips a local hour without keeping the calendar day', () => {
+  it('stores the hour in America/El_Salvador', () => {
     const stored = fromTimeLocal('08:30');
-    expect(stored).toBeTruthy();
+    expect(stored).toBe('2000-01-01T14:30:00.000Z');
     expect(toTimeLocal(stored)).toBe('08:30');
-    expect(new Date(stored ?? '').getFullYear()).toBe(2000);
   });
 
-  it('puts that hour on the session day', () => {
+  it('puts that hour on the El Salvador calendar day', () => {
     const stored = fromTimeLocal('08:30');
-    const thursday = new Date(2026, 8, 24, 15, 0, 0, 0);
-    const applied = applyTimeOnDate(stored, thursday);
-    const when = new Date(applied ?? '');
-    expect(when.getFullYear()).toBe(2026);
-    expect(when.getMonth()).toBe(8);
-    expect(when.getDate()).toBe(24);
-    expect(when.getHours()).toBe(8);
-    expect(when.getMinutes()).toBe(30);
+    // 03:00Z is still the previous evening in El Salvador.
+    const lateEvening = new Date('2026-09-24T03:00:00.000Z');
+    expect(applyTimeOnDate(stored, lateEvening)).toBe('2026-09-23T14:30:00.000Z');
+    const afternoon = new Date('2026-09-24T21:00:00.000Z');
+    expect(applyTimeOnDate(stored, afternoon)).toBe('2026-09-24T14:30:00.000Z');
   });
 
   it('rejects an empty clock', () => {
     expect(fromTimeLocal('')).toBeNull();
     expect(toTimeLocal(null)).toBe('');
     expect(applyTimeOnDate(null, new Date())).toBeNull();
+  });
+});
+
+describe('session window clock', () => {
+  it('reads and writes the check-in window in America/El_Salvador', () => {
+    expect(fromDatetimeLocal('2026-09-29T08:00')).toBe('2026-09-29T14:00:00.000Z');
+    expect(toDatetimeLocal('2026-09-29T14:00:00.000Z')).toBe('2026-09-29T08:00');
+    expect(fromDatetimeLocal('')).toBeNull();
+    expect(toDatetimeLocal(null)).toBe('');
   });
 });

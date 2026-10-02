@@ -183,6 +183,31 @@ describe('summarizeClassAttendance', () => {
       { studentCode: 'SM007', studentName: 'Sol Rivas', attended: 0, total: 0, percentage: null },
     ]);
   });
+
+  it('does not count a closed session whose start is still ahead', () => {
+    const now = new Date('2026-09-29T14:00:00.000Z');
+    const summary = summarizeClassAttendance(
+      [
+        {
+          status: 'CLOSED',
+          attendanceOpensAt: new Date('2026-09-29T15:00:00.000Z'),
+          records: [
+            {
+              studentCode: 'SM001',
+              studentName: 'Ana',
+              attendanceStatus: 'PRESENT',
+              createdAt: now,
+            },
+          ],
+        },
+      ],
+      now,
+    );
+    expect(summary.closedSessionCount).toBe(0);
+    expect(summary.students).toEqual([
+      { studentCode: 'SM001', studentName: 'Ana', attended: 0, total: 0, percentage: null },
+    ]);
+  });
 });
 
 describe('ownedClassAttendanceQuery', () => {

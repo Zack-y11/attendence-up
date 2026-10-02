@@ -8,21 +8,25 @@ export type SessionGateInput = {
 
 export type AttendanceGate = { ok: true } | { ok: false; reason: AttendanceGateReason };
 
-/** Schedule times (startsAt/endsAt) do not gate check-in. Only OPEN plus the optional window does. */
+/**
+ * A configured window is checked before status so a scheduled session that is
+ * closed still tells students whether they are early or late. The start
+ * instant is inside the window. The end instant still accepts check-in.
+ */
 export function attendanceGate(session: SessionGateInput, now: Date): AttendanceGate {
-  if (session.status !== 'OPEN') {
-    return { ok: false, reason: 'NOT_OPEN' };
+  if (session.attendanceClosesAt && now > session.attendanceClosesAt) {
+    return { ok: false, reason: 'TOO_LATE' };
   }
   if (session.attendanceOpensAt && now < session.attendanceOpensAt) {
     return { ok: false, reason: 'TOO_EARLY' };
   }
-  if (session.attendanceClosesAt && now > session.attendanceClosesAt) {
-    return { ok: false, reason: 'TOO_LATE' };
+  if (session.status !== 'OPEN') {
+    return { ok: false, reason: 'NOT_OPEN' };
   }
   return { ok: true };
 }
 
-/** The close instant itself still accepts check-in. The next moment does not. */
+/** The close instant itself still counts as inside the window. */
 export function attendanceWindowEnded(closesAt: Date | null, now: Date): boolean {
   return closesAt != null && now > closesAt;
 }

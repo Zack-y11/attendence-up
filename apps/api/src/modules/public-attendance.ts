@@ -1,8 +1,12 @@
-import { absenceNoteForCheckIn, submitAttendanceSchema, tokenParamSchema } from '@attendence-up/shared';
+import {
+  absenceNoteForCheckIn,
+  submitAttendanceSchema,
+  tokenParamSchema,
+} from '@attendence-up/shared';
 import type { FastifyInstance } from 'fastify';
 import type { ZodTypeProvider } from 'fastify-type-provider-zod';
 import { attendanceGate, attendanceGateMessage } from '../domain/attendance-gate';
-import { closeExpiredSessions } from '../domain/close-expired-sessions';
+import { syncAttendanceWindows } from '../domain/sync-attendance-windows';
 import { deriveLocationStatus } from '../domain/location-status';
 import { normalizeStudentCode } from '../domain/student-code';
 import { AppError } from '../lib/errors';
@@ -18,7 +22,7 @@ export async function publicAttendanceRoutes(app: FastifyInstance) {
       include: { class: { select: { name: true, startsAt: true, endsAt: true } } },
     });
     if (!session) throw new AppError(404, 'This attendance link is not valid.');
-    await closeExpiredSessions({ id: session.id });
+    await syncAttendanceWindows({ id: session.id });
     const current = await prisma.attendanceSession.findUnique({
       where: { id: session.id },
       include: { class: { select: { name: true, startsAt: true, endsAt: true } } },
@@ -43,7 +47,7 @@ export async function publicAttendanceRoutes(app: FastifyInstance) {
         where: { publicToken: request.params.token },
       });
       if (!session) throw new AppError(404, 'This attendance link is not valid.');
-      await closeExpiredSessions({ id: session.id });
+      await syncAttendanceWindows({ id: session.id });
       const current = await prisma.attendanceSession.findUnique({
         where: { id: session.id },
       });
@@ -61,7 +65,11 @@ export async function publicAttendanceRoutes(app: FastifyInstance) {
           longitude: body.longitude ?? null,
           accuracyMeters: body.locationAccuracyMeters ?? null,
         },
-        toLocation(current.locationLatitude, current.locationLongitude, current.locationRadiusMeters),
+        toLocation(
+          current.locationLatitude,
+          current.locationLongitude,
+          current.locationRadiusMeters,
+        ),
       );
       const absence = absenceNoteForCheckIn(body.notInClassroom === true, body.absenceNote);
       if (!absence.ok) {
