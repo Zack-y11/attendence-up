@@ -47,6 +47,7 @@ Deployment:
 - The web app is on Vercel (`vercel.json`: Vite build of `@attendence-up/web`, output `apps/web/dist`).
 - `vercel.json` rewrites `/api/*` to the API on Fly, `https://attendence-up-api.fly.dev/api/$1`. Other paths fall through to `index.html`.
 - The API image is `Dockerfile`, configured in `fly.toml` (`attendence-up-api`, port 8080). Fly runs `pnpm exec prisma migrate deploy` as the release command.
+- Fly is set to **stop Machines when idle** (`auto_stop_machines = "stop"`, `min_machines_running = 0`) so you are not billed for a running VM 24/7. The first request after idle may take a few seconds while the Machine starts (`auto_start_machines = true`). Redeploy after changing `fly.toml`: `fly deploy --app attendence-up-api`.
 
 Locally, Vite proxies `/api` to `http://localhost:3001`.
 
