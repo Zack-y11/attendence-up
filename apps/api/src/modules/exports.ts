@@ -195,6 +195,7 @@ export async function exportRoutes(app: FastifyInstance) {
 
       const pdf = await renderAttendancePdf({
         heading,
+        columns,
         headers: table.headers,
         rows: table.rows,
         signatures,
